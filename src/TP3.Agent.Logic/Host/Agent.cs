@@ -8,6 +8,12 @@
 public class Agent
 {
     public Agent()
-    {   
+    {
+        this.T = new Trunk();
+    }
+
+    public Trunk T
+    {
+        get; private set;
     }
 }
