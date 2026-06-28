@@ -283,7 +283,39 @@ Each node has one namespace root stream group called trunk.
 - /nodes/{node_id}/trunk/events/*
 - /nodes/{node_id}/trunk/compute/*
 
-Trunk is the anchor for discovery, policy, and routing. It should fan out into substreams and not be implemented as one giant mixed stream.
+Trunk is the opinionated anchor for discovery, policy, and routing. It defines a stable, consistent way to access a node's core resources and makes common operations predictable.
+
+Namespace outside trunk should remain flexible and extensible:
+
+- custom mounts under /nodes/{node_id}/mounts/*
+- app-specific views under /namespaces/{namespace_name}/...
+- projections and overlays defined by policy or capability
+
+This means:
+
+- trunk is the canonical entry point
+- namespace is the freedom layer for composition, merging, and specialized views
+- both coexist without forcing every resource into the same rigid schema
+
+### 13.2.1 Example: Trunk + Custom Namespaces
+
+A node exposes a fixed trunk, and apps can request namespaces that combine branches from multiple devices.
+
+- /nodes/laptop-01/trunk/meta
+- /nodes/laptop-01/trunk/control/*
+- /nodes/laptop-01/trunk/state/*
+- /nodes/laptop-01/trunk/events/*
+- /nodes/laptop-01/trunk/compute/*
+
+Custom namespaces:
+
+- /namespaces/photos-all/ -> union of /nodes/phone-01/trunk/state/photos and /nodes/camera-02/trunk/state/photos
+- /namespaces/office/ -> merged view of cloud file storage and laptop documents
+- /namespaces/phone-events/ -> mounted /nodes/phone-01/trunk/events/notifications
+
+This keeps `trunk` stable and opinionated while allowing flexible, application-specific namespace composition.
+
+Trunk should fan out into substreams and not be implemented as one giant mixed stream.
 
 ### 13.3 Mount Rules
 
@@ -375,3 +407,109 @@ Each node should publish available projections in metadata:
 - node/projections/database
 
 Clients choose the best projection they support, with stream-native access always available as fallback.
+
+---
+
+## 15. Namespace Storage, Configuration, and Load
+
+Namespaces should be represented as data, not hardcoded behavior.
+
+### 15.1 What Gets Stored
+
+Store namespace-related data in three layers:
+
+1. Namespace manifest
+  - Declares paths, mounts, projections, and versions.
+  - Example contents: node identity, trunk branches, exported capabilities.
+
+2. Policy bundle
+  - Declares ACLs, ownership, trust roots, read/write permissions, and mount rules.
+
+3. Runtime cache
+  - In-memory resolved namespace view used by the agent for fast lookup.
+
+### 15.2 Recommended Storage Format
+
+Use declarative, versioned documents for portability.
+
+- YAML or JSON for source-controlled configuration
+- Signed manifest for trust and integrity
+- Optional compiled cache for fast startup
+
+Suggested layout:
+
+- /etc/agent/namespace.d/*.yaml for local config
+- /var/lib/agent/namespace.cache for resolved runtime cache
+- /var/lib/agent/namespace.signatures for trust material
+
+For distributed deployment, the same data can also be published as streams:
+
+- trunk/meta for identity and version
+- trunk/coord for mounts and ownership
+- trunk/control for namespace update commands
+
+### 15.3 Configuration Model
+
+Configuration should be declarative and layered.
+
+Order of precedence:
+
+1. Built-in defaults
+2. Local node config
+3. Signed deployment policy
+4. Remote mounted namespace rules
+5. Runtime overrides with explicit lease or admin rights
+
+Configuration should describe:
+
+- local trunk root
+- mounted remote branches
+- projection capabilities
+- path versions
+- policy inheritance
+- event routing rules
+
+### 15.4 Load Sequence
+
+Namespace loading should be deterministic:
+
+1. Load built-in defaults
+2. Load local manifest files
+3. Verify signatures and trust chain
+4. Merge policy bundles
+5. Resolve mounts
+6. Build runtime namespace cache
+7. Publish node/meta readiness
+
+If a mount or policy fails validation, the agent should degrade gracefully and expose the unresolved state in node/health.
+
+### 15.5 Update and Reload
+
+Namespace changes should be applied through explicit control events.
+
+- Validate new manifest or policy bundle
+- Write update to a control stream or admin channel
+- Rebuild resolved cache atomically
+- Emit namespace changed event
+- Keep old view available until new view is valid, if possible
+
+Hot reload is allowed, but only with clear versioning and rollback support.
+
+### 15.6 Distributed Namespace Sync
+
+In a multi-node system, namespace data can be synchronized in three ways:
+
+- Push: central deployment publishes updated manifests
+- Pull: node fetches signed namespace policy on startup or refresh
+- Peer mount: one node mounts another node’s exported namespace branch
+
+The source of truth should be explicit per path prefix so different branches can have different owners.
+
+### 15.7 Practical Rule
+
+Use this rule of thumb:
+
+- Store namespace definition in manifests.
+- Configure namespace through signed policy and mounts.
+- Load namespace into a runtime cache at agent startup.
+- Expose the resolved namespace back out through trunk/meta and trunk/coord.

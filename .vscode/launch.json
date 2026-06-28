@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch TP3.Agent",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build TP3.Agent",
+      "program": "${workspaceFolder}/src/TP3.Agent/bin/Debug/net10.0/TP3.Agent.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/TP3.Agent",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ]
+}
