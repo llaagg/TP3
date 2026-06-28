@@ -20,7 +20,7 @@ public class Trunk
     
     private static TP3Stram Storage()
     {
-        throw new NotImplementedException();
+        return new TP3Stram();
     }
 
     public List<string> Streams()

@@ -2,10 +2,11 @@ using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using TP3.Client;
 using TP3.Interfaces;
+using NodeType = TP3.Agent.Logic.Agent.Node;
 
 public static class AgentInstance
 {
-    public static TP3.Agent.Logic.Agent Agent
+    public static NodeType? Agent
     {
         get; set;
     }
