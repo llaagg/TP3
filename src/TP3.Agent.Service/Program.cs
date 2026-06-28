@@ -1,0 +1,1 @@
+var agent = new TP3.Agent();
