@@ -4,3 +4,4 @@ public interface IConnection
 {
     void Connect();
 }
+    

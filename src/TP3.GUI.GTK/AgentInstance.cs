@@ -1,3 +1,5 @@
+using System.Net.Sockets;
+using Microsoft.Extensions.Logging;
 using TP3.Client;
 using TP3.Interfaces;
 
@@ -12,7 +14,9 @@ public static class AgentInstance
     {
         get
         {
-            return new LocalConnection(Agent);
+            return ConnectionHelper.ConnectTcp("localhost", 5000, Logger as ILogger<Connection>);
         }
     }
+
+    public static ILogger? Logger { get; set; }
 }
