@@ -45,13 +45,11 @@ public class AgentListControl : Box
 
         PopulateAgents(new[]
         {
-            new Agent("Scheduler", "Schedules tasks based on rules"),
-            new Agent("Assistant", "Assists users with common workflows"),
-            new Agent("Monitor", "Watches system status and alerts"),
+            new AgentItem(AgentInstance.Agent),
         });
     }
 
-    public void PopulateAgents(IEnumerable<Agent> agents)
+    public void PopulateAgents(IEnumerable<AgentItem> agents)
     {
         listStore.Clear();
 
@@ -62,4 +60,14 @@ public class AgentListControl : Box
     }
 }
 
-public sealed record Agent(string Name, string Description);
+public sealed class AgentItem
+{
+    public string Name { get; }
+    public string Description { get; }
+
+    public AgentItem(TP3.Agent.Logic.Agent agent)
+    {
+        Name = agent.T?.GetType().Name;
+        Description = agent.T?.GetType().FullName;
+    }
+}

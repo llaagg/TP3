@@ -16,4 +16,12 @@ public class Agent
     {
         get; private set;
     }
+
+    public static Agent Main(string[] args)
+    {
+        Console.WriteLine("Starting agent logic...");
+
+        var agent = new Agent();
+        return agent;
+    } 
 }
