@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
-using TP3.Agent.Logic.Host;
+using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
 
 namespace TP3.Agent.Logic;
@@ -12,10 +12,11 @@ namespace TP3.Agent.Logic;
 /// </summary>
 public class Agent : IAgent, IDisposable
 {
-    private readonly TCPTransport tcpTransport;
+    private readonly ILogger? logger;
 
-    public Agent()
+    public Agent(ILogger? logger = null)
     {
+        this.logger = logger;
         this.T = new Trunk();
         this.MetaData = new MetaData()
         {
@@ -24,7 +25,7 @@ public class Agent : IAgent, IDisposable
             new MetaDataItem { Name = "OS", Value = System.Runtime.InteropServices.RuntimeInformation.OSDescription },
         };
 
-        tcpTransport = new TCPTransport(5000, BuildResponse);
+        logger?.LogInformation("Initializing agent logic.");
     }
     
     public Trunk T
@@ -32,22 +33,19 @@ public class Agent : IAgent, IDisposable
         get; private set;
     }
 
-    public static Agent Main(string[] args)
-    {
-        Console.WriteLine("Starting agent logic...");
-
-        var agent = new Agent();
-        return agent;
-    } 
-
     public MetaData MetaData
     {
         get; private set;
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
-        tcpTransport.Dispose();
+        // Agent logic has no transport of its own.
+    }
+
+    public string HandleRequest(string request)
+    {
+        return BuildResponse(request);
     }
 
     private string BuildResponse(string request)

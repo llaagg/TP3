@@ -39,12 +39,14 @@ public class AgentListControl : Box
 
         PackStart(scrolledWindow, true, true, 0);
 
+        var connection = AgentInstance.Connection;
         PopulateAgents(new[]
         {
-            new ConnectionItem("Computer", "Desktop connection", "computer", "💻"),
-            new ConnectionItem("Mobile", "Phone connection", "smartphone", "📱"),
-            new ConnectionItem("Router", "Linux router", "network-wired", "📡"),
-            new ConnectionItem("OneDrive", "Cloud storage", "folder-cloud", "☁️")
+            new ConnectionItem("Agent connection", connection.GetType().Name, "network-server", "🖥️")
+            // new ConnectionItem("Computer", "Desktop connection", "computer", "💻"),
+            // new ConnectionItem("Mobile", "Phone connection", "smartphone", "📱"),
+            // new ConnectionItem("Router", "Linux router", "network-wired", "📡"),
+            // new ConnectionItem("OneDrive", "Cloud storage", "folder-cloud", "☁️")
         });
     }
 

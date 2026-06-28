@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace TP3.Agent.Logic.Host;
 
@@ -15,10 +16,12 @@ public sealed class TCPTransport : IDisposable
     private readonly List<Subscriber> subscribers = new();
     private readonly object subscribersLock = new();
     private bool disposed;
+    private readonly ILogger? logger;
 
-    public TCPTransport(int port, Func<string, string> responseFactory)
+    public TCPTransport(int port, Func<string, string> responseFactory, ILogger? logger = null)
     {
         this.responseFactory = responseFactory ?? throw new ArgumentNullException(nameof(responseFactory));
+        this.logger = logger;
         listener = new TcpListener(IPAddress.Any, port);
         Start(port);
     }
@@ -41,11 +44,13 @@ public sealed class TCPTransport : IDisposable
         try
         {
             listener.Start();
+            logger?.LogInformation("Agent TCP listener started on port {Port}", port);
             Console.WriteLine($"Agent TCP listener started on port {port}");
             _ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
         }
         catch (Exception ex)
         {
+            logger?.LogError(ex, "Failed to start TCP listener.");
             Console.WriteLine($"Failed to start TCP listener: {ex.Message}");
         }
     }
@@ -63,9 +68,11 @@ public sealed class TCPTransport : IDisposable
         catch (OperationCanceledException)
         {
             // Shutdown requested.
+            logger?.LogInformation("TCP accept loop canceled.");
         }
         catch (Exception ex)
         {
+            logger?.LogError(ex, "TCP accept loop error.");
             Console.WriteLine($"TCP accept loop error: {ex.Message}");
         }
     }
@@ -77,6 +84,7 @@ public sealed class TCPTransport : IDisposable
 
         try
         {
+            this.logger?.LogInformation("Client connected: {ClientEndpoint}", client.Client.RemoteEndPoint);
             while (!cancellationToken.IsCancellationRequested && client.Connected)
             {
                 var bytesRead = await networkStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false);
@@ -105,9 +113,11 @@ public sealed class TCPTransport : IDisposable
         catch (OperationCanceledException)
         {
             // Shutdown requested.
+            logger?.LogInformation("TCP client handler canceled.");
         }
         catch (Exception ex)
         {
+            logger?.LogError(ex, "TCP client handler error.");
             Console.WriteLine($"TCP client handler error: {ex.Message}");
         }
         finally
@@ -140,8 +150,9 @@ public sealed class TCPTransport : IDisposable
                     subscriber.WriteLock.Release();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                logger?.LogWarning(ex, "Failed to write event to subscriber, removing subscriber.");
                 RemoveSubscriber(subscriber);
             }
         }
@@ -179,6 +190,7 @@ public sealed class TCPTransport : IDisposable
         }
         catch (Exception ex)
         {
+            logger?.LogError(ex, "Subscriber monitor error.");
             Console.WriteLine($"Subscriber monitor error: {ex.Message}");
         }
         finally
