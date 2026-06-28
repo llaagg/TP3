@@ -5,10 +5,10 @@
       "name": "Launch TP3.Agent",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build TP3.Agent",
-      "program": "${workspaceFolder}/src/TP3.Agent/bin/Debug/net10.0/TP3.Agent.dll",
+      "preLaunchTask": "build TP3.GUI.GTK",
+      "program": "${workspaceFolder}/src/TP3.GUI.GTK/bin/Debug/net10.0/TP3.GUI.GTK.dll",
       "args": [],
-      "cwd": "${workspaceFolder}/src/TP3.Agent",
+      "cwd": "${workspaceFolder}/src/TP3.GUI.GTK",
       "console": "internalConsole",
       "stopAtEntry": false
     }

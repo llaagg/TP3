@@ -1,2 +1,5 @@
 <Solution>
+  <Project Path="TP3.Agent.Logic/TP3.Agent.Logic.csproj" />
+  <Project Path="TP3.Agent/TP3.Agent.csproj" />
+  <Project Path="TP3.Client/TP3.Client.csproj" />
 </Solution>

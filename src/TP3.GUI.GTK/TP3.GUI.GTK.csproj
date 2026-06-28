@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TP3.Client\TP3.Client.csproj" />
+    <PackageReference Include="GtkSharp" Version="3.24.24.95" />
   </ItemGroup>
 
 </Project>
