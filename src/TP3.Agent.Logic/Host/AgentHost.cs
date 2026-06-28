@@ -1,57 +1,43 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using AgentType = TP3.Agent.Logic.Agent.Node;
 using TP3.Interfaces;
 
 namespace TP3.Agent.Logic.Host;
 
 public class AgentHost : IDisposable
 {
-    private readonly Agent agent;
+    private readonly AgentType agent;
     private readonly TCPTransport tcpTransport;
     private readonly ILogger? logger;
-    private readonly List<IConnection> peerConnections = new();
+    private readonly PeerConnectionManager peerConnectionManager;
+    private readonly Router router;
     private readonly List<NamespaceCollection> namespaces = new();
 
-    public AgentHost(Agent agent, int port = 5000, ILogger? logger = null)
+    public AgentHost(AgentType agent, int port = 5000, ILogger? logger = null)
     {
         this.agent = agent ?? throw new ArgumentNullException(nameof(agent));
         this.logger = logger;
+        peerConnectionManager = new PeerConnectionManager(logger);
+        router = new Router(this, logger);
 
         logger?.LogInformation("Starting agent host on port {Port}.", port);
-        tcpTransport = new TCPTransport(port, HandleRequest, logger);
+        tcpTransport = new TCPTransport(port, router.Route, logger);
     }
 
-    public string HandleRequest(string request)
-    {
-        return BuildResponse(request);
-    }
+    public AgentType Me => agent;
 
-    private string BuildResponse(string request)
-    {
-        return request.ToUpperInvariant() switch
-        {
-            "GET META" => string.Join("; ", Me.MetaData.Select(item => $"{item.Name}={item.Value}")),
-            "GET TRUNK" => Me.T?.ToString() ?? "No trunk available",
-            _ => $"ECHO: {request}",
-        };
-    }
-    public Agent Me => agent;
-
-    public IReadOnlyCollection<IConnection> PeerConnections => peerConnections.AsReadOnly();
+    public IReadOnlyCollection<IConnection> PeerConnections => peerConnectionManager.Connections;
     public IReadOnlyCollection<NamespaceCollection> Namespaces => namespaces.AsReadOnly();
 
     public void AddPeerConnection(IConnection connection)
     {
-        if (connection is null) throw new ArgumentNullException(nameof(connection));
-        peerConnections.Add(connection);
-        logger?.LogInformation("Added peer connection: {Connection}", connection.GetType().Name);
+        peerConnectionManager.AddConnection(connection);
     }
 
-    public void RemovePeerConnection(IConnection connection)
+    public bool RemovePeerConnection(IConnection connection)
     {
-        if (connection is null) throw new ArgumentNullException(nameof(connection));
-        peerConnections.Remove(connection);
-        logger?.LogInformation("Removed peer connection: {Connection}", connection.GetType().Name);
+        return peerConnectionManager.RemoveConnection(connection);
     }
 
     public NamespaceCollection CreateNamespace(string name)
@@ -95,7 +81,7 @@ public class AgentHost : IDisposable
     public static AgentHost Main(string[] args, int port = 5000, ILogger? logger = null)
     {
         logger?.LogInformation("Starting agent host...");
-        var agent = new Agent(logger);
+        var agent = new AgentType(logger);
         var agentHost = new AgentHost(agent, port, logger);
         return agentHost;
     }

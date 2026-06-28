@@ -14,7 +14,7 @@ AgentInstance.Logger = loggerFactory.CreateLogger("TP3.GUI.GTK");
 AgentInstance.Logger.LogInformation("Starting TP3 GTK application.");
 
 // start agent
-AgentInstance.Agent = TP3.Agent.Logic.Agent.Main(args);
+AgentInstance.Agent = TP3.Agent.Logic.Agent.Main(args, logger: AgentInstance.Logger as ILogger<TP3.Agent.Logic.Agent>);
 AgentInstance.Connection.Connect();
 AgentInstance.Logger.LogInformation("Agent and connection initialized.");
 

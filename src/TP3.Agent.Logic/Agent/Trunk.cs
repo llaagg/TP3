@@ -1,4 +1,4 @@
-namespace TP3.Agent.Logic;
+namespace TP3.Agent.Logic.Agent;
 
 /// <summary>
 /// this is the place where all streams will be availble
