@@ -1,14 +1,11 @@
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace TP3.Agent.Logic.Host;
 
-public sealed class TCPTransport : IDisposable
+public sealed partial class TCPTransport : IDisposable
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;
@@ -220,19 +217,6 @@ public sealed class TCPTransport : IDisposable
         }
         catch
         {
-        }
-    }
-
-    private sealed class Subscriber
-    {
-        public TcpClient Client { get; }
-        public NetworkStream Stream { get; }
-        public SemaphoreSlim WriteLock { get; } = new(1, 1);
-
-        public Subscriber(TcpClient client, NetworkStream stream)
-        {
-            Client = client;
-            Stream = stream;
         }
     }
 }

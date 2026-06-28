@@ -18,9 +18,23 @@ public class AgentHost : IDisposable
         this.logger = logger;
 
         logger?.LogInformation("Starting agent host on port {Port}.", port);
-        tcpTransport = new TCPTransport(port, agent.HandleRequest, logger);
+        tcpTransport = new TCPTransport(port, HandleRequest, logger);
     }
 
+    public string HandleRequest(string request)
+    {
+        return BuildResponse(request);
+    }
+
+    private string BuildResponse(string request)
+    {
+        return request.ToUpperInvariant() switch
+        {
+            "GET META" => string.Join("; ", Me.MetaData.Select(item => $"{item.Name}={item.Value}")),
+            "GET TRUNK" => Me.T?.ToString() ?? "No trunk available",
+            _ => $"ECHO: {request}",
+        };
+    }
     public Agent Me => agent;
 
     public IReadOnlyCollection<IConnection> PeerConnections => peerConnections.AsReadOnly();

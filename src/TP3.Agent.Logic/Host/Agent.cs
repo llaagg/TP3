@@ -43,18 +43,4 @@ public class Agent : IAgent, IDisposable
         // Agent logic has no transport of its own.
     }
 
-    public string HandleRequest(string request)
-    {
-        return BuildResponse(request);
-    }
-
-    private string BuildResponse(string request)
-    {
-        return request.ToUpperInvariant() switch
-        {
-            "GET META" => string.Join("; ", MetaData.Select(item => $"{item.Name}={item.Value}")),
-            "GET TRUNK" => T?.ToString() ?? "No trunk available",
-            _ => $"ECHO: {request}",
-        };
-    }
 }
