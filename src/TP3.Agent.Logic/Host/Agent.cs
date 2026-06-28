@@ -12,8 +12,14 @@ public class Agent : IAgent
     public Agent()
     {
         this.T = new Trunk();
+        this.MetaData = new MetaData()
+        {
+            new MetaDataItem { Name = "Symbol", Value = "💻" },
+            new MetaDataItem { Name = "HostName", Value = System.Net.Dns.GetHostName() },
+            new MetaDataItem { Name = "OS", Value = System.Runtime.InteropServices.RuntimeInformation.OSDescription },
+        };
     }
-
+    
     public Trunk T
     {
         get; private set;
@@ -26,4 +32,9 @@ public class Agent : IAgent
         var agent = new Agent();
         return agent;
     } 
+
+    public MetaData MetaData
+    {
+        get; private set;
+    }
 }
