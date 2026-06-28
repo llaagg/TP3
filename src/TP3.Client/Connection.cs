@@ -1,6 +1,8 @@
-﻿namespace TP3.Client;
+﻿using TP3.Interfaces;
 
-public class Connection
+namespace TP3.Client;
+
+public class Connection : IConnection
 {
     private readonly string connectionString;
 
