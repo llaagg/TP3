@@ -37,6 +37,7 @@ jobs:
       - name: Install MAUI workloads for project
         run: |
           set -e
+          cd src
           dotnet --info
           dotnet workload restore
           for i in 1 2 3; do
@@ -47,7 +48,9 @@ jobs:
           done || true
 
       - name: Restore
-        run: dotnet restore src/TP3.slnx
+        run: |
+          cd src
+          dotnet restore TP3.slnx
 
       - name: Build Android
         run: dotnet build src/TP3.slnx -f net10.0-android -c Release --no-restore
@@ -74,6 +77,7 @@ jobs:
       - name: Install MAUI workloads for project
         run: |
           set -e
+          cd src
           dotnet --info
           dotnet workload restore
           for i in 1 2 3; do
@@ -84,7 +88,9 @@ jobs:
           done || true
 
       - name: Restore
-        run: dotnet restore src/TP3.slnx
+        run: |
+          cd src
+          dotnet restore TP3.slnx
 
       - name: Build iOS
         run: dotnet build src/TP3.slnx -f net10.0-ios -c Release --no-restore
@@ -111,6 +117,7 @@ jobs:
       - name: Install MAUI workloads for project
         run: |
           set -e
+          cd src
           dotnet --info
           dotnet workload restore
           for i in 1 2 3; do
@@ -121,7 +128,9 @@ jobs:
           done || true
 
       - name: Restore
-        run: dotnet restore src/TP3.slnx
+        run: |
+          cd src
+          dotnet restore TP3.slnx
 
       - name: Build Mac Catalyst
         run: dotnet build src/TP3.slnx -f net10.0-maccatalyst -c Release --no-restore
