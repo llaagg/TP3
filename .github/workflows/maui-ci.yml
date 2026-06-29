@@ -1,0 +1,67 @@
+name: MAUI CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Android SDK (packages)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk-headless unzip
+          yes | sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
+
+      - name: Restore
+        run: dotnet restore src/TP3.slnx
+
+      - name: Build Android
+        run: dotnet build src/TP3.slnx -f net10.0-android -c Release --no-restore
+
+  build-ios:
+    name: Build iOS (macos-latest)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/TP3.slnx
+
+      - name: Build iOS
+        run: dotnet build src/TP3.slnx -f net10.0-ios -c Release --no-restore
+
+  build-maccatalyst:
+    name: Build Mac Catalyst
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/TP3.slnx
+
+      - name: Build Mac Catalyst
+        run: dotnet build src/TP3.slnx -f net10.0-maccatalyst -c Release --no-restore

@@ -3,5 +3,7 @@
   <Project Path="TP3.Agent.Service/TP3.Agent.Service.csproj" />
   <Project Path="TP3.Client/TP3.Client.csproj" />
   <Project Path="TP3.GUI.GTK/TP3.GUI.GTK.csproj" />
+  <Project Path="TP3.Maui.Client/TP3.Maui.Client.csproj" />
+  <Project Path="TP3.Client/TP3.Client.csproj" />
   <Project Path="TP3.Interfaces/TP3.Interfaces.csproj" />
 </Solution>
