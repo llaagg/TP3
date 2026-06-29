@@ -28,8 +28,10 @@ jobs:
 
       - name: Install MAUI workloads for project
         run: |
-          dotnet workload restore src/TP3.Maui.Client/TP3.Maui.Client.csproj
-          dotnet workload install maui-android --project src/TP3.Maui.Client/TP3.Maui.Client.csproj
+          set -e
+          dotnet --info
+          dotnet workload restore
+          dotnet workload install maui-android || true
 
       - name: Restore
         run: dotnet restore src/TP3.slnx
