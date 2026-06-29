@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using AgentType = TP3.Agent.Logic.Agent.Node;
@@ -9,12 +10,13 @@ public class AgentHost : IDisposable
 {
     private readonly AgentType agent;
     private readonly TCPTransport tcpTransport;
-    private readonly ILogger? logger;
+    private readonly IpcTransport ipcTransport;
     private readonly PeerConnectionManager peerConnectionManager;
+    private readonly ILogger? logger;
     private readonly Router router;
     private readonly List<NamespaceCollection> namespaces = new();
 
-    public AgentHost(AgentType agent, int port = 5000, ILogger? logger = null)
+    public AgentHost(AgentType agent, int port = 5000, int ipcPort = 5001, ILogger? logger = null)
     {
         this.agent = agent ?? throw new ArgumentNullException(nameof(agent));
         this.logger = logger;
@@ -23,6 +25,9 @@ public class AgentHost : IDisposable
 
         logger?.LogInformation("Starting agent host on port {Port}.", port);
         tcpTransport = new TCPTransport(port, router.Route, logger);
+
+        logger?.LogInformation("Starting IPC host on port {Port}.", ipcPort);
+        ipcTransport = new IpcTransport(ipcPort, HandleIpcRequest, logger);
     }
 
     public AgentType Me => agent;
@@ -30,15 +35,6 @@ public class AgentHost : IDisposable
     public IReadOnlyCollection<IConnection> PeerConnections => peerConnectionManager.Connections;
     public IReadOnlyCollection<NamespaceCollection> Namespaces => namespaces.AsReadOnly();
 
-    public void AddPeerConnection(IConnection connection)
-    {
-        peerConnectionManager.AddConnection(connection);
-    }
-
-    public bool RemovePeerConnection(IConnection connection)
-    {
-        return peerConnectionManager.RemoveConnection(connection);
-    }
 
     public NamespaceCollection CreateNamespace(string name)
     {
@@ -74,15 +70,73 @@ public class AgentHost : IDisposable
     public void Dispose()
     {
         logger?.LogInformation("Disposing agent host.");
+        ipcTransport.Dispose();
         tcpTransport.Dispose();
         agent.Dispose();
     }
 
-    public static AgentHost Main(string[] args, int port = 5000, ILogger? logger = null)
+    public static AgentHost Main(string[] args, int port = 5000, int ipcPort = 5001, ILogger? logger = null)
     {
         logger?.LogInformation("Starting agent host...");
+        var finalPort = ParsePort(args, port, logger);
         var agent = new AgentType(logger);
-        var agentHost = new AgentHost(agent, port, logger);
+        var agentHost = new AgentHost(agent, finalPort, ipcPort, logger);
         return agentHost;
+    }
+
+    private string HandleIpcRequest(string request)
+    {
+        logger?.LogInformation("Received IPC request: {Request}", request);
+        if (request.StartsWith("ECHO ", StringComparison.OrdinalIgnoreCase))
+        {
+            var message = request.Substring(5);
+            return message;
+        }
+
+        return $"Unknown IPC command: {request}";
+    }
+
+    private static int ParsePort(string[] args, int defaultPort, ILogger? logger)
+    {
+        if (args is null || args.Length == 0)
+        {
+            return defaultPort;
+        }
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            var arg = args[i];
+            if (arg == "--port" || arg == "-p")
+            {
+                if (i + 1 >= args.Length)
+                {
+                    logger?.LogWarning("Missing value for {Argument}. Using default port {Port}.", arg, defaultPort);
+                    break;
+                }
+
+                if (int.TryParse(args[i + 1], out var parsedPort))
+                {
+                    return parsedPort;
+                }
+
+                logger?.LogWarning("Invalid port value '{PortValue}' for {Argument}. Using default port {Port}.", args[i + 1], arg, defaultPort);
+                break;
+            }
+
+            const string portPrefix = "--port=";
+            if (arg.StartsWith(portPrefix, StringComparison.Ordinal))
+            {
+                var value = arg[portPrefix.Length..];
+                if (int.TryParse(value, out var parsedPort))
+                {
+                    return parsedPort;
+                }
+
+                logger?.LogWarning("Invalid port value '{PortValue}' for {Argument}. Using default port {Port}.", value, "--port", defaultPort);
+                break;
+            }
+        }
+
+        return defaultPort;
     }
 }
