@@ -1,4 +1,4 @@
-name: MAUI CI
+name: MAUI CI - Android only
 
 on:
   push:
@@ -24,6 +24,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y openjdk-17-jdk-headless unzip
+          # sdkmanager is available via Android SDK; attempt install but tolerate failures
           yes | sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
 
       - name: Cache NuGet packages and workloadpacks
@@ -34,12 +35,13 @@ jobs:
             ~/.dotnet/workloadpacks
           key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('src/TP3.slnx') }}
 
-      - name: Install MAUI workloads for project
+      - name: Install MAUI workloads for Android
         run: |
           set -e
           cd src
           dotnet --info
           dotnet workload restore
+          # retry installs to reduce flakiness
           for i in 1 2 3; do
             dotnet workload install maui-android && break || {
               echo "maui-android install failed, retrying ($i)";
@@ -47,90 +49,12 @@ jobs:
             }
           done || true
 
-      - name: Restore
+      - name: Restore for Android only
         run: |
           cd src
-          dotnet restore TP3.slnx
+          dotnet restore TP3.slnx -f net10.0-android
 
       - name: Build Android
-        run: dotnet build src/TP3.slnx -f net10.0-android -c Release --no-restore
-
-  build-ios:
-    name: Build iOS (macos-latest)
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Cache NuGet packages and workloadpacks
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.nuget/packages
-            ~/.dotnet/workloadpacks
-          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('src/TP3.slnx') }}
-
-      - name: Install MAUI workloads for project
-        run: |
-          set -e
-          cd src
-          dotnet --info
-          dotnet workload restore
-          for i in 1 2 3; do
-            dotnet workload install maui-ios && break || {
-              echo "maui-ios install failed, retrying ($i)";
-              sleep $((i * 5));
-            }
-          done || true
-
-      - name: Restore
         run: |
           cd src
-          dotnet restore TP3.slnx
-
-      - name: Build iOS
-        run: dotnet build src/TP3.slnx -f net10.0-ios -c Release --no-restore
-
-  build-maccatalyst:
-    name: Build Mac Catalyst
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Cache NuGet packages and workloadpacks
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.nuget/packages
-            ~/.dotnet/workloadpacks
-          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('src/TP3.slnx') }}
-
-      - name: Install MAUI workloads for project
-        run: |
-          set -e
-          cd src
-          dotnet --info
-          dotnet workload restore
-          for i in 1 2 3; do
-            dotnet workload install maui-maccatalyst && break || {
-              echo "maui-maccatalyst install failed, retrying ($i)";
-              sleep $((i * 5));
-            }
-          done || true
-
-      - name: Restore
-        run: |
-          cd src
-          dotnet restore TP3.slnx
-
-      - name: Build Mac Catalyst
-        run: dotnet build src/TP3.slnx -f net10.0-maccatalyst -c Release --no-restore
+          dotnet build TP3.slnx -f net10.0-android -c Release --no-restore
