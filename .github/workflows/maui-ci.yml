@@ -48,6 +48,10 @@ jobs:
               sleep $((i * 5));
             }
           done || true
+      - name: Post-install: list installed workload packs
+        run: |
+          cd src
+          dotnet workload list || true
 
       - name: Restore for Android only
         run: |
