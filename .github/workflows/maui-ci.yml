@@ -52,7 +52,7 @@ jobs:
       - name: Restore for Android only
         run: |
           cd src
-          dotnet restore TP3.Maui.Client/TP3.Maui.Client.csproj
+          dotnet restore TP3.Maui.Client/TP3.Maui.Client.csproj -p:TargetFramework=net10.0-android
 
       - name: Build Android
         run: |
