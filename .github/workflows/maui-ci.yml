@@ -26,12 +26,25 @@ jobs:
           sudo apt-get install -y openjdk-17-jdk-headless unzip
           yes | sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
 
+      - name: Cache NuGet packages and workloadpacks
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.dotnet/workloadpacks
+          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('src/TP3.slnx') }}
+
       - name: Install MAUI workloads for project
         run: |
           set -e
           dotnet --info
           dotnet workload restore
-          dotnet workload install maui-android || true
+          for i in 1 2 3; do
+            dotnet workload install maui-android && break || {
+              echo "maui-android install failed, retrying ($i)";
+              sleep $((i * 5));
+            }
+          done || true
 
       - name: Restore
         run: dotnet restore src/TP3.slnx
@@ -50,10 +63,25 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Cache NuGet packages and workloadpacks
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.dotnet/workloadpacks
+          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('src/TP3.slnx') }}
+
       - name: Install MAUI workloads for project
         run: |
-          dotnet workload restore src/TP3.Maui.Client/TP3.Maui.Client.csproj
-          dotnet workload install maui-ios --project src/TP3.Maui.Client/TP3.Maui.Client.csproj
+          set -e
+          dotnet --info
+          dotnet workload restore
+          for i in 1 2 3; do
+            dotnet workload install maui-ios && break || {
+              echo "maui-ios install failed, retrying ($i)";
+              sleep $((i * 5));
+            }
+          done || true
 
       - name: Restore
         run: dotnet restore src/TP3.slnx
@@ -72,10 +100,25 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Cache NuGet packages and workloadpacks
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            ~/.dotnet/workloadpacks
+          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('src/TP3.slnx') }}
+
       - name: Install MAUI workloads for project
         run: |
-          dotnet workload restore src/TP3.Maui.Client/TP3.Maui.Client.csproj
-          dotnet workload install maui-maccatalyst --project src/TP3.Maui.Client/TP3.Maui.Client.csproj
+          set -e
+          dotnet --info
+          dotnet workload restore
+          for i in 1 2 3; do
+            dotnet workload install maui-maccatalyst && break || {
+              echo "maui-maccatalyst install failed, retrying ($i)";
+              sleep $((i * 5));
+            }
+          done || true
 
       - name: Restore
         run: dotnet restore src/TP3.slnx
