@@ -3,8 +3,6 @@ namespace TP3.Interfaces;
 public interface IAgent
 {    
     INode T { get; }
-
-    MetaData MetaData { get; }
-
+    Task AddService(IService service);
     string HandleRequest(string request);
 }

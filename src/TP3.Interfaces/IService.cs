@@ -2,10 +2,9 @@ using TP3.Interfaces;
 
 public interface IService
 {
-    object State { get; }
-    object Control { get; }
-    object Events { get; }
-    MetaData MetaData { get; }
+    public INode State { get; }
+    public INode Control { get; }
+    public INode Events { get; }
 
     Task Init(IAgent me);
 }

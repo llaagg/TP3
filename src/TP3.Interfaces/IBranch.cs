@@ -1,6 +1,6 @@
 public interface INode
 {
-    string Id { get; }
-    string Value { get; }
-    public IEnumerable<INode> Leafs { get; }
+    string Name { get; }
+    public IEnumerable<INode>? Children { get; }
+    public Stream? Data { get; }
 }

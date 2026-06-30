@@ -39,7 +39,7 @@ public class AgentHost : IDisposable
             logger?.LogInformation("Initializing service: {ServiceName}", service.GetType().Name);
             try
             {
-                await service.Init(Me);
+                await Me.AddService(service);
             }
             catch (Exception ex)
             {

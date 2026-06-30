@@ -17,28 +17,32 @@ public class Agent : IAgent
     public Agent(ILogger? logger = null)
     {
         this.logger = logger;
-        this.T = new Trunk();
-        this.MetaData = new MetaData()
-        {
-            new MetaDataItem { Name = "Symbol", Value = "💻" },
-            new MetaDataItem { Name = "HostName", Value = System.Net.Dns.GetHostName() },
-            new MetaDataItem { Name = "OS", Value = System.Runtime.InteropServices.RuntimeInformation.OSDescription },
-        };
 
         logger?.LogInformation("Initializing agent logic.");
     }
-    
+
     public INode T
     {
-        get; private set;
+        get
+        {
+            return new Trunk(this.Services);
+        }
     }
 
-    public MetaData MetaData
+    public List<IService> Services { get; private set; } = new List<IService>();
+
+    public async Task AddService(IService service)
     {
-        get; private set;
+        try
+        {
+            await service.Init(this);
+            this.Services.Add(service);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to initialize service: {service.GetType().Name}", ex);
+        }
     }
-
-    INode IAgent.T => throw new NotImplementedException();
 
     public virtual void Dispose()
     {
@@ -49,7 +53,7 @@ public class Agent : IAgent
     {
         return request.ToUpperInvariant() switch
         {
-            "GET META" => string.Join("; ", MetaData.Select(item => $"{item.Name}={item.Value}")),
+            "GET META" => "No metadata available",
             "GET TRUNK" => T?.ToString() ?? "No trunk available",
             _ => $"ECHO: {request}",
         };

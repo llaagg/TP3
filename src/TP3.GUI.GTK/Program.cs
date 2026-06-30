@@ -1,6 +1,5 @@
 ﻿using Gtk;
 using Microsoft.Extensions.Logging;
-using AgentType = TP3.Agent.Logic.Agent.Node;
 using TP3.Agent.Logic.Host;
 using TP3.GUI.GTK;
 
@@ -12,7 +11,10 @@ var loggerFactory = LoggerFactory.Create(builder =>
 });
 
 var logger = loggerFactory.CreateLogger("TP3.GUI.GTK");
-var host = AgentHost.Main();
+var host = new AgentHost(5000, 5001, logger, new IService[]
+{
+    
+});
 
 AgentInstance.Initialize(host, logger);
 

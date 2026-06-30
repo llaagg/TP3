@@ -41,7 +41,6 @@ public sealed class Router
     {
         return payload.ToUpperInvariant() switch
         {
-            "META" => string.Join("; ", host.Me.MetaData.Select(item => $"{item.Name}={item.Value}")),
             "TRUNK" => host.Me.T?.ToString() ?? "No trunk available",
             _ => $"UNKNOWN GET TARGET: {payload}"
         };

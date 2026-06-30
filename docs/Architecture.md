@@ -35,3 +35,15 @@ Resources has:
             │              │              │              │
       Filesystem View    .NET SDK      REST API           CLI
 ```
+
+# Arcitecture
+# Agent has
+
+INode State
+
+public interface INode
+{
+    string Name { get; }
+    public IEnumerable<INode> Children { get; }
+    public Stream Data { get; }
+}

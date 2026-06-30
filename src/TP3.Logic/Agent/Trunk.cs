@@ -13,38 +13,25 @@ namespace TP3.Agent.Logic.Agent;
 /// </summary>
 public class Trunk : INode
 {
-    Dictionary<string, Func<TP3Stram>> streams = new Dictionary<string, Func<TP3Stram>>()
+    private IList<IService> service;
+
+    public Trunk(IList<IService> service)
     {
-        { "Storage", Storage },
-    };
-
-    public string Id => throw new NotImplementedException();
-
-    public string Value => throw new NotImplementedException();
-
-    public IEnumerable<INode> Leafs => throw new NotImplementedException();
-
-    private static TP3Stram Storage()
-    {
-        return new TP3Stram();
+        this.service = service;
     }
 
-    public List<string> Streams()
-    {
-        return new List<string>
-        {
-            "Storage",
-            "Bus",
-            "Streams"
-        };
-    }
+    public string Name => "/";
 
-    public TP3Stram Get(string name)
+    public IEnumerable<INode>? Children
     {
-        if (streams.TryGetValue(name, out var streamFunc))
+        get
         {
-            return streamFunc();
+            foreach (var s in service)
+            {
+                yield return new ServiceNode(s);
+            }
         }
-        throw new KeyNotFoundException($"Stream '{name}' not found.");
     }
+
+    public Stream? Data => null;
 }
