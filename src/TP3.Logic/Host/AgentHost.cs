@@ -2,6 +2,7 @@ using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Agent;
 using TP3.Agent.Logic.Protocol;
+using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 
 namespace TP3.Agent.Logic.Host;

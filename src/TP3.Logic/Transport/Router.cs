@@ -8,12 +8,12 @@ namespace TP3.Agent.Logic.Transport;
 public sealed class Router
 {
     private readonly AgentHost host;
-    private readonly ILogger logger;
+    private readonly ILogger? logger;
 
-    public Router(AgentHost host, ILogger logger)
+    public Router(AgentHost host, ILogger? logger)
     {
         this.host = host ?? throw new ArgumentNullException(nameof(host));
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger;
     }
 
     public string Route(string message)
@@ -24,7 +24,7 @@ public sealed class Router
         }
 
         var request = message.Trim();
-        logger.LogDebug("Routing message: {Message}", request);
+        logger?.LogDebug("Routing message: {Message}", request);
 
         var tp3Message = TP3Protocol.Parse(request);
         return Route(tp3Message);
@@ -34,11 +34,11 @@ public sealed class Router
     {
         if (message.IsEmpty)
         {
-            logger.LogWarning("Received empty TP3 message.");
+            logger?.LogWarning("Received empty TP3 message.");
             return string.Empty;
         }
 
-        logger.LogDebug("Routing TP3 message: {Command} {Target}", message.Command, message.Target);
+        logger?.LogDebug("Routing TP3 message: {Command} {Target}", message.Command, message.Target);
 
         return RouteAgentRequest(message);
     }
