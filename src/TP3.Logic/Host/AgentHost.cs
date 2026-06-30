@@ -5,6 +5,14 @@ using TP3.Interfaces;
 
 namespace TP3.Agent.Logic.Host;
 
+/// <summary>
+/// I know all.
+/// I know tcp.
+/// I know ipc.
+/// I allow to talk to me from my thread.
+/// I route messages to router.
+/// I filter messages with namespaces.
+/// </summary>
 public class AgentHost : IDisposable
 {
     private readonly IAgent agent;
@@ -18,13 +26,14 @@ public class AgentHost : IDisposable
 
     public AgentHost(int port = 5000, int ipcPort = 5001, ILogger? logger = null, IService[]? services = null)
     {
-        agent = new Agent.Agent(logger);
         this.logger = logger;
-        peerConnectionManager = new PeerConnectionManager(logger);
+
+        agent = new Agent.Agent(logger);
         router = new Router(this, logger);
 
+        peerConnectionManager = new PeerConnectionManager(logger);
         tcpTransport = new TCPTransport(port, router.Route, logger);
-        ipcTransport = new IpcTransport(ipcPort, HandleIpcRequest, logger);
+        ipcTransport = new IpcTransport(ipcPort, Handle, logger);
 
         this.services = services ?? Array.Empty<IService>();
     }
@@ -32,7 +41,6 @@ public class AgentHost : IDisposable
     public async Task Start()
     {
         logger?.LogInformation("Starting agent host.");
-
 
         foreach (var service in services)
         {
@@ -53,34 +61,6 @@ public class AgentHost : IDisposable
 
     public IAgent Me => agent;
 
-    public IReadOnlyCollection<IConnection> PeerConnections => peerConnectionManager.Connections;
-    public IReadOnlyCollection<NamespaceCollection> Namespaces => namespaces.AsReadOnly();
-
-    public NamespaceCollection CreateNamespace(string name)
-    {
-        var ns = new NamespaceCollection(name);
-        namespaces.Add(ns);
-        logger?.LogInformation("Created namespace: {Namespace}", name);
-        return ns;
-    }
-
-    public bool RemoveNamespace(NamespaceCollection ns)
-    {
-        if (ns is null) throw new ArgumentNullException(nameof(ns));
-        var removed = namespaces.Remove(ns);
-        if (removed)
-        {
-            logger?.LogInformation("Removed namespace: {Namespace}", ns.Name);
-        }
-
-        return removed;
-    }
-
-    public NamespaceCollection? GetNamespace(string name)
-    {
-        return namespaces.Find(ns => ns.Name == name);
-    }
-
     public void PublishEvent(string eventText)
     {
         logger?.LogInformation("Publishing event: {EventText}", eventText);
@@ -94,7 +74,7 @@ public class AgentHost : IDisposable
         tcpTransport.Dispose();
     }
 
-    private string HandleIpcRequest(string request)
+    private string Handle(string request)
     {
         logger?.LogInformation("Received IPC request: {Request}", request);
         if (request.StartsWith("ECHO ", StringComparison.OrdinalIgnoreCase))

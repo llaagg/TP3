@@ -61,7 +61,7 @@ public static class CommandLineApplication
             logger.LogInformation("IPC connection stopped.");
         };       
         
-        IpcClient.Main().Wait(cts.Token);
+        IpcClient.ConsoleLoop().Wait(cts.Token);
     }
 
     private static async Task ExecuteEchoAsync(int ipcPort, string message, ILogger logger)

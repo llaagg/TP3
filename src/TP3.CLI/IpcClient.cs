@@ -33,7 +33,7 @@ public class IpcClient
         return response ?? string.Empty;
     }
 
-    public static async Task  Main()
+    public static async Task ConsoleLoop()
     {
         var ipcClient = new IpcClient("127.0.0.1", 5001);
 

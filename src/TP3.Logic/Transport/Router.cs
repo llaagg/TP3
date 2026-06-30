@@ -32,7 +32,6 @@ public sealed class Router
         {
             "GET" => RouteGet(payload),
             "PUBLISH" => RoutePublish(payload),
-            "NAMESPACE" => RouteNamespace(payload),
             _ => RouteAgentRequest(request)
         };
     }
@@ -58,25 +57,6 @@ public sealed class Router
         return "UNKNOWN PUBLISH COMMAND";
     }
 
-    private string RouteNamespace(string payload)
-    {
-        if (string.IsNullOrWhiteSpace(payload))
-        {
-            return "MISSING NAMESPACE COMMAND";
-        }
-
-        var parts = payload.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-        var action = parts[0].ToUpperInvariant();
-        var argument = parts.Length > 1 ? parts[1] : string.Empty;
-
-        return action switch
-        {
-            "CREATE" when !string.IsNullOrWhiteSpace(argument) => host.CreateNamespace(argument).Name,
-            "GET" when !string.IsNullOrWhiteSpace(argument) => host.GetNamespace(argument) != null ? "NAMESPACE FOUND" : "NAMESPACE NOT FOUND",
-            "LIST" => string.Join(", ", host.Namespaces.Select(ns => ns.Name)),
-            _ => "UNKNOWN NAMESPACE COMMAND"
-        };
-    }
 
     private string RouteAgentRequest(string request)
     {
