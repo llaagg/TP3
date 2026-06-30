@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
+using TP3.Service.FileSystem;
 
 namespace TP3.CLI;
 
@@ -17,7 +18,7 @@ public static class CommandLineApplication
             portOption,
             ipcPortOption
         };
-        runCommand.SetHandler((int port, int ipcPort) => ExecuteStart(port, ipcPort, logger), portOption, ipcPortOption);
+        runCommand.SetHandler(async (int port, int ipcPort) => await ExecuteStart(port, ipcPort, logger), portOption, ipcPortOption);
 
         var echoCommand = new Command("echo", "Send an ECHO message to the local IPC server")
         {
@@ -40,10 +41,12 @@ public static class CommandLineApplication
         return rootCommand.InvokeAsync(args);
     }
 
-    private static void ExecuteStart(int port, int ipcPort, ILogger logger)
+    private static async Task ExecuteStart(int port, int ipcPort, ILogger logger)
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
-        var ah = AgentHost.Main(port, ipcPort, logger);
+
+        var ah = new AgentHost(port, ipcPort, logger, new []{new FileSystemService()});
+        await ah.Start();
 
         logger.LogInformation("Agent service started. Press Ctrl+C to exit.");
 

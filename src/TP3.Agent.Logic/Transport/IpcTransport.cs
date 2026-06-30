@@ -20,7 +20,6 @@ public sealed class IpcTransport : IDisposable
         this.requestHandler = requestHandler ?? throw new ArgumentNullException(nameof(requestHandler));
         this.logger = logger;
         listener = new TcpListener(IPAddress.Loopback, port);
-        Start(port);
     }
 
     public void Dispose()
@@ -36,13 +35,13 @@ public sealed class IpcTransport : IDisposable
         cancellationTokenSource.Dispose();
     }
 
-    private void Start(int port)
+    public async Task Start()
     {
         try
         {
             listener.Start();
-            logger?.LogInformation("IPC listener started on port {Port}", port);
-            Console.WriteLine($"IPC listener started on port {port}");
+            logger?.LogInformation("IPC listener started on port {Port}", listener.LocalEndpoint);
+            Console.WriteLine($"IPC listener started on port {listener.LocalEndpoint}");
             _ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
         }
         catch (Exception ex)

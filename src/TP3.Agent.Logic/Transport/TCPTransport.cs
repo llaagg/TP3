@@ -35,13 +35,13 @@ public sealed partial class TCPTransport : IDisposable
         cancellationTokenSource.Dispose();
     }
 
-    public void Start(int port)
+    public async Task Start()
     {
         try
         {
             listener.Start();
-            logger?.LogInformation("Agent TCP listener started on port {Port}", port);
-            Console.WriteLine($"Agent TCP listener started on port {port}");
+            logger?.LogInformation("Agent TCP listener started on port {Port}", listener.LocalEndpoint);
+            Console.WriteLine($"Agent TCP listener started on port {listener.LocalEndpoint}");
             _ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
         }
         catch (Exception ex)

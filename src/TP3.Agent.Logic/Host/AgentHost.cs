@@ -10,12 +10,13 @@ public class AgentHost : IDisposable
     private readonly Node agent;
     private readonly TCPTransport tcpTransport;
     private readonly IpcTransport ipcTransport;
+    private readonly IService[] services;
     private readonly PeerConnectionManager peerConnectionManager;
     private readonly ILogger? logger;
     private readonly Router router;
     private readonly List<NamespaceCollection> namespaces = new();
 
-    public AgentHost(int port = 5000, int ipcPort = 5001, ILogger? logger = null)
+    public AgentHost(int port = 5000, int ipcPort = 5001, ILogger? logger = null, IService[]? services = null)
     {
         agent = new Node(logger);
         this.logger = logger;
@@ -24,6 +25,30 @@ public class AgentHost : IDisposable
 
         tcpTransport = new TCPTransport(port, router.Route, logger);
         ipcTransport = new IpcTransport(ipcPort, HandleIpcRequest, logger);
+
+        this.services = services ?? Array.Empty<IService>();
+    }
+
+    public async Task Start()
+    {
+        logger?.LogInformation("Starting agent host.");
+
+
+        foreach (var service in services)
+        {
+            logger?.LogInformation("Initializing service: {ServiceName}", service.GetType().Name);
+            try
+            {
+                await service.Init(Me);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Failed to initialize service: {ServiceName}", service.GetType().Name);
+            }
+        }
+
+        await tcpTransport.Start();
+        await ipcTransport.Start();
     }
 
     public Node Me => agent;
@@ -81,14 +106,6 @@ public class AgentHost : IDisposable
 
         return $"Unknown IPC command: {request}";
     }
-
-    public static AgentHost Main(int port = 5000, int ipcPort = 5001, ILogger? logger = null)
-    {
-        logger?.LogInformation("Starting agent host...");
-        var agentHost = new AgentHost(port, ipcPort, logger);
-        return agentHost;
-    }
-
 
     public void Stop()
     {

@@ -10,7 +10,7 @@ namespace TP3.Agent.Logic.Agent;
 /// Delivers trunk to the clients connected to it. (that should be other agents)
 /// Connects to other agents and requests trunk from them.  
 /// </summary>
-public class Node : IAgent, IDisposable
+public class Node : INode, IDisposable
 {
     private readonly ILogger? logger;
 
