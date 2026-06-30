@@ -1,44 +1,35 @@
-using System.Collections.Generic;
+using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
-using AgentType = TP3.Agent.Logic.Agent.Node;
+using TP3.Agent.Logic.Agent;
 using TP3.Interfaces;
 
 namespace TP3.Agent.Logic.Host;
 
 public class AgentHost : IDisposable
 {
-    private readonly AgentType agent;
+    private readonly Node agent;
     private readonly TCPTransport tcpTransport;
-    private readonly ILogger? logger;
+    private readonly IpcTransport ipcTransport;
     private readonly PeerConnectionManager peerConnectionManager;
+    private readonly ILogger? logger;
     private readonly Router router;
     private readonly List<NamespaceCollection> namespaces = new();
 
-    public AgentHost(AgentType agent, int port = 5000, ILogger? logger = null)
+    public AgentHost(int port = 5000, int ipcPort = 5001, ILogger? logger = null)
     {
-        this.agent = agent ?? throw new ArgumentNullException(nameof(agent));
+        agent = new Node(logger);
         this.logger = logger;
         peerConnectionManager = new PeerConnectionManager(logger);
         router = new Router(this, logger);
 
-        logger?.LogInformation("Starting agent host on port {Port}.", port);
         tcpTransport = new TCPTransport(port, router.Route, logger);
+        ipcTransport = new IpcTransport(ipcPort, HandleIpcRequest, logger);
     }
 
-    public AgentType Me => agent;
+    public Node Me => agent;
 
     public IReadOnlyCollection<IConnection> PeerConnections => peerConnectionManager.Connections;
     public IReadOnlyCollection<NamespaceCollection> Namespaces => namespaces.AsReadOnly();
-
-    public void AddPeerConnection(IConnection connection)
-    {
-        peerConnectionManager.AddConnection(connection);
-    }
-
-    public bool RemovePeerConnection(IConnection connection)
-    {
-        return peerConnectionManager.RemoveConnection(connection);
-    }
 
     public NamespaceCollection CreateNamespace(string name)
     {
@@ -74,15 +65,34 @@ public class AgentHost : IDisposable
     public void Dispose()
     {
         logger?.LogInformation("Disposing agent host.");
+        ipcTransport.Dispose();
         tcpTransport.Dispose();
         agent.Dispose();
     }
 
-    public static AgentHost Main(string[] args, int port = 5000, ILogger? logger = null)
+    private string HandleIpcRequest(string request)
+    {
+        logger?.LogInformation("Received IPC request: {Request}", request);
+        if (request.StartsWith("ECHO ", StringComparison.OrdinalIgnoreCase))
+        {
+            var message = request.Substring(5);
+            return message;
+        }
+
+        return $"Unknown IPC command: {request}";
+    }
+
+    public static AgentHost Main(int port = 5000, int ipcPort = 5001, ILogger? logger = null)
     {
         logger?.LogInformation("Starting agent host...");
-        var agent = new AgentType(logger);
-        var agentHost = new AgentHost(agent, port, logger);
+        var agentHost = new AgentHost(port, ipcPort, logger);
         return agentHost;
+    }
+
+
+    public void Stop()
+    {
+        tcpTransport.Stop();
+        ipcTransport.Stop();
     }
 }

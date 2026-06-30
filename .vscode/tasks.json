@@ -14,6 +14,19 @@
         "isDefault": true
       },
       "problemMatcher": "$msCompile"
+    },{
+      "label": "build TP3.CLI",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/TP3.CLI/TP3.CLI.csproj"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
     }
   ]
 }

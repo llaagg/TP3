@@ -1,7 +1,8 @@
 ﻿using Gtk;
 using Microsoft.Extensions.Logging;
-
-
+using AgentType = TP3.Agent.Logic.Agent.Node;
+using TP3.Agent.Logic.Host;
+using TP3.GUI.GTK;
 
 var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -10,13 +11,12 @@ var loggerFactory = LoggerFactory.Create(builder =>
         .SetMinimumLevel(LogLevel.Information);
 });
 
-AgentInstance.Logger = loggerFactory.CreateLogger("TP3.GUI.GTK");
-AgentInstance.Logger.LogInformation("Starting TP3 GTK application.");
+var logger = loggerFactory.CreateLogger("TP3.GUI.GTK");
+var host = AgentHost.Main(args, logger: logger);
 
-// start agent
-AgentInstance.Agent = new TP3.Agent.Logic.Agent.Node(AgentInstance.Logger as ILogger<TP3.Agent.Logic.Agent.Node>);
-AgentInstance.Connection.Connect();
-AgentInstance.Logger.LogInformation("Agent and connection initialized.");
+AgentInstance.Initialize(host, logger);
+
+logger.LogInformation("Starting TP3 GTK application.");
 
 Application.Init();
 

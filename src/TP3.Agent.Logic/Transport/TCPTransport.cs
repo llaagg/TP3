@@ -20,7 +20,6 @@ public sealed partial class TCPTransport : IDisposable
         this.responseFactory = responseFactory ?? throw new ArgumentNullException(nameof(responseFactory));
         this.logger = logger;
         listener = new TcpListener(IPAddress.Any, port);
-        Start(port);
     }
 
     public void Dispose()
@@ -36,7 +35,7 @@ public sealed partial class TCPTransport : IDisposable
         cancellationTokenSource.Dispose();
     }
 
-    private void Start(int port)
+    public void Start(int port)
     {
         try
         {
@@ -218,5 +217,12 @@ public sealed partial class TCPTransport : IDisposable
         catch
         {
         }
+    }
+
+    public void Stop()
+    {
+        cancellationTokenSource.Cancel();
+        listener.Stop();
+        logger?.LogInformation("TCP listener stopped.");
     }
 }

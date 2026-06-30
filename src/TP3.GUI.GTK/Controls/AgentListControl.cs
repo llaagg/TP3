@@ -1,6 +1,7 @@
 using Gtk;
 using Gdk;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TP3.GUI.GTK.Controls;
 
@@ -39,15 +40,15 @@ public class AgentListControl : Box
 
         PackStart(scrolledWindow, true, true, 0);
 
-        var connection = AgentInstance.Connection;
-        PopulateAgents(new[]
+        var host = AgentInstance.Host;
+        var connectionItems = host?.PeerConnections.Select((connection, index) =>
+            new ConnectionItem($"Peer #{index + 1}", connection.GetType().Name, "network-server", "🖥️"))
+            .ToList() ?? new List<ConnectionItem>
         {
-            new ConnectionItem("Agent connection", connection.GetType().Name, "network-server", "🖥️")
-            // new ConnectionItem("Computer", "Desktop connection", "computer", "💻"),
-            // new ConnectionItem("Mobile", "Phone connection", "smartphone", "📱"),
-            // new ConnectionItem("Router", "Linux router", "network-wired", "📡"),
-            // new ConnectionItem("OneDrive", "Cloud storage", "folder-cloud", "☁️")
-        });
+            new ConnectionItem("No peers", "No peer connections are currently attached.", "network-offline", "⛔")
+        };
+
+        PopulateAgents(connectionItems);
     }
 
     public void PopulateAgents(IEnumerable<ConnectionItem> agents)
