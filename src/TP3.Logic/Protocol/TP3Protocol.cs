@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Protocol;
 
@@ -18,7 +19,7 @@ public static class TP3Protocol
             return new TP3Message();
         }
 
-        var command = parts[0].ToUpperInvariant();
+        var command = Enum.TryParse<TP3Command>(parts[0], true, out var parsedCommand) ? parsedCommand : TP3Command.ECHO;
         var target = parts.Length > 1 ? parts[1] : string.Empty;
         var payload = parts.Length > 2 ? parts[2] : string.Empty;
 

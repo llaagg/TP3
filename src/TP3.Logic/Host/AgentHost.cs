@@ -4,6 +4,7 @@ using TP3.Agent.Logic.Agent;
 using TP3.Agent.Logic.Protocol;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Host;
 

@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Protocol;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
 
@@ -52,6 +53,11 @@ public sealed class Router
             ? message.Payload
             : $"{message.Target} {message.Payload}".Trim();
 
-        return host.Me.HandleRequest(request);
+        return host.Me.HandleRequest(new TP3Message
+        {
+            Command = message.Command,
+            Target = message.Target,
+            Payload = request
+        });
     }
 }

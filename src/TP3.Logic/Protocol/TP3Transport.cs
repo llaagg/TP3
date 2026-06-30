@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Protocol;
 

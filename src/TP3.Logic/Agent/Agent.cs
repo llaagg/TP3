@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Agent;
 
@@ -49,9 +50,9 @@ public class Agent : IAgent
         // Agent logic has no transport of its own.
     }
 
-    public string HandleRequest(string request)
+    public string HandleRequest(TP3Message request)
     {
-        return request.ToUpperInvariant() switch
+        return request.Command.ToString().ToUpperInvariant() switch
         {
             "GET TRUNK" => T?.ToString() ?? "No trunk available",
             _ => $"ECHO: {request}",
