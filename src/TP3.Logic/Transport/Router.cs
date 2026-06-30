@@ -24,15 +24,24 @@ public sealed class Router
         var request = message.Trim();
         logger?.LogDebug("Routing message: {Message}", request);
 
-        var parts = request.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-        var command = parts[0].ToUpperInvariant();
-        var payload = parts.Length > 1 ? parts[1] : string.Empty;
+        var tp3Message = TP3Protocol.Parse(request);
+        return Route(tp3Message);
+    }
 
-        return command switch
+    public string Route(TP3Message message)
+    {
+        if (message.IsEmpty)
         {
-            "GET" => RouteGet(payload),
-            "PUBLISH" => RoutePublish(payload),
-            _ => RouteAgentRequest(request)
+            return string.Empty;
+        }
+
+        logger?.LogDebug("Routing TP3 message: {Command} {Target}", message.Command, message.Target);
+
+        return message.Command switch
+        {
+            "GET" => RouteGet(message.Target),
+            "PUBLISH" => RoutePublish(message.Payload),
+            _ => RouteAgentRequest(message)
         };
     }
 
@@ -57,9 +66,12 @@ public sealed class Router
         return "UNKNOWN PUBLISH COMMAND";
     }
 
-
-    private string RouteAgentRequest(string request)
+    private string RouteAgentRequest(TP3Message message)
     {
+        var request = string.IsNullOrWhiteSpace(message.Target)
+            ? message.Payload
+            : $"{message.Target} {message.Payload}".Trim();
+
         return host.Me.HandleRequest(request);
     }
 }

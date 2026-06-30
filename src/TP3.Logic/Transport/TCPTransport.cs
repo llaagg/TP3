@@ -12,6 +12,8 @@ public sealed partial class TCPTransport : IDisposable
     private readonly Func<string, string> responseFactory;
     private readonly List<Subscriber> subscribers = new();
     private readonly object subscribersLock = new();
+    private readonly Dictionary<string, StreamSession> streamSessions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object streamSessionsLock = new();
     private bool disposed;
     private readonly ILogger? logger;
 
@@ -90,9 +92,15 @@ public sealed partial class TCPTransport : IDisposable
                 }
 
                 var request = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
-                if (request.Equals("SUBSCRIBE", StringComparison.OrdinalIgnoreCase) || request.Equals("STREAM", StringComparison.OrdinalIgnoreCase))
+                if (request.Equals("SUBSCRIBE", StringComparison.OrdinalIgnoreCase))
                 {
                     await SubscribeClientAsync(client, networkStream, cancellationToken).ConfigureAwait(false);
+                    return;
+                }
+
+                if (request.Equals("STREAM", StringComparison.OrdinalIgnoreCase))
+                {
+                    await HandleStreamConnectionAsync(client, networkStream, cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
@@ -119,6 +127,251 @@ public sealed partial class TCPTransport : IDisposable
         finally
         {
             client.Close();
+        }
+    }
+
+    private async Task HandleStreamConnectionAsync(TcpClient client, NetworkStream networkStream, CancellationToken cancellationToken)
+    {
+        await WriteLineAsync(networkStream, "STREAM_OK", cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested && client.Connected)
+            {
+                var line = await ReadLineAsync(networkStream, cancellationToken).ConfigureAwait(false);
+                if (line is null)
+                {
+                    break;
+                }
+
+                var trimmed = line.Trim();
+                if (trimmed.Length == 0)
+                {
+                    continue;
+                }
+
+                var parts = trimmed.Split(' ', 5, StringSplitOptions.RemoveEmptyEntries);
+                var command = parts[0].ToUpperInvariant();
+
+                switch (command)
+                {
+                    case "OPEN":
+                        await HandleStreamOpenAsync(parts, networkStream, cancellationToken).ConfigureAwait(false);
+                        break;
+                    case "DATA":
+                        await HandleStreamDataAsync(parts, networkStream, cancellationToken).ConfigureAwait(false);
+                        break;
+                    case "CLOSE":
+                        await HandleStreamCloseAsync(parts, networkStream, cancellationToken).ConfigureAwait(false);
+                        break;
+                    case "QUIT":
+                        return;
+                    default:
+                        await WriteLineAsync(networkStream, $"ERROR Unknown stream command: {command}", cancellationToken).ConfigureAwait(false);
+                        break;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            logger?.LogInformation("Stream client handler canceled.");
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Stream client handler error.");
+            Console.WriteLine($"Stream client handler error: {ex.Message}");
+        }
+        finally
+        {
+            client.Close();
+            CleanupCompletedStreams();
+        }
+    }
+
+    private async Task HandleStreamOpenAsync(string[] parts, NetworkStream networkStream, CancellationToken cancellationToken)
+    {
+        if (parts.Length < 5)
+        {
+            await WriteLineAsync(networkStream, "ERROR OPEN requires: OPEN <streamId> <path> <length> <contentType>", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var streamId = parts[1];
+        var path = parts[2];
+        if (!long.TryParse(parts[3], out var expectedLength) || expectedLength < 0)
+        {
+            await WriteLineAsync(networkStream, "ERROR Invalid length", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var contentType = parts[4];
+
+        lock (streamSessionsLock)
+        {
+            if (streamSessions.ContainsKey(streamId))
+            {
+                WriteLineAsync(networkStream, $"ERROR Stream already exists: {streamId}", cancellationToken).GetAwaiter().GetResult();
+                return;
+            }
+
+            var session = new StreamSession(streamId, path, expectedLength, contentType, logger);
+            streamSessions.Add(streamId, session);
+        }
+
+        await WriteLineAsync(networkStream, $"OK OPEN {streamId}", cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task HandleStreamDataAsync(string[] parts, NetworkStream networkStream, CancellationToken cancellationToken)
+    {
+        if (parts.Length < 5)
+        {
+            await WriteLineAsync(networkStream, "ERROR DATA requires: DATA <streamId> <seq> <final> <byteCount>", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var streamId = parts[1];
+        if (!int.TryParse(parts[2], out var seq))
+        {
+            await WriteLineAsync(networkStream, "ERROR Invalid sequence number", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        if (!bool.TryParse(parts[3], out var finalFlag))
+        {
+            await WriteLineAsync(networkStream, "ERROR Invalid final flag", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        if (!int.TryParse(parts[4], out var byteCount) || byteCount < 0)
+        {
+            await WriteLineAsync(networkStream, "ERROR Invalid byte count", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var payload = await ReadExactAsync(networkStream, byteCount, cancellationToken).ConfigureAwait(false);
+
+        StreamSession? session;
+        lock (streamSessionsLock)
+        {
+            streamSessions.TryGetValue(streamId, out session);
+        }
+
+        if (session is null)
+        {
+            await WriteLineAsync(networkStream, $"ERROR Unknown stream: {streamId}", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        await session.WriteAsync(payload, cancellationToken).ConfigureAwait(false);
+        await WriteLineAsync(networkStream, $"ACK {streamId} {seq}", cancellationToken).ConfigureAwait(false);
+
+        if (finalFlag)
+        {
+            await session.CompleteAsync(cancellationToken).ConfigureAwait(false);
+            lock (streamSessionsLock)
+            {
+                streamSessions.Remove(streamId);
+            }
+            await WriteLineAsync(networkStream, $"OK CLOSE {streamId}", cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private async Task HandleStreamCloseAsync(string[] parts, NetworkStream networkStream, CancellationToken cancellationToken)
+    {
+        if (parts.Length < 2)
+        {
+            await WriteLineAsync(networkStream, "ERROR CLOSE requires: CLOSE <streamId>", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var streamId = parts[1];
+        StreamSession? session;
+        lock (streamSessionsLock)
+        {
+            if (!streamSessions.TryGetValue(streamId, out session))
+            {
+                session = null;
+            }
+            else
+            {
+                streamSessions.Remove(streamId);
+            }
+        }
+
+        if (session is null)
+        {
+            await WriteLineAsync(networkStream, $"ERROR Unknown stream: {streamId}", cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        await session.CompleteAsync(cancellationToken).ConfigureAwait(false);
+        await WriteLineAsync(networkStream, $"OK CLOSE {streamId}", cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<string?> ReadLineAsync(NetworkStream stream, CancellationToken cancellationToken)
+    {
+        var buffer = new List<byte>();
+        var single = new byte[1];
+
+        while (true)
+        {
+            var bytesRead = await stream.ReadAsync(single.AsMemory(0, 1), cancellationToken).ConfigureAwait(false);
+            if (bytesRead == 0)
+            {
+                return null;
+            }
+
+            if (single[0] == '\r')
+            {
+                continue;
+            }
+
+            if (single[0] == '\n')
+            {
+                break;
+            }
+
+            buffer.Add(single[0]);
+        }
+
+        return Encoding.UTF8.GetString(buffer.ToArray());
+    }
+
+    private static async Task WriteLineAsync(NetworkStream stream, string line, CancellationToken cancellationToken)
+    {
+        var bytes = Encoding.UTF8.GetBytes(line + "\n");
+        await stream.WriteAsync(bytes.AsMemory(0, bytes.Length), cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<byte[]> ReadExactAsync(NetworkStream stream, int count, CancellationToken cancellationToken)
+    {
+        var buffer = new byte[count];
+        var offset = 0;
+
+        while (offset < count)
+        {
+            var bytesRead = await stream.ReadAsync(buffer.AsMemory(offset, count - offset), cancellationToken).ConfigureAwait(false);
+            if (bytesRead == 0)
+            {
+                throw new IOException("Unexpected EOF while reading stream frame payload.");
+            }
+
+            offset += bytesRead;
+        }
+
+        return buffer;
+    }
+
+    private void CleanupCompletedStreams()
+    {
+        lock (streamSessionsLock)
+        {
+            foreach (var session in streamSessions.Values.ToArray())
+            {
+                session.Dispose();
+            }
+
+            streamSessions.Clear();
         }
     }
 

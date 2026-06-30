@@ -16,7 +16,7 @@ namespace TP3.Agent.Logic.Host;
 public class AgentHost : IDisposable
 {
     private readonly IAgent agent;
-    private readonly TCPTransport tcpTransport;
+    private readonly ITP3Transport tp3Transport;
     private readonly IpcTransport ipcTransport;
     private readonly IService[] services;
     private readonly PeerConnectionManager peerConnectionManager;
@@ -32,7 +32,7 @@ public class AgentHost : IDisposable
         router = new Router(this, logger);
 
         peerConnectionManager = new PeerConnectionManager(logger);
-        tcpTransport = new TCPTransport(port, router.Route, logger);
+        tp3Transport = new TP3Transport(port, HandleTP3Message, logger);
         ipcTransport = new IpcTransport(ipcPort, Handle, logger);
 
         this.services = services ?? Array.Empty<IService>();
@@ -55,7 +55,7 @@ public class AgentHost : IDisposable
             }
         }
 
-        await tcpTransport.Start();
+        await tp3Transport.Start();
         await ipcTransport.Start();
     }
 
@@ -64,31 +64,39 @@ public class AgentHost : IDisposable
     public void PublishEvent(string eventText)
     {
         logger?.LogInformation("Publishing event: {EventText}", eventText);
-        tcpTransport.PublishEventAsync(eventText).GetAwaiter().GetResult();
+        tp3Transport.PublishEventAsync(eventText).GetAwaiter().GetResult();
     }
 
     public void Dispose()
     {
         logger?.LogInformation("Disposing agent host.");
         ipcTransport.Dispose();
-        tcpTransport.Dispose();
+        tp3Transport.Dispose();
     }
 
     private string Handle(string request)
     {
         logger?.LogInformation("Received IPC request: {Request}", request);
+        var response = this.router.Route(request);
+
         if (request.StartsWith("ECHO ", StringComparison.OrdinalIgnoreCase))
         {
             var message = request.Substring(5);
             return message;
         }
 
-        return $"Unknown IPC command: {request}";
+        return response;
+    }
+
+    private string HandleTP3Message(TP3Message message)
+    {
+        logger?.LogInformation("Received TP3 message: {Message}", message.Command);
+        return router.Route(message);
     }
 
     public void Stop()
     {
-        tcpTransport.Stop();
+        tp3Transport.Stop();
         ipcTransport.Stop();
     }
 }
