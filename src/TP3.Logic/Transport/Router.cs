@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Extensions.Logging;
+using TP3.Agent.Logic.Protocol;
 
 namespace TP3.Agent.Logic.Host;
 

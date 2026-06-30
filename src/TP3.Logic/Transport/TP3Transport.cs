@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TP3.Agent.Logic.Protocol;
 using TP3.Interfaces;
 
 namespace TP3.Agent.Logic.Host;
