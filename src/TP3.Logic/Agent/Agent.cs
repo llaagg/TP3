@@ -52,10 +52,13 @@ public class Agent : IAgent
 
     public string HandleRequest(TP3Message request)
     {
-        return request.Command.ToString().ToUpperInvariant() switch
+        return request.Command switch
         {
-            "GET TRUNK" => T?.ToString() ?? "No trunk available",
-            _ => $"ECHO: {request}",
+            TP3Command.LIST => 
+                string.Join(",", this.Services.Select(s => s.GetType().Name)),
+            
+            TP3Command.ECHO => $"ECHO: {request}",
+            TP3Command.HI => $"HI,I am {request.Target}.",
         };
     }
 }

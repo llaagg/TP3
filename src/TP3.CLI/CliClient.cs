@@ -32,14 +32,14 @@ public class CliClient
 
     private static readonly Dictionary<string, Func<IpcClient, string, Task>> commandHandlers = new()
     {
-        { "HI", async (ipcClient, message) => {
+        { "LIST", async (ipcClient, message) => {
             var response = await ipcClient.SendAsync($"LIST {message}");
             Console.WriteLine(response);
         }},
         { "HELP", async (ipcClient, message) => {
             Console.WriteLine("Available local commands:");
             Console.WriteLine("HELP - Show this help message");
-            Console.WriteLine("HI <message> - Send a HI message to the local IPC server");
+            Console.WriteLine("LIST - List available services");
             Console.WriteLine("ECHO <message> - Send an ECHO message to the local IPC server");
             Console.WriteLine("QUIT - Exit the CLI");
         }},
