@@ -46,13 +46,19 @@ public static class CommandLineApplication
         var ah = AgentHost.Main(port, ipcPort, logger);
 
         logger.LogInformation("Agent service started. Press Ctrl+C to exit.");
+
+        CancellationTokenSource cts = new CancellationTokenSource();
+
         Console.CancelKeyPress += (sender, e) => {
             logger.LogInformation("Stopping agent service...");
             ah.Stop();
             logger.LogInformation("Agent service stopped.");
+            logger.LogInformation("Stopping IPC connection...");
+            cts.Cancel();
+            logger.LogInformation("IPC connection stopped.");
         };       
         
-        IpcClient.Main().Wait();
+        IpcClient.Main().Wait(cts.Token);
     }
 
     private static async Task ExecuteEchoAsync(int ipcPort, string message, ILogger logger)

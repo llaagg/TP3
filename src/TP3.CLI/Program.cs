@@ -8,5 +8,6 @@ var loggerFactory = LoggerFactory.Create(builder =>
 });
 
 var logger = loggerFactory.CreateLogger("TP3.Agent.Service");
+
 await TP3.CLI.CommandLineApplication.RunAsync(args, logger);
 

@@ -1,6 +1,6 @@
 namespace TP3.Interfaces;
 
-public interface IAgent
+public interface INode
 {
     
     MetaData MetaData { get; }

@@ -5,4 +5,6 @@
   <Project Path="TP3.GUI.GTK/TP3.GUI.GTK.csproj" />
   <Project Path="TP3.Maui.Client/TP3.Maui.Client.csproj" />
   <Project Path="TP3.Interfaces/TP3.Interfaces.csproj" />
+  <Project Path="TP3.Service.FileSystem/TP3.Service.FileSystem.csproj" />
+  <Project Path="TP3.Service.Screen/TP3.Service.Screen.csproj" />
 </Solution>
