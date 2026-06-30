@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace TP3.Agent.Logic.Host;
+namespace TP3.Agent.Logic.Transport;
 
 public sealed class StreamSession : IDisposable
 {

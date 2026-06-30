@@ -78,15 +78,8 @@ public class AgentHost : IDisposable
     private string Handle(string request)
     {
         logger?.LogInformation("Received IPC request: {Request}", request);
-        var response = this.router.Route(request);
-
-        if (request.StartsWith("ECHO ", StringComparison.OrdinalIgnoreCase))
-        {
-            var message = request.Substring(5);
-            return message;
-        }
-
-        return response;
+        var tp3Message = TP3Protocol.Parse(request);
+        return HandleTP3Message(tp3Message);
     }
 
     private string HandleTP3Message(TP3Message message)

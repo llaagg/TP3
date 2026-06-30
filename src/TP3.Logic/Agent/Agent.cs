@@ -53,7 +53,6 @@ public class Agent : IAgent
     {
         return request.ToUpperInvariant() switch
         {
-            "GET META" => "No metadata available",
             "GET TRUNK" => T?.ToString() ?? "No trunk available",
             _ => $"ECHO: {request}",
         };

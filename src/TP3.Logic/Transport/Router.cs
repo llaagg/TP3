@@ -1,18 +1,19 @@
 using System;
 using Microsoft.Extensions.Logging;
+using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Protocol;
 
-namespace TP3.Agent.Logic.Host;
+namespace TP3.Agent.Logic.Transport;
 
 public sealed class Router
 {
     private readonly AgentHost host;
-    private readonly ILogger? logger;
+    private readonly ILogger logger;
 
-    public Router(AgentHost host, ILogger? logger = null)
+    public Router(AgentHost host, ILogger logger)
     {
         this.host = host ?? throw new ArgumentNullException(nameof(host));
-        this.logger = logger;
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public string Route(string message)
@@ -23,7 +24,7 @@ public sealed class Router
         }
 
         var request = message.Trim();
-        logger?.LogDebug("Routing message: {Message}", request);
+        logger.LogDebug("Routing message: {Message}", request);
 
         var tp3Message = TP3Protocol.Parse(request);
         return Route(tp3Message);
@@ -33,42 +34,20 @@ public sealed class Router
     {
         if (message.IsEmpty)
         {
+            logger.LogWarning("Received empty TP3 message.");
             return string.Empty;
         }
 
-        logger?.LogDebug("Routing TP3 message: {Command} {Target}", message.Command, message.Target);
+        logger.LogDebug("Routing TP3 message: {Command} {Target}", message.Command, message.Target);
 
-        return message.Command switch
-        {
-            "GET" => RouteGet(message.Target),
-            "PUBLISH" => RoutePublish(message.Payload),
-            _ => RouteAgentRequest(message)
-        };
+        return RouteAgentRequest(message);
     }
 
-    private string RouteGet(string payload)
-    {
-        return payload.ToUpperInvariant() switch
-        {
-            "TRUNK" => host.Me.T?.ToString() ?? "No trunk available",
-            _ => $"UNKNOWN GET TARGET: {payload}"
-        };
-    }
-
-    private string RoutePublish(string payload)
-    {
-        if (payload.StartsWith("EVENT ", StringComparison.OrdinalIgnoreCase))
-        {
-            var eventText = payload[6..].Trim();
-            host.PublishEvent(eventText);
-            return "EVENT PUBLISHED";
-        }
-
-        return "UNKNOWN PUBLISH COMMAND";
-    }
 
     private string RouteAgentRequest(TP3Message message)
     {
+        #warning TODO: namespace filtering
+        #warning TODO: tcp forward
         var request = string.IsNullOrWhiteSpace(message.Target)
             ? message.Payload
             : $"{message.Target} {message.Payload}".Trim();

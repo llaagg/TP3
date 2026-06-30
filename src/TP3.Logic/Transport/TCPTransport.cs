@@ -3,15 +3,14 @@ using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace TP3.Agent.Logic.Host;
+namespace TP3.Agent.Logic.Transport;
 
 public sealed partial class TCPTransport : IDisposable
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;
     private readonly Func<string, string> responseFactory;
-    private readonly List<Subscriber> subscribers = new();
-    private readonly object subscribersLock = new();
+    private readonly SubscriptionManager subscriptionManager;
     private readonly Dictionary<string, StreamSession> streamSessions = new(StringComparer.OrdinalIgnoreCase);
     private readonly object streamSessionsLock = new();
     private bool disposed;
@@ -22,6 +21,7 @@ public sealed partial class TCPTransport : IDisposable
         this.responseFactory = responseFactory ?? throw new ArgumentNullException(nameof(responseFactory));
         this.logger = logger;
         listener = new TcpListener(IPAddress.Any, port);
+        subscriptionManager = new SubscriptionManager(logger);
     }
 
     public void Dispose()
@@ -94,7 +94,7 @@ public sealed partial class TCPTransport : IDisposable
                 var request = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
                 if (request.Equals("SUBSCRIBE", StringComparison.OrdinalIgnoreCase))
                 {
-                    await SubscribeClientAsync(client, networkStream, cancellationToken).ConfigureAwait(false);
+                    await subscriptionManager.SubscribeClientAsync(client, networkStream, cancellationToken).ConfigureAwait(false);
                     return;
                 }
 
@@ -375,101 +375,9 @@ public sealed partial class TCPTransport : IDisposable
         }
     }
 
-    public async Task PublishEventAsync(string eventText)
+    public Task PublishEventAsync(string eventText)
     {
-        var message = Encoding.UTF8.GetBytes($"EVENT: {eventText}\n");
-        Subscriber[] currentSubscribers;
-
-        lock (subscribersLock)
-        {
-            currentSubscribers = subscribers.ToArray();
-        }
-
-        foreach (var subscriber in currentSubscribers)
-        {
-            try
-            {
-                await subscriber.WriteLock.WaitAsync(cancellationTokenSource.Token).ConfigureAwait(false);
-                try
-                {
-                    await subscriber.Stream.WriteAsync(message.AsMemory(0, message.Length), cancellationTokenSource.Token).ConfigureAwait(false);
-                }
-                finally
-                {
-                    subscriber.WriteLock.Release();
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogWarning(ex, "Failed to write event to subscriber, removing subscriber.");
-                RemoveSubscriber(subscriber);
-            }
-        }
-    }
-
-    private async Task SubscribeClientAsync(TcpClient client, NetworkStream networkStream, CancellationToken cancellationToken)
-    {
-        var subscriber = new Subscriber(client, networkStream);
-        AddSubscriber(subscriber);
-
-        try
-        {
-            var ackBytes = Encoding.UTF8.GetBytes("SUBSCRIBED\n");
-            await networkStream.WriteAsync(ackBytes.AsMemory(0, ackBytes.Length), cancellationToken).ConfigureAwait(false);
-
-            var buffer = new byte[256];
-            while (!cancellationToken.IsCancellationRequested && client.Connected)
-            {
-                var bytesRead = await networkStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken).ConfigureAwait(false);
-                if (bytesRead <= 0)
-                {
-                    break;
-                }
-
-                var request = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
-                if (request.Equals("QUIT", StringComparison.OrdinalIgnoreCase) || request.Equals("UNSUBSCRIBE", StringComparison.OrdinalIgnoreCase))
-                {
-                    break;
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Shutdown requested.
-        }
-        catch (Exception ex)
-        {
-            logger?.LogError(ex, "Subscriber monitor error.");
-            Console.WriteLine($"Subscriber monitor error: {ex.Message}");
-        }
-        finally
-        {
-            RemoveSubscriber(subscriber);
-        }
-    }
-
-    private void AddSubscriber(Subscriber subscriber)
-    {
-        lock (subscribersLock)
-        {
-            subscribers.Add(subscriber);
-        }
-    }
-
-    private void RemoveSubscriber(Subscriber subscriber)
-    {
-        lock (subscribersLock)
-        {
-            subscribers.Remove(subscriber);
-        }
-
-        try
-        {
-            subscriber.Client.Close();
-        }
-        catch
-        {
-        }
+        return subscriptionManager.PublishEventAsync(eventText, cancellationTokenSource.Token);
     }
 
     public void Stop()

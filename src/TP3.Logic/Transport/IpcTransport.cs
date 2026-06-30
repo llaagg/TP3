@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace TP3.Agent.Logic.Host;
+namespace TP3.Agent.Logic.Transport;
 
 public sealed class IpcTransport : IDisposable
 {

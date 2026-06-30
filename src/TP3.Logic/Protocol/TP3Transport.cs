@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Protocol;
+using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 
-namespace TP3.Agent.Logic.Host;
+namespace TP3.Agent.Logic.Protocol;
 
 public sealed class TP3Transport : ITP3Transport
 {

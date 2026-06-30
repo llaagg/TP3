@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 
-namespace TP3.Agent.Logic.Host;
+namespace TP3.Agent.Logic.Transport;
 
 public class Subscriber
 {
