@@ -19,13 +19,6 @@ public static class CommandLineApplication
         };
         runCommand.SetHandler((int port, int ipcPort) => ExecuteStart(port, ipcPort, logger), portOption, ipcPortOption);
 
-        var startCommand = new Command("start", "Start the agent host (alias)")
-        {
-            portOption,
-            ipcPortOption
-        };
-        startCommand.SetHandler((int port, int ipcPort) => ExecuteStart(port, ipcPort, logger), portOption, ipcPortOption);
-
         var echoCommand = new Command("echo", "Send an ECHO message to the local IPC server")
         {
             ipcPortOption,
@@ -36,7 +29,6 @@ public static class CommandLineApplication
         var rootCommand = new RootCommand("TP3 CLI")
         {
             runCommand,
-            startCommand,
             echoCommand
         };
 
@@ -51,13 +43,22 @@ public static class CommandLineApplication
     private static void ExecuteStart(int port, int ipcPort, ILogger logger)
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
-        AgentHost.Main(Array.Empty<string>(), port, ipcPort, logger);
+        var ah = AgentHost.Main(port, ipcPort, logger);
+
+        logger.LogInformation("Agent service started. Press Ctrl+C to exit.");
+        Console.CancelKeyPress += (sender, e) => {
+            logger.LogInformation("Stopping agent service...");
+            ah.Stop();
+            logger.LogInformation("Agent service stopped.");
+        };       
+        
+        IpcClient.Main().Wait();
     }
 
     private static async Task ExecuteEchoAsync(int ipcPort, string message, ILogger logger)
     {
         logger.LogInformation("Sending ECHO to IPC port {IpcPort}: {Message}", ipcPort, message);
-        var response = await IpcClient.SendAsync("127.0.0.1", ipcPort, $"ECHO {message}").ConfigureAwait(false);
+        var response = await new IpcClient("127.0.0.1", ipcPort).SendAsync( $"ECHO {message}").ConfigureAwait(false);
         Console.WriteLine(response);
     }
 }

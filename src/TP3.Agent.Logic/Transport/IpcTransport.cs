@@ -52,6 +52,14 @@ public sealed class IpcTransport : IDisposable
         }
     }
 
+
+    public void Stop()
+    {
+        cancellationTokenSource.Cancel();
+        listener.Stop();
+        logger?.LogInformation("IPC listener stopped.");
+    }
+
     private async Task AcceptLoopAsync(CancellationToken cancellationToken)
     {
         try
