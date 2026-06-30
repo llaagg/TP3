@@ -7,7 +7,7 @@ namespace TP3.Agent.Logic.Host;
 
 public class AgentHost : IDisposable
 {
-    private readonly Node agent;
+    private readonly IAgent agent;
     private readonly TCPTransport tcpTransport;
     private readonly IpcTransport ipcTransport;
     private readonly IService[] services;
@@ -18,7 +18,7 @@ public class AgentHost : IDisposable
 
     public AgentHost(int port = 5000, int ipcPort = 5001, ILogger? logger = null, IService[]? services = null)
     {
-        agent = new Node(logger);
+        agent = new Agent.Agent(logger);
         this.logger = logger;
         peerConnectionManager = new PeerConnectionManager(logger);
         router = new Router(this, logger);
@@ -51,7 +51,7 @@ public class AgentHost : IDisposable
         await ipcTransport.Start();
     }
 
-    public Node Me => agent;
+    public IAgent Me => agent;
 
     public IReadOnlyCollection<IConnection> PeerConnections => peerConnectionManager.Connections;
     public IReadOnlyCollection<NamespaceCollection> Namespaces => namespaces.AsReadOnly();
@@ -92,7 +92,6 @@ public class AgentHost : IDisposable
         logger?.LogInformation("Disposing agent host.");
         ipcTransport.Dispose();
         tcpTransport.Dispose();
-        agent.Dispose();
     }
 
     private string HandleIpcRequest(string request)

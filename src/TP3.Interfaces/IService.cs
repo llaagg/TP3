@@ -7,5 +7,5 @@ public interface IService
     object Events { get; }
     MetaData MetaData { get; }
 
-    Task Init(INode me);
+    Task Init(IAgent me);
 }

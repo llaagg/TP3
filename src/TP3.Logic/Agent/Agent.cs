@@ -10,11 +10,11 @@ namespace TP3.Agent.Logic.Agent;
 /// Delivers trunk to the clients connected to it. (that should be other agents)
 /// Connects to other agents and requests trunk from them.  
 /// </summary>
-public class Node : INode, IDisposable
+public class Agent : IAgent
 {
     private readonly ILogger? logger;
 
-    public Node(ILogger? logger = null)
+    public Agent(ILogger? logger = null)
     {
         this.logger = logger;
         this.T = new Trunk();
@@ -28,7 +28,7 @@ public class Node : INode, IDisposable
         logger?.LogInformation("Initializing agent logic.");
     }
     
-    public Trunk T
+    public INode T
     {
         get; private set;
     }
@@ -37,6 +37,8 @@ public class Node : INode, IDisposable
     {
         get; private set;
     }
+
+    INode IAgent.T => throw new NotImplementedException();
 
     public virtual void Dispose()
     {

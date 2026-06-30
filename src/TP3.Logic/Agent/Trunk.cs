@@ -11,13 +11,19 @@ namespace TP3.Agent.Logic.Agent;
 ///  is 
 ///  
 /// </summary>
-public class Trunk
+public class Trunk : INode
 {
     Dictionary<string, Func<TP3Stram>> streams = new Dictionary<string, Func<TP3Stram>>()
     {
         { "Storage", Storage },
     };
-    
+
+    public string Id => throw new NotImplementedException();
+
+    public string Value => throw new NotImplementedException();
+
+    public IEnumerable<INode> Leafs => throw new NotImplementedException();
+
     private static TP3Stram Storage()
     {
         return new TP3Stram();

@@ -2,8 +2,15 @@
 
 namespace TP3.Service.FileSystem;
 
+/// <summary>
+/// Service that allows access to filesystem, in tp3 space
+/// </summary>
 public class FileSystemService : IService
 {
+    public FileSystemService()
+    {
+    }
+
     public object State => throw new NotImplementedException();
 
     public object Control => throw new NotImplementedException();
@@ -12,8 +19,10 @@ public class FileSystemService : IService
 
     public MetaData MetaData => throw new NotImplementedException();
 
-    public Task Init(INode me)
+    public string SetStartingFolder { get; private set; }
+
+    public async Task Init(IAgent me)
     {
-        throw new NotImplementedException();
+        this.SetStartingFolder = "C:\\";
     }
 }
