@@ -12,7 +12,7 @@ var loggerFactory = LoggerFactory.Create(builder =>
 });
 
 var logger = loggerFactory.CreateLogger("TP3.GUI.GTK");
-var host = AgentHost.Main(args, logger: logger);
+var host = AgentHost.Main();
 
 AgentInstance.Initialize(host, logger);
 
