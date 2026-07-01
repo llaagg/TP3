@@ -28,20 +28,6 @@ public static class TP3Serializer
         return BuildPacket(serializer.Header, payload);
     }
 
-    public static TP3Message DeserializeBytes(ReadOnlySpan<byte> bytes)
-    {
-        if (bytes.Length < HeaderLength + sizeof(int))
-        {
-            throw new InvalidDataException("Invalid TP3 packet.");
-        }
-
-        var header = bytes.Slice(0, HeaderLength);
-        var serializer = GetSerializer(header);
-        var payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(bytes.Slice(HeaderLength, sizeof(int)).ToArray(), 0));
-        var payload = bytes.Slice(HeaderLength + sizeof(int), payloadLength);
-
-        return serializer.DeserializePayload(payload);
-    }
 
     public static async Task<TP3Message> ReadMessageAsync(Stream stream, CancellationToken cancellationToken)
     {
