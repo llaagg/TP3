@@ -11,6 +11,8 @@ internal partial class ServiceNode : INode
         this.s = s;
     }
 
+    public string Qid => $"service:{Name}";
+
     public string Name => s.GetType().Name;
 
     public IEnumerable<INode>? Children

@@ -4,10 +4,13 @@ namespace TP3.Service.FileSystem;
 
 public class StateNode : INode
 {
-    public StateNode()
+    public StateNode(string qid)
     {
+        this.Qid = qid;
         this.Name = "state";
     }
+
+    public string Qid { get; }
 
     public string Name { get; set; }
 
@@ -19,7 +22,7 @@ public class StateNode : INode
             var drives = DriveInfo.GetDrives();
             foreach (var drive in drives)
             {
-                yield return new FileSystemNode(drive.Name);
+                yield return new FileSystemNode(drive.Name, $"fs:{Guid.NewGuid():N}");
             }
         }
     }

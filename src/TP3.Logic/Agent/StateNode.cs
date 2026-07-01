@@ -12,6 +12,8 @@ public class StateNode : INode
 
     }
 
+    public string Qid => $"state:{Name}";
+
     public string Name => "state";
 
     public IEnumerable<INode>? Children => state.Children;

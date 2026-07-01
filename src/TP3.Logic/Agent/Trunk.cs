@@ -22,6 +22,8 @@ public class Trunk : INode
         this.service = service;
     }
 
+    public string Qid => "trunk:/";
+
     public string Name => "/";
 
     public IEnumerable<INode>? Children

@@ -37,9 +37,15 @@ public class TP3Message
         init => _args = value ?? new List<string>();
     }
 
+    public string? Tag { get; init; }
+
     public string? Qid { get; init; }
 
-    public string? NodeType { get; init; }
+    public long Offset { get; init; }
+
+    public int MaxBytes { get; init; }
+
+    public NodeType? NodeType { get; init; }
 
     public bool IsChunk { get; init; }
 
@@ -63,6 +69,11 @@ public class TP3Message
         if (!string.IsNullOrWhiteSpace(Qid))
         {
             suffix += $" qid={Qid}";
+        }
+
+        if (Command == TP3Command.READ)
+        {
+            suffix += $" offset={Offset} max={MaxBytes}";
         }
 
         if (!string.IsNullOrWhiteSpace(Error))

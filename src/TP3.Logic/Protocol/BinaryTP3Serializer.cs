@@ -21,8 +21,11 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
             writer.Write(segment ?? string.Empty);
         }
 
+        writer.Write(message.Tag ?? string.Empty);
         writer.Write(message.Qid ?? string.Empty);
-        writer.Write(message.NodeType ?? string.Empty);
+        writer.Write(message.Offset);
+        writer.Write(message.MaxBytes);
+        writer.Write(message.NodeType?.ToString().ToLowerInvariant() ?? string.Empty);
         writer.Write(message.IsChunk);
         writer.Write(message.ChunkIndex);
         writer.Write(message.IsFinalChunk);
@@ -56,8 +59,17 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
             path.Add(reader.ReadString());
         }
 
+        var tag = reader.ReadString();
         var qid = reader.ReadString();
-        var nodeType = reader.ReadString();
+        var offset = reader.ReadInt64();
+        var maxBytes = reader.ReadInt32();
+        var nodeTypeRaw = reader.ReadString();
+        NodeType? nodeType = null;
+        if (!string.IsNullOrWhiteSpace(nodeTypeRaw)
+            && Enum.TryParse<NodeType>(nodeTypeRaw, ignoreCase: true, out var parsedNodeType))
+        {
+            nodeType = parsedNodeType;
+        }
         var isChunk = reader.ReadBoolean();
         var chunkIndex = reader.ReadInt32();
         var isFinalChunk = reader.ReadBoolean();
@@ -69,8 +81,11 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         {
             Command = command,
             Args = path,
+            Tag = string.IsNullOrWhiteSpace(tag) ? null : tag,
             Qid = string.IsNullOrWhiteSpace(qid) ? null : qid,
-            NodeType = string.IsNullOrWhiteSpace(nodeType) ? null : nodeType,
+            Offset = offset,
+            MaxBytes = maxBytes,
+            NodeType = nodeType,
             IsChunk = isChunk,
             ChunkIndex = chunkIndex,
             IsFinalChunk = isFinalChunk,

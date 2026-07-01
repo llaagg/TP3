@@ -82,7 +82,13 @@ public class Agent : IAgent
 
         if (request.Command == TP3Command.READ)
         {
-            var service = ResolvePathService(request.Args);
+            IPathDataService? service = null;
+            if (!string.IsNullOrWhiteSpace(request.Qid))
+            {
+                service = ResolveQidService(request.Qid);
+            }
+
+            service ??= ResolvePathService(request.Args);
             if (service is null)
             {
                 await Respond(request, new TP3Message
@@ -94,11 +100,8 @@ public class Agent : IAgent
                 return;
             }
 
-            var responses = await service.ReadAsync(request).ConfigureAwait(false);
-            foreach (var response in responses)
-            {
-                await Respond(request, response).ConfigureAwait(false);
-            }
+            var response = await service.ReadAsync(request).ConfigureAwait(false);
+            await Respond(request, response).ConfigureAwait(false);
             return;
         }
 
@@ -107,6 +110,11 @@ public class Agent : IAgent
     private IPathDataService? ResolvePathService(IReadOnlyList<string> requestPath)
     {
         return Services.OfType<IPathDataService>().FirstOrDefault(s => s.CanHandlePath(requestPath));
+    }
+
+    private IPathDataService? ResolveQidService(string qid)
+    {
+        return Services.OfType<IPathDataService>().FirstOrDefault(s => s.CanHandleQid(qid));
     }
 
     private async Task Respond(TP3Message request, TP3Message tP3Message)

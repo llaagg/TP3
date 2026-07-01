@@ -2,6 +2,8 @@ namespace TP3.Interfaces
 {
     public interface INode
     {
+        string Qid { get; }
+
         string Name { get; }
 
         public IEnumerable<INode>? Children{ get; }
