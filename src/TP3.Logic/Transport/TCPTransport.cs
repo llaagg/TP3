@@ -46,7 +46,8 @@ public sealed partial class TCPTransport : INetworkTransport
         {
             listener.Start();
             logger?.LogInformation("Agent TCP listener started on port {Port}", listener.LocalEndpoint);
-            _ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
+            await AcceptLoopAsync(cancellationTokenSource.Token).ConfigureAwait(false);
+            //_ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
         }
         catch (Exception ex)
         {

@@ -16,14 +16,14 @@ public sealed class TP3Transport : ITP3Transport
         this.logger = logger;
     }
 
-    public Task Start()
+    public async Task Start()
     {
-        return transport.Start();
+        await transport.Start();
     }
 
-    public Task Send(TP3Message message)
+    public async Task Send(TP3Message message)
     {
-        return transport.Send(message);
+        await transport.Send(message);
     }
 
     public void Stop()

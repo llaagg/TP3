@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TP3.Logic\TP3.Agent.Logic.csproj" />
+    <ProjectReference Include="..\TP3.Logic\TP3.Logic.csproj" />
   </ItemGroup>
 
   <ItemGroup>

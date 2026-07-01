@@ -22,12 +22,11 @@ public class AgentHost : IDisposable
 {
     public readonly IAgent Me;
     private readonly ITP3Transport tcpTransport;
-    private readonly ITP3Transport ipcTransport;
     private readonly IService[] services;
     private readonly ILogger? logger;
     private readonly Router router;
 
-    public AgentHost(int port = 5000, int ipcPort = 5001, ILogger? logger = null, IService[]? services = null)
+    public AgentHost(int port = 5000, ILogger? logger = null, IService[]? services = null)
     {
         this.logger = logger;
 
@@ -35,8 +34,6 @@ public class AgentHost : IDisposable
         Me = new Agent.Agent(router, logger);
 
         tcpTransport = TP3TransportFactory.CreateTCP(port, router, logger);
-        ipcTransport = TP3TransportFactory.CreateIPC(ipcPort, router, logger);
-
         this.services = services ?? Array.Empty<IService>();
     }
 
@@ -58,19 +55,16 @@ public class AgentHost : IDisposable
         }
 
         await tcpTransport.Start();
-        await ipcTransport.Start();
     }
 
     public void Dispose()
     {
         logger?.LogInformation("Disposing agent host.");
-        ipcTransport.Dispose();
         tcpTransport.Dispose();
     }
 
     public void Stop()
     {
         tcpTransport.Stop();
-        ipcTransport.Stop();
     }
 }
