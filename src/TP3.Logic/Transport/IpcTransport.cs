@@ -14,7 +14,6 @@ public sealed class IpcTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;
-    private readonly Func<TP3Message, Task> requestHandler;
     private readonly IRouter router;
     private readonly ILogger? logger;
     private bool disposed;
@@ -114,8 +113,8 @@ public sealed class IpcTransport : INetworkTransport
                 }
 
                 var message = TP3Serializer.Deserialize(trimmed);
-                
-                await this.router.Route(message);
+
+                await this.router.Route(this, message);
             }
         }
         catch (OperationCanceledException)
@@ -131,5 +130,10 @@ public sealed class IpcTransport : INetworkTransport
         {
             client.Close();
         }
+    }
+
+    public Task Send(TP3Message message)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -12,7 +12,6 @@ public sealed partial class TCPTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;
-    private readonly Func<TP3Message, Task> responseFactory;
     private readonly SubscriptionManager subscriptionManager;
     private readonly Dictionary<string, StreamSession> streamSessions = new(StringComparer.OrdinalIgnoreCase);
     private readonly object streamSessionsLock = new();
@@ -110,7 +109,7 @@ public sealed partial class TCPTransport : INetworkTransport
 
                 var message = TP3ProtocolHelpers.Parse(request);
 
-                await router.Route(message);
+                await router.Route(this, message);
                 
             }
         }
@@ -385,5 +384,10 @@ public sealed partial class TCPTransport : INetworkTransport
         cancellationTokenSource.Cancel();
         listener.Stop();
         logger?.LogInformation("TCP listener stopped.");
+    }
+
+    public Task Send(TP3Message message)
+    {
+        throw new NotImplementedException();
     }
 }

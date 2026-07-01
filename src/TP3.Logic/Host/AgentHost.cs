@@ -13,13 +13,15 @@ namespace TP3.Agent.Logic.Host;
 /// I know tcp.
 /// I know ipc.
 /// I allow to talk to me from my thread.
-/// I route messages to router.
-/// I filter messages with namespaces.
+/// I do not route messages to router.
+///    I let router do it.
+/// I filter messages with namespaces. 
+///    TODO: implement namespace filtering
 /// </summary>
 public class AgentHost : IDisposable
 {
-    private readonly IAgent agent;
-    private readonly ITP3Transport tp3Transport;
+    public readonly IAgent Me;
+    private readonly ITP3Transport tcpTransport;
     private readonly ITP3Transport ipcTransport;
     private readonly IService[] services;
     private readonly ILogger? logger;
@@ -29,11 +31,11 @@ public class AgentHost : IDisposable
     {
         this.logger = logger;
 
-        agent = new Agent.Agent(logger);
         router = new Router(this, logger);
+        Me = new Agent.Agent(router, logger);
 
-        tp3Transport = TP3TransportFactory.CreateIPC(port, router, logger);
-        ipcTransport = TP3TransportFactory.CreateTCP(ipcPort, router, logger);
+        tcpTransport = TP3TransportFactory.CreateTCP(port, router, logger);
+        ipcTransport = TP3TransportFactory.CreateIPC(ipcPort, router, logger);
 
         this.services = services ?? Array.Empty<IService>();
     }
@@ -55,28 +57,20 @@ public class AgentHost : IDisposable
             }
         }
 
-        await tp3Transport.Start();
+        await tcpTransport.Start();
         await ipcTransport.Start();
     }
-
-    public IAgent Me => agent;
 
     public void Dispose()
     {
         logger?.LogInformation("Disposing agent host.");
         ipcTransport.Dispose();
-        tp3Transport.Dispose();
-    }
-
-    private async Task HandleTP3Message(TP3Message message)
-    {
-        logger?.LogInformation("Received TP3 message: {Message}", message.Command);
-        await router.Route(message);
+        tcpTransport.Dispose();
     }
 
     public void Stop()
     {
-        tp3Transport.Stop();
+        tcpTransport.Stop();
         ipcTransport.Stop();
     }
 }
