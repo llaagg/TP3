@@ -62,12 +62,6 @@ public sealed class IpcTransport : INetworkTransport
         logger?.LogInformation("IPC listener stopped.");
     }
 
-    public Task PublishEventAsync(string eventText)
-    {
-        logger?.LogWarning("PublishEventAsync is not supported on IPC transport.");
-        return Task.CompletedTask;
-    }
-
     private async Task AcceptLoopAsync(CancellationToken cancellationToken)
     {
         try
@@ -136,4 +130,5 @@ public sealed class IpcTransport : INetworkTransport
     {
         throw new NotImplementedException();
     }
+
 }
