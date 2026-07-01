@@ -35,12 +35,6 @@ public sealed class Router : IRouter
 
     public async Task Route(INetworkTransport ipcTransport, TP3Message message)
     {
-        if (message.Command == TP3Command.NONE)
-        {
-            logger?.LogWarning($"Received {message.Command} TP3 message.");
-            return;
-        }
-
         logger?.LogDebug("Routing TP3 message: {Command} {Path}", message.Command, message.Path);
 
         #warning TODO: namespace filtering

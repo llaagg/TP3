@@ -59,11 +59,7 @@ public class Agent : IAgent
             logger?.LogWarning("Received null TP3 message.");
             return;
         }
-        if (request.Command == TP3Command.NONE)
-        {
-            logger?.LogWarning("Received {Command} TP3 message.", request.Command);
-            return;
-        }
+        
         if (request.Command == TP3Command.WALK)
         {
             var service = ResolvePathService(request.Path);
@@ -105,31 +101,6 @@ public class Agent : IAgent
             return;
         }
 
-
-//         if (request.Command == TP3Command.LIST)
-//         {
-//             var targetNode = Navigate(T, request.Path);
-//             var childrenList = NodeChildrenToString(targetNode);
-
-//             logger?.LogInformation("LIST command received for target '{Target}'. Children: {Children}", request.Path, childrenList.Count());
-// #warning TODO: return the list of children to the requester
-
-//             // let's send the response
-//             await this.Respond(
-//                 request,
-//                 new TP3Message
-//                 {
-//                     Command = TP3Command.LISTRESPONSE,
-//                     Path = request.Path,
-//                     Payload = childrenList
-//                 });
-//             return;
-//         }
-        if (request.Command == TP3Command.ECHO)
-        {
-            logger?.LogInformation("ECHO command received with payload: {Payload}", request.Payload);
-            return;
-        }
     }
 
     private IPathDataService? ResolvePathService(IReadOnlyList<string> requestPath)

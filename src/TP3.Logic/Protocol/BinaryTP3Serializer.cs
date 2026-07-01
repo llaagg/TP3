@@ -43,9 +43,11 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         using var reader = new BinaryReader(memoryStream, Utf8, leaveOpen: true);
 
         var commandValue = reader.ReadInt32();
-        var command = Enum.IsDefined(typeof(TP3Command), commandValue)
-            ? (TP3Command)commandValue
-            : TP3Command.ECHO;
+
+        if(!Enum.TryParse<TP3Command>(commandValue.ToString(), out var command))
+        {
+            throw new InvalidDataException($"Invalid TP3 command value: {commandValue}");
+        }
 
         var pathCount = reader.ReadInt32();
         var path = new List<string>(pathCount);

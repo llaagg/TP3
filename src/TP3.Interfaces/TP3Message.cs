@@ -24,15 +24,13 @@ public class TP3Message
     {
     }
     
-    public TP3Command Command { get; init; } = TP3Command.NONE;
+    public TP3Command Command { get; init; } = TP3Command.WALK;
 
     /// <summary>
     /// Which node you are referring to
     /// </summary>
     public List<string> Path { get; init; } = new List<string>();
     
-    public ITP3Stream? Payload { get; init; }
-
     public string? Qid { get; init; }
 
     public string? NodeType { get; init; }
@@ -49,11 +47,6 @@ public class TP3Message
 
     public override string ToString()
     {
-        if (Command == TP3Command.NONE)
-        {
-            return string.Empty;
-        }
-
         var suffix = string.Empty;
         if (IsChunk)
         {
@@ -71,15 +64,6 @@ public class TP3Message
             suffix += $" error={Error}";
         }
 
-        if (Path.Count == 0)
-        {
-            return Payload == null
-                ? $"{Command}{suffix}"
-                : $"{Command} {Payload}{suffix}";
-        }
-
-        return Payload == null
-            ? $"{Command} {string.Join("/", Path)}{suffix}"
-            : $"{Command} {string.Join("/", Path)} {Payload}{suffix}";
+        return $"TP3Message cmd={Command} path={string.Join('/', Path)}{suffix}";
     }
 }

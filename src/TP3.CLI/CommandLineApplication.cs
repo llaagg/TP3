@@ -23,7 +23,9 @@ public static class CommandLineApplication
             bePatientAndWaitForServer
         };
         
-        readCommand.SetHandler(async (int ipcPort, string message, bool consumeResponses, int waitForServer) => await ExecuteRead(ipcPort, message, consumeResponses, waitForServer, logger), ipcPortOption, messageArgument, consumeResponses, bePatientAndWaitForServer);
+        readCommand.SetHandler(async (int ipcPort, string message, bool consumeResponses, int waitForServer) => 
+            await ExecuteRead(ipcPort, message, consumeResponses, waitForServer, logger), 
+                ipcPortOption, messageArgument, consumeResponses, bePatientAndWaitForServer);
 
         var rootCommand = new RootCommand("TP3 CLI")
         {

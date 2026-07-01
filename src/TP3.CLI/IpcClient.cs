@@ -123,20 +123,11 @@ internal sealed class IpcClient
 
     private static TP3Message ParseMessage(string message)
     {
-        if (string.IsNullOrWhiteSpace(message))
-        {
-            return new TP3Message(TP3Command.NONE);
-        }
-
         var parts = message.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length == 0)
-        {
-            return new TP3Message(TP3Command.NONE);
-        }
-
+        
         if (!Enum.TryParse(parts[0], ignoreCase: true, out TP3Command command))
         {
-            command = TP3Command.ECHO;
+            throw new ArgumentException($"Invalid command: {parts[0]}", nameof(message));
         }
 
         var pathSegments = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
