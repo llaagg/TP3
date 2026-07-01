@@ -4,6 +4,8 @@ namespace TP3.Interfaces
     {
         string Name { get; }
 
+        public IEnumerable<INode>? Children{ get; }
+    
         public ITP3Stream? Data { get; }
     }
 }

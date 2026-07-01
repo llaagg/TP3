@@ -42,7 +42,7 @@ public class FileSystemNode : INode
         }
     }
 
-    public Stream? Data
+    public ITP3Stream? Data
     {
         get
         {
@@ -50,7 +50,7 @@ public class FileSystemNode : INode
                 return null!;
             else
             {
-                return File.OpenRead(this.AbsolutePath);
+                throw new NotImplementedException("File data streaming is not implemented yet.");
             }
         }
     }

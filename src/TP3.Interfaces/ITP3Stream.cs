@@ -1,11 +1,45 @@
 namespace TP3.Interfaces
 {
-    public interface ITP3Stream
+    public class ITP3Stream : Stream
     {
-        Task Close();
+        // Task Close();
 
-        Task WriteAsync(Memory<byte> data);
+        // Task WriteAsync(Memory<byte> data);
 
-        Task<Memory<byte>> ReadAsync();
+        // Task<Memory<byte>> ReadAsync();
+        public override bool CanRead => throw new NotImplementedException();
+
+        public override bool CanSeek => throw new NotImplementedException();
+
+        public override bool CanWrite => throw new NotImplementedException();
+
+        public override long Length => throw new NotImplementedException();
+
+        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public override void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

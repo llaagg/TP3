@@ -35,5 +35,5 @@ public class Trunk : INode
         }
     }
 
-    public Stream? Data => null;
+    public ITP3Stream? Data => null;
 }

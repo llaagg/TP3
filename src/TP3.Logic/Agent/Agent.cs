@@ -110,32 +110,32 @@ public class Agent : IAgent
         if (request.Command == TP3Command.READ)
         {
             var path = request.Path;
-            var targetNode = Navigate(T, path);
+            var targetNode = Navigate(T, path.ToArray());
             var dataStream = targetNode.Data;
 
             return;
         }
 
 
-        if (request.Command == TP3Command.LIST)
-        {
-            var targetNode = Navigate(T, request.Path);
-            var childrenList = NodeChildrenToString(targetNode);
+//         if (request.Command == TP3Command.LIST)
+//         {
+//             var targetNode = Navigate(T, request.Path);
+//             var childrenList = NodeChildrenToString(targetNode);
 
-            logger?.LogInformation("LIST command received for target '{Target}'. Children: {Children}", request.Path, childrenList.Count());
-#warning TODO: return the list of children to the requester
+//             logger?.LogInformation("LIST command received for target '{Target}'. Children: {Children}", request.Path, childrenList.Count());
+// #warning TODO: return the list of children to the requester
 
-            // let's send the response
-            await this.Respond(
-                request,
-                new TP3Message
-                {
-                    Command = TP3Command.LISTRESPONSE,
-                    Path = request.Path,
-                    Payload = childrenList
-                });
-            return;
-        }
+//             // let's send the response
+//             await this.Respond(
+//                 request,
+//                 new TP3Message
+//                 {
+//                     Command = TP3Command.LISTRESPONSE,
+//                     Path = request.Path,
+//                     Payload = childrenList
+//                 });
+//             return;
+//         }
         if (request.Command == TP3Command.ECHO)
         {
             logger?.LogInformation("ECHO command received with payload: {Payload}", request.Payload);
@@ -153,5 +153,5 @@ internal class ZeroNodesNode : INode
 {
     public string Name => "EmptyNode";
     public IEnumerable<INode> Children => Enumerable.Empty<INode>();
-    public Stream Data => Stream.Null;
+    public ITP3Stream Data => null!;
 }

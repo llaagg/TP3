@@ -130,8 +130,7 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         using var writer = new BinaryWriter(memoryStream, Utf8, leaveOpen: true);
 
         writer.Write((int)message.Command);
-        writer.Write(message.Path ?? string.Empty);
-        writer.Write(message.Payload ?? string.Empty);
+        writer.Write(message.Path);
         writer.Flush();
 
         return memoryStream.ToArray();

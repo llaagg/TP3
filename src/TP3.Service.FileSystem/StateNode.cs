@@ -24,7 +24,7 @@ public class StateNode : INode
         }
     }
 
-    public Stream? Data
+    public ITP3Stream? Data
     {
         get
         {
