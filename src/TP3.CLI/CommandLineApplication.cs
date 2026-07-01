@@ -1,8 +1,5 @@
 using System.CommandLine;
 using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Host;
-using TP3.Messages;
-using TP3.Service.FileSystem;
 
 namespace TP3.CLI;
 
@@ -12,15 +9,16 @@ public static class CommandLineApplication
     {
         var portOption = new Option<int>(new[] { "--port", "-p" }, () => 5000, "Port to listen on");
         var ipcPortOption = new Option<int>(new[] { "--ipc-port", "-i" }, () => 5001, "IPC port to connect to");
-        var messageArgument = new Argument<string>("message", "Message to send to IPC server");
         var consumeResponses = new Option<bool>(new[] { "--consume-responses", "-c" } , () => true, "Consume responses from the IPC server");
         var bePatientAndWaitForServer = new Option<int>(new[] { "--wait-for-server", "-w" }, ()=>60, "Wait for the IPC server to be ready before sending messages");
+        var messageArgument = new Argument<string>("message", "Message to send to IPC server");
+        
         var readCommand = new Command("read", "Read a message from the IPC server")
         {
             ipcPortOption,
-            messageArgument,
             consumeResponses,
-            bePatientAndWaitForServer
+            bePatientAndWaitForServer,
+            messageArgument,
         };
         
         readCommand.SetHandler(async (int ipcPort, string message, bool consumeResponses, int waitForServer) => 
@@ -42,11 +40,13 @@ public static class CommandLineApplication
 
     private static async Task ExecuteRead(int ipcPort, string message, bool consumeResponses, int waitForServer, ILogger logger)
     {
-        logger.LogInformation("Connecting to IPC server on port {IpcPort} to send message: {Message}", ipcPort, message);
+        logger.LogInformation("Connecting to IPC server on port {IpcPort}", ipcPort);
 
         var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
-        await ipcClient.SendMessageAsync(message);
+
+        logger.LogInformation("Sending message to IPC server: {Message}", message);
+        await ipcClient.SendMessageAsync("read {message}");
 
         if(consumeResponses)
         {

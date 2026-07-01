@@ -54,6 +54,7 @@ public class Agent : IAgent
 
     public async Task Handle(TP3Message request)
     {
+        logger?.LogDebug("Agent handling TP3 message: {Command} {Path}", request.Command, string.Join(" ", request.Args));
         if (request == null)
         {
             logger?.LogWarning("Received null TP3 message.");
@@ -62,13 +63,13 @@ public class Agent : IAgent
         
         if (request.Command == TP3Command.WALK)
         {
-            var service = ResolvePathService(request.Path);
+            var service = ResolvePathService(request.Args);
             if (service is null)
             {
                 await Respond(request, new TP3Message
                 {
                     Command = TP3Command.WALK,
-                    Path = request.Path,
+                    Args = request.Args,
                     Error = "NotFound"
                 });
                 return;
@@ -81,13 +82,13 @@ public class Agent : IAgent
 
         if (request.Command == TP3Command.READ)
         {
-            var service = ResolvePathService(request.Path);
+            var service = ResolvePathService(request.Args);
             if (service is null)
             {
                 await Respond(request, new TP3Message
                 {
                     Command = TP3Command.READ,
-                    Path = request.Path,
+                    Args = request.Args,
                     Error = "NotFound"
                 });
                 return;

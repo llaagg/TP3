@@ -15,8 +15,8 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         using var writer = new BinaryWriter(memoryStream, Utf8, leaveOpen: true);
 
         writer.Write((int)message.Command);
-        writer.Write(message.Path.Count);
-        foreach (var segment in message.Path)
+        writer.Write(message.Args.Count);
+        foreach (var segment in message.Args)
         {
             writer.Write(segment ?? string.Empty);
         }
@@ -68,7 +68,7 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         return new TP3Message
         {
             Command = command,
-            Path = path,
+            Args = path,
             Qid = string.IsNullOrWhiteSpace(qid) ? null : qid,
             NodeType = string.IsNullOrWhiteSpace(nodeType) ? null : nodeType,
             IsChunk = isChunk,

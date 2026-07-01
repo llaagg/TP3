@@ -4,33 +4,39 @@ namespace TP3.Messages;
 
 public class TP3Message
 {
+    private List<string> _args = new();
+
     public TP3Message()
     {
     }
     
     /// <summary>
-    /// Initializes a new instance of the <see cref="TP3Message"/> class with the specified command and path.
+    /// Initializes a new instance of the <see cref="TP3Message"/> class with the specified command and arguments.
     /// </summary>
-    public TP3Message(TP3Command command, params string[] path)
+    public TP3Message(TP3Command command, params string[] args)
     {
         Command = command;
-        Path = path.ToList();
+        _args = args.ToList();
     }
 
     /// <summary>
     /// Copy constructor for TP3Message.
     /// </summary>
-    public TP3Message(TP3Message other) : this(other.Command, other.Path.ToArray())
+    public TP3Message(TP3Message other) : this(other.Command, other.Args.ToArray())
     {
     }
     
     public TP3Command Command { get; init; } = TP3Command.WALK;
 
     /// <summary>
-    /// Which node you are referring to
+    /// The arguments for the TP3 message.
     /// </summary>
-    public List<string> Path { get; init; } = new List<string>();
-    
+    public List<string> Args
+    {
+        get => _args;
+        init => _args = value ?? new List<string>();
+    }
+
     public string? Qid { get; init; }
 
     public string? NodeType { get; init; }
@@ -64,6 +70,6 @@ public class TP3Message
             suffix += $" error={Error}";
         }
 
-        return $"TP3Message cmd={Command} path={string.Join('/', Path)}{suffix}";
+        return $"TP3Message cmd={Command} args={string.Join('/', Args)}{suffix}";
     }
 }

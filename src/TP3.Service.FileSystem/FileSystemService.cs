@@ -38,12 +38,12 @@ public class FileSystemService : IPathDataService
 
     public Task<TP3Message> WalkAsync(TP3Message request)
     {
-        if (!TryResolvePath(request.Path, out var absolutePath, out var isRootState, out var error))
+        if (!TryResolvePath(request.Args, out var absolutePath, out var isRootState, out var error))
         {
             return Task.FromResult(new TP3Message
             {
                 Command = TP3Command.WALK,
-                Path = request.Path,
+                Args = request.Args,
                 Error = error
             });
         }
@@ -53,7 +53,7 @@ public class FileSystemService : IPathDataService
             return Task.FromResult(new TP3Message
             {
                 Command = TP3Command.WALK,
-                Path = request.Path,
+                Args = request.Args,
                 Qid = "fs:/",
                 NodeType = "directory"
             });
@@ -64,7 +64,7 @@ public class FileSystemService : IPathDataService
             return Task.FromResult(new TP3Message
             {
                 Command = TP3Command.WALK,
-                Path = request.Path,
+                Args = request.Args,
                 Qid = absolutePath,
                 NodeType = "directory"
             });
@@ -75,7 +75,7 @@ public class FileSystemService : IPathDataService
             return Task.FromResult(new TP3Message
             {
                 Command = TP3Command.WALK,
-                Path = request.Path,
+                Args = request.Args,
                 Qid = absolutePath,
                 NodeType = "file"
             });
@@ -84,21 +84,21 @@ public class FileSystemService : IPathDataService
         return Task.FromResult(new TP3Message
         {
             Command = TP3Command.WALK,
-            Path = request.Path,
+            Args = request.Args,
             Error = "NotFound"
         });
     }
 
     public async Task<IReadOnlyList<TP3Message>> ReadAsync(TP3Message request)
     {
-        if (!TryResolvePath(request.Path, out var absolutePath, out var isRootState, out var error))
+        if (!TryResolvePath(request.Args, out var absolutePath, out var isRootState, out var error))
         {
             return new[]
             {
                 new TP3Message
                 {
                     Command = TP3Command.READ,
-                    Path = request.Path,
+                    Args = request.Args,
                     Error = error
                 }
             };
@@ -132,7 +132,7 @@ public class FileSystemService : IPathDataService
             new TP3Message
             {
                 Command = TP3Command.READ,
-                Path = request.Path,
+                Args = request.Args,
                 Error = "NotFound"
             }
         };
@@ -201,7 +201,7 @@ public class FileSystemService : IPathDataService
             results.Add(new TP3Message
             {
                 Command = TP3Command.READ,
-                Path = request.Path,
+                Args = request.Args,
                 Qid = qid,
                 NodeType = nodeType,
                 IsChunk = true,
@@ -223,7 +223,7 @@ public class FileSystemService : IPathDataService
             results.Add(new TP3Message
             {
                 Command = TP3Command.READ,
-                Path = request.Path,
+                Args = request.Args,
                 Qid = qid,
                 NodeType = nodeType,
                 IsChunk = true,
@@ -254,7 +254,7 @@ public class FileSystemService : IPathDataService
                     results.Add(new TP3Message
                     {
                         Command = TP3Command.READ,
-                        Path = request.Path,
+                        Args = request.Args,
                         Qid = absolutePath,
                         NodeType = "file",
                         IsChunk = true,
@@ -274,7 +274,7 @@ public class FileSystemService : IPathDataService
             results.Add(new TP3Message
             {
                 Command = TP3Command.READ,
-                Path = request.Path,
+                Args = request.Args,
                 Qid = absolutePath,
                 NodeType = "file",
                 IsChunk = true,
