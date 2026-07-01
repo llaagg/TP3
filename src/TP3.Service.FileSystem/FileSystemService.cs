@@ -19,16 +19,6 @@ public class FileSystemService : IService
 
     public INode Events { get; private set; } = null!;
 
-    public bool CanHandlePath(IReadOnlyList<string> fullPath)
-    {
-        if (fullPath.Count == 0)
-        {
-            return true;
-        }
-
-        return string.Equals(fullPath[0], nameof(FileSystemService), StringComparison.OrdinalIgnoreCase);
-    }
-
     public async Task Init(IAgent me)
     {
     }
