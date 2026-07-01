@@ -14,5 +14,5 @@ var loggerFactory = LoggerFactory.Create(builder =>
 
 var logger = loggerFactory.CreateLogger(Assembly.GetExecutingAssembly().GetName().Name!);
 
-await TP3.CLI.CommandLineApplication.RunAsync(args, logger);
+await TP3.CLI.CLI.RunAsync(args, logger);
 

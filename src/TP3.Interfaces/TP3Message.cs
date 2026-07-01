@@ -4,10 +4,9 @@ namespace TP3.Messages;
 
 public abstract class TP3Message
 {
-    private List<string> _args = new();
-
     protected TP3Message()
     {
+        Args = new List<string>();
     }
     
     /// <summary>
@@ -16,7 +15,7 @@ public abstract class TP3Message
     protected TP3Message(TP3Command command, params string[] args)
     {
         Command = command;
-        _args = args.ToList();
+        Args = args.ToList();
     }
 
     /// <summary>
@@ -34,11 +33,10 @@ public abstract class TP3Message
     /// </summary>
     public List<string> Args
     {
-        get => _args;
-        init => _args = value ?? new List<string>();
+        get;set;
     }
 
-    public string? Tag { get; init; }
+    public string? Tag { get; set; }
 
     public override string ToString()
     {
