@@ -162,7 +162,7 @@ internal sealed class IpcClient
             };
         }
 
-        return new TP3Message(command, pathSegments)
+        return new TP3GenericMessage(command, pathSegments)
         {
             Tag = tag
         };

@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Microsoft.Extensions.Logging;
+using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
 
@@ -54,23 +55,24 @@ public class Agent : IAgent
 
     public async Task Handle(TP3Message request)
     {
-        logger?.LogDebug("Agent handling TP3 message: {Command} {Path}", request.Command, string.Join(" ", request.Args));
+        var effectiveRequest = request is RouteTP3Message routed ? routed.InnerMessage : request;
+        logger?.LogDebug("Agent handling TP3 message: {Command} {Path}", effectiveRequest.Command, string.Join(" ", effectiveRequest.Args));
         if (request == null)
         {
             logger?.LogWarning("Received null TP3 message.");
             return;
         }
         
-        if (request.Command == TP3Command.WALK)
+        if (effectiveRequest.Command == TP3Command.WALK)
         {
-            var walkRequest = TP3WalkRequest.From(request);
-            var service = ResolvePathService(request.Args);
+            var walkRequest = TP3WalkRequest.From(effectiveRequest);
+            var service = ResolvePathService(effectiveRequest.Args);
             if (service is null)
             {
                 await Respond(request, new TP3WalkResponse
                 {
-                    Args = request.Args,
-                    Tag = request.Tag,
+                    Args = effectiveRequest.Args,
+                    Tag = effectiveRequest.Tag,
                     Error = "NotFound"
                 });
                 return;
@@ -81,22 +83,22 @@ public class Agent : IAgent
             return;
         }
 
-        if (request.Command == TP3Command.READ)
+        if (effectiveRequest.Command == TP3Command.READ)
         {
-            var readRequest = TP3ReadRequest.From(request);
+            var readRequest = TP3ReadRequest.From(effectiveRequest);
             IPathDataService? service = null;
-            if (!string.IsNullOrWhiteSpace(request.Qid))
+            if (!string.IsNullOrWhiteSpace(readRequest.Qid))
             {
-                service = ResolveQidService(request.Qid);
+                service = ResolveQidService(readRequest.Qid);
             }
 
-            service ??= ResolvePathService(request.Args);
+            service ??= ResolvePathService(effectiveRequest.Args);
             if (service is null)
             {
                 await Respond(request, new TP3ReadResponse
                 {
-                    Args = request.Args,
-                    Tag = request.Tag,
+                    Args = effectiveRequest.Args,
+                    Tag = effectiveRequest.Tag,
                     Error = "NotFound"
                 });
                 return;

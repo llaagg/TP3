@@ -7,7 +7,6 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
 {
     private static readonly Encoding Utf8 = Encoding.UTF8;
     public byte[] Header { get; } = Utf8.GetBytes("TP30");
-    public TP3SerializationFormat Format => TP3SerializationFormat.Binary;
 
     public byte[] SerializePayload(TP3Message message)
     {
@@ -15,27 +14,43 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         using var writer = new BinaryWriter(memoryStream, Utf8, leaveOpen: true);
 
         writer.Write((int)message.Command);
-        writer.Write(message.Args.Count);
-        foreach (var segment in message.Args)
-        {
-            writer.Write(segment ?? string.Empty);
-        }
-
+        writer.Write(message is TP3WalkResponse or TP3ReadResponse ? (byte)1 : (byte)0);
+        WriteStringList(writer, message.Args);
         writer.Write(message.Tag ?? string.Empty);
-        writer.Write(message.Qid ?? string.Empty);
-        writer.Write(message.Offset);
-        writer.Write(message.MaxBytes);
-        writer.Write(message.NodeType?.ToString().ToLowerInvariant() ?? string.Empty);
-        writer.Write(message.IsChunk);
-        writer.Write(message.ChunkIndex);
-        writer.Write(message.IsFinalChunk);
 
-        var data = message.Data ?? Array.Empty<byte>();
-        writer.Write(data.Length);
-        writer.Write(data);
+        switch (message)
+        {
+            case TP3WalkResponse walkResponse:
+                writer.Write(walkResponse.Qid ?? string.Empty);
+                writer.Write(walkResponse.NodeType?.ToString().ToLowerInvariant() ?? string.Empty);
+                writer.Write(walkResponse.Error ?? string.Empty);
+                break;
 
-        writer.Write(message.Error ?? string.Empty);
-        writer.Flush();
+            case TP3ReadRequest readRequest:
+                writer.Write(readRequest.Qid ?? string.Empty);
+                writer.Write(readRequest.Offset);
+                writer.Write(readRequest.MaxBytes);
+                break;
+
+            case TP3ReadResponse readResponse:
+                writer.Write(readResponse.Qid ?? string.Empty);
+                writer.Write(readResponse.Offset);
+                writer.Write(readResponse.MaxBytes);
+                writer.Write(readResponse.NodeType?.ToString().ToLowerInvariant() ?? string.Empty);
+                writer.Write(readResponse.IsChunk);
+                writer.Write(readResponse.ChunkIndex);
+                writer.Write(readResponse.IsFinalChunk);
+                var data = readResponse.Data ?? Array.Empty<byte>();
+                writer.Write(data.Length);
+                writer.Write(data);
+                writer.Write(readResponse.Error ?? string.Empty);
+                break;
+
+            case TP3WalkRequest:
+            case TP3GenericMessage:
+            default:
+                break;
+        }
 
         return memoryStream.ToArray();
     }
@@ -46,43 +61,68 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         using var reader = new BinaryReader(memoryStream, Utf8, leaveOpen: true);
 
         var commandValue = reader.ReadInt32();
-
-        if(!Enum.TryParse<TP3Command>(commandValue.ToString(), out var command))
+        if (!Enum.TryParse<TP3Command>(commandValue.ToString(), out var command))
         {
             throw new InvalidDataException($"Invalid TP3 command value: {commandValue}");
         }
 
-        var pathCount = reader.ReadInt32();
-        var path = new List<string>(pathCount);
-        for (var i = 0; i < pathCount; i++)
-        {
-            path.Add(reader.ReadString());
-        }
-
+        var kind = reader.ReadByte();
+        var args = ReadStringList(reader);
         var tag = reader.ReadString();
-        var qid = reader.ReadString();
+
+        var isResponse = kind == 1;
+        return command switch
+        {
+            TP3Command.WALK => isResponse ? ReadWalkResponse(args, tag, reader) : new TP3WalkRequest
+            {
+                Args = args,
+                Tag = NormalizeOptionalString(tag)
+            },
+            TP3Command.READ => isResponse ? ReadReadResponse(args, tag, reader) : new TP3ReadRequest
+            {
+                Args = args,
+                Tag = NormalizeOptionalString(tag),
+                Qid = NormalizeOptionalString(reader.ReadString()),
+                Offset = reader.ReadInt64(),
+                MaxBytes = reader.ReadInt32()
+            },
+            _ => new TP3GenericMessage(command, args.ToArray())
+            {
+                Tag = NormalizeOptionalString(tag)
+            }
+        };
+    }
+
+    private static TP3WalkResponse ReadWalkResponse(List<string> args, string tag, BinaryReader reader)
+    {
+        return new TP3WalkResponse
+        {
+            Args = args,
+            Tag = NormalizeOptionalString(tag),
+            Qid = NormalizeOptionalString(reader.ReadString()),
+            NodeType = TryReadNodeType(reader.ReadString()),
+            Error = NormalizeOptionalString(reader.ReadString())
+        };
+    }
+
+    private static TP3ReadResponse ReadReadResponse(List<string> args, string tag, BinaryReader reader)
+    {
+        var qid = NormalizeOptionalString(reader.ReadString());
         var offset = reader.ReadInt64();
         var maxBytes = reader.ReadInt32();
-        var nodeTypeRaw = reader.ReadString();
-        NodeType? nodeType = null;
-        if (!string.IsNullOrWhiteSpace(nodeTypeRaw)
-            && Enum.TryParse<NodeType>(nodeTypeRaw, ignoreCase: true, out var parsedNodeType))
-        {
-            nodeType = parsedNodeType;
-        }
+        var nodeType = TryReadNodeType(reader.ReadString());
         var isChunk = reader.ReadBoolean();
         var chunkIndex = reader.ReadInt32();
         var isFinalChunk = reader.ReadBoolean();
         var dataLength = reader.ReadInt32();
         var data = dataLength > 0 ? reader.ReadBytes(dataLength) : Array.Empty<byte>();
-        var error = reader.ReadString();
+        var error = NormalizeOptionalString(reader.ReadString());
 
-        return new TP3Message
+        return new TP3ReadResponse
         {
-            Command = command,
-            Args = path,
-            Tag = string.IsNullOrWhiteSpace(tag) ? null : tag,
-            Qid = string.IsNullOrWhiteSpace(qid) ? null : qid,
+            Args = args,
+            Tag = NormalizeOptionalString(tag),
+            Qid = qid,
             Offset = offset,
             MaxBytes = maxBytes,
             NodeType = nodeType,
@@ -90,7 +130,38 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
             ChunkIndex = chunkIndex,
             IsFinalChunk = isFinalChunk,
             Data = dataLength > 0 ? data : null,
-            Error = string.IsNullOrWhiteSpace(error) ? null : error
+            Error = error
         };
     }
+
+    private static void WriteStringList(BinaryWriter writer, IReadOnlyList<string> values)
+    {
+        writer.Write(values.Count);
+        foreach (var value in values)
+        {
+            writer.Write(value ?? string.Empty);
+        }
+    }
+
+    private static List<string> ReadStringList(BinaryReader reader)
+    {
+        var count = reader.ReadInt32();
+        var list = new List<string>(count);
+        for (var i = 0; i < count; i++)
+        {
+            list.Add(reader.ReadString());
+        }
+
+        return list;
+    }
+
+    private static NodeType? TryReadNodeType(string value)
+    {
+        return !string.IsNullOrWhiteSpace(value) && Enum.TryParse<NodeType>(value, ignoreCase: true, out var nodeType)
+            ? nodeType
+            : null;
+    }
+
+    private static string? NormalizeOptionalString(string value)
+        => string.IsNullOrWhiteSpace(value) ? null : value;
 }

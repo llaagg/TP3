@@ -1,5 +1,6 @@
 using System.CommandLine;
 using Microsoft.Extensions.Logging;
+using TP3.Messages;
 
 namespace TP3.CLI;
 
@@ -76,8 +77,8 @@ public static class CommandLineApplication
         logger.LogInformation("Sending message to IPC server: {Message}", command);
         await ipcClient.SendMessageAsync(command);
 
-        var walkResponse = await ReceiveSingleResponse(ipcClient).ConfigureAwait(false);
-        if (walkResponse is null)
+        var walkMessage = await ReceiveSingleResponse(ipcClient).ConfigureAwait(false);
+        if (walkMessage is not TP3WalkResponse walkResponse)
         {
             logger.LogWarning("No WALK response received.");
             await ipcClient.DisconnectAsync();
@@ -106,8 +107,8 @@ public static class CommandLineApplication
         while (true)
         {
             await ipcClient.SendMessageAsync($"read {qid} {offset} {maxBytes}").ConfigureAwait(false);
-            var response = await ReceiveSingleResponse(ipcClient).ConfigureAwait(false);
-            if (response is null)
+            var readMessage = await ReceiveSingleResponse(ipcClient).ConfigureAwait(false);
+            if (readMessage is not TP3ReadResponse response)
             {
                 break;
             }
@@ -156,7 +157,7 @@ public static class CommandLineApplication
             await foreach (var response in ipcClient.ListenAsync())
             {
                 logger.LogInformation("Received response: {Response}", response);
-                if(response.IsFinalChunk)
+                if (response is TP3ReadResponse readResponse && readResponse.IsFinalChunk)
                 {
                     logger.LogInformation("Received final chunk. Stopping response consumption.");
                     break;

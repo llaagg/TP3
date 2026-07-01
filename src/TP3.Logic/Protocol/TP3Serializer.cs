@@ -8,33 +8,23 @@ using TP3.Messages;
 
 namespace TP3.Agent.Logic.Protocol;
 
-public enum TP3SerializationFormat
-{
-    Binary,
-    Json
-}
-
 public static class TP3Serializer
 {
     private static readonly Encoding Utf8 = Encoding.UTF8;
     private static readonly int HeaderLength = 4;
     private static readonly ITP3Serializer BinarySerializer = new BinaryTP3Serializer();
-    private static readonly ITP3Serializer JsonSerializer = new JsonTP3Serializer();
 
-    public static byte[] SerializeBytes(TP3Message message, TP3SerializationFormat format = TP3SerializationFormat.Json)
+    public static byte[] SerializeBytes(TP3Message message)
     {
-        var serializer = GetSerializer(format);
-        var payload = serializer.SerializePayload(message);
-        return BuildPacket(serializer.Header, payload);
+        var payload = BinarySerializer.SerializePayload(message);
+        return BuildPacket(BinarySerializer.Header, payload);
     }
-
 
     public static async Task<TP3Message> ReadMessageAsync(Stream stream, CancellationToken cancellationToken)
     {
         var header = new byte[HeaderLength];
         await ReadExactAsync(stream, header, cancellationToken).ConfigureAwait(false);
 
-        var serializer = GetSerializer(header);
         var lengthBytes = new byte[sizeof(int)];
         await ReadExactAsync(stream, lengthBytes, cancellationToken).ConfigureAwait(false);
         var payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lengthBytes, 0));
@@ -46,7 +36,7 @@ public static class TP3Serializer
 
         var payload = new byte[payloadLength];
         await ReadExactAsync(stream, payload, cancellationToken).ConfigureAwait(false);
-        return serializer.DeserializePayload(payload);
+        return BinarySerializer.DeserializePayload(payload);
     }
 
     private static byte[] BuildPacket(byte[] header, byte[] payload)
@@ -57,24 +47,6 @@ public static class TP3Serializer
         Buffer.BlockCopy(lengthBytes, 0, packet, header.Length, lengthBytes.Length);
         Buffer.BlockCopy(payload, 0, packet, header.Length + lengthBytes.Length, payload.Length);
         return packet;
-    }
-
-    private static ITP3Serializer GetSerializer(TP3SerializationFormat format)
-        => format == TP3SerializationFormat.Json ? JsonSerializer : BinarySerializer;
-
-    private static ITP3Serializer GetSerializer(ReadOnlySpan<byte> header)
-    {
-        if (header.SequenceEqual(BinarySerializer.Header))
-        {
-            return BinarySerializer;
-        }
-
-        if (header.SequenceEqual(JsonSerializer.Header))
-        {
-            return JsonSerializer;
-        }
-
-        throw new InvalidDataException("Unknown TP3 header.");
     }
 
     private static async Task ReadExactAsync(Stream stream, byte[] buffer, CancellationToken cancellationToken)
