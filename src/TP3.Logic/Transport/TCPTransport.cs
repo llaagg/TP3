@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace TP3.Agent.Logic.Transport;
 
-public sealed partial class TCPTransport : IDisposable
+public sealed partial class TCPTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;

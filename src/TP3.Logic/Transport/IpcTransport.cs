@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace TP3.Agent.Logic.Transport;
 
-public sealed class IpcTransport : IDisposable
+public sealed class IpcTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;
@@ -59,6 +59,12 @@ public sealed class IpcTransport : IDisposable
         logger?.LogInformation("IPC listener stopped.");
     }
 
+    public Task PublishEventAsync(string eventText)
+    {
+        logger?.LogWarning("PublishEventAsync is not supported on IPC transport.");
+        return Task.CompletedTask;
+    }
+
     private async Task AcceptLoopAsync(CancellationToken cancellationToken)
     {
         try
@@ -105,11 +111,6 @@ public sealed class IpcTransport : IDisposable
 
                 var response = requestHandler(trimmed);
                 await writer.WriteLineAsync(response).ConfigureAwait(false);
-
-                if (trimmed.Equals("QUIT", StringComparison.OrdinalIgnoreCase))
-                {
-                    break;
-                }
             }
         }
         catch (OperationCanceledException)

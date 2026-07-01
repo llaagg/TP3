@@ -20,7 +20,7 @@ public class AgentHost : IDisposable
 {
     private readonly IAgent agent;
     private readonly ITP3Transport tp3Transport;
-    private readonly IpcTransport ipcTransport;
+    private readonly ITP3Transport ipcTransport;
     private readonly IService[] services;
     private readonly PeerConnectionManager peerConnectionManager;
     private readonly ILogger? logger;
@@ -36,7 +36,7 @@ public class AgentHost : IDisposable
 
         peerConnectionManager = new PeerConnectionManager(logger);
         tp3Transport = new TP3Transport(port, HandleTP3Message, logger);
-        ipcTransport = new IpcTransport(ipcPort, Handle, logger);
+        ipcTransport = new TP3Transport(ipcPort, HandleTP3Message, logger, useIpc: true);
 
         this.services = services ?? Array.Empty<IService>();
     }
@@ -75,13 +75,6 @@ public class AgentHost : IDisposable
         logger?.LogInformation("Disposing agent host.");
         ipcTransport.Dispose();
         tp3Transport.Dispose();
-    }
-
-    private string Handle(string request)
-    {
-        logger?.LogInformation("Received IPC request: {Request}", request);
-        var tp3Message = TP3Protocol.Parse(request);
-        return HandleTP3Message(tp3Message);
     }
 
     private string HandleTP3Message(TP3Message message)

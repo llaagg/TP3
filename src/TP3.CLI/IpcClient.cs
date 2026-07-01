@@ -1,5 +1,6 @@
 using System.Net.Sockets;
 using System.Text;
+using TP3.Messages;
 
 namespace TP3.CLI;
 
@@ -14,7 +15,7 @@ public class IpcClient
         this.host = host;
     }
 
-    public async Task<string> SendAsync(string message)
+    public async Task<string> SendAsync(TP3Message message)
     {
         using var tcpClient = new TcpClient();
         await tcpClient.ConnectAsync(host, ipcPort).ConfigureAwait(false);
@@ -23,7 +24,7 @@ public class IpcClient
         using var writer = new StreamWriter(networkStream, Encoding.UTF8, leaveOpen: true) { AutoFlush = true };
         using var reader = new StreamReader(networkStream, Encoding.UTF8, leaveOpen: true);
 
-        await writer.WriteLineAsync(message).ConfigureAwait(false);
+        await writer.WriteLineAsync(message.ToString()).ConfigureAwait(false);
         var response = await reader.ReadLineAsync().ConfigureAwait(false);
         return response ?? string.Empty;
     }

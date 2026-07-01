@@ -1,6 +1,7 @@
 using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
+using TP3.Messages;
 using TP3.Service.FileSystem;
 
 namespace TP3.CLI;
@@ -68,7 +69,11 @@ public static class CommandLineApplication
     private static async Task ExecuteEchoAsync(int ipcPort, string message, ILogger logger)
     {
         logger.LogInformation("Sending ECHO to IPC port {IpcPort}: {Message}", ipcPort, message);
-        var response = await new IpcClient("127.0.0.1", ipcPort).SendAsync( $"ECHO {message}").ConfigureAwait(false);
+        var response = await new IpcClient("127.0.0.1", ipcPort).SendAsync(new TP3Message
+        {
+            Command = TP3Command.ECHO,
+            Payload = message
+        }).ConfigureAwait(false);
         Console.WriteLine(response);
     }
 }

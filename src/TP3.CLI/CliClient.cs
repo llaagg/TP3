@@ -1,3 +1,5 @@
+using TP3.Messages;
+
 namespace TP3.CLI;
 
 public class CliClient
@@ -33,7 +35,11 @@ public class CliClient
     private static readonly Dictionary<string, Func<IpcClient, string, Task>> commandHandlers = new()
     {
         { "LIST", async (ipcClient, message) => {
-            var response = await ipcClient.SendAsync($"LIST {message}");
+            var response = await ipcClient.SendAsync(new TP3Message
+            {
+                Command = TP3Command.LIST,
+                Target = message
+            });
             Console.WriteLine(response);
         }},
         { "HELP", async (ipcClient, message) => {
@@ -44,11 +50,19 @@ public class CliClient
             Console.WriteLine("QUIT - Exit the CLI");
         }},
         { "ECHO", async (ipcClient, message) => {
-            var response = await ipcClient.SendAsync($"ECHO {message}");
+            var response = await ipcClient.SendAsync(new TP3Message
+            {
+                Command = TP3Command.ECHO,
+                Payload = message
+            });
             Console.WriteLine(response);
         }},
         { "QUIT", async (ipcClient, message) => {
-            var response = await ipcClient.SendAsync($"QUIT");
+            var response = await ipcClient.SendAsync(new TP3Message
+            {
+                Command = TP3Command.ECHO,
+                Payload = "QUIT"
+            });
             Console.WriteLine(response);
             isRunning = false;
         }}

@@ -9,32 +9,34 @@ namespace TP3.Agent.Logic.Protocol;
 
 public sealed class TP3Transport : ITP3Transport
 {
-    private readonly TCPTransport tcpTransport;
+    private readonly INetworkTransport transport;
     private readonly ILogger? logger;
 
-    public TP3Transport(int port, Func<TP3Message, string> messageHandler, ILogger? logger = null)
+    public TP3Transport(int port, Func<TP3Message, string> messageHandler, ILogger? logger = null, bool useIpc = false)
     {
         this.logger = logger;
-        tcpTransport = new TCPTransport(port, rawRequest => messageHandler(TP3Protocol.Parse(rawRequest)), logger);
+        transport = useIpc
+            ? new IpcTransport(port, rawRequest => messageHandler(TP3Protocol.Parse(rawRequest)), logger)
+            : new TCPTransport(port, rawRequest => messageHandler(TP3Protocol.Parse(rawRequest)), logger);
     }
 
     public Task Start()
     {
-        return tcpTransport.Start();
+        return transport.Start();
     }
 
     public Task PublishEventAsync(string eventText)
     {
-        return tcpTransport.PublishEventAsync(eventText);
+        return transport.PublishEventAsync(eventText);
     }
 
     public void Stop()
     {
-        tcpTransport.Stop();
+        transport.Stop();
     }
 
     public void Dispose()
     {
-        tcpTransport.Dispose();
+        transport.Dispose();
     }
 }
