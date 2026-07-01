@@ -53,14 +53,14 @@ public class Agent : IAgent
     }
 
 
-    private INode Navigate(INode node, string path)
+    private INode Navigate(INode node, params string[] path)
     {
-        if (string.IsNullOrWhiteSpace(path))
+        if (path == null || path.Length == 0)
         {
             return node;
         }
 
-        var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+        var segments = path.SelectMany(p => p.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)).ToArray();
         var currentNode = node;
 
         foreach (var segment in segments)
@@ -107,6 +107,16 @@ public class Agent : IAgent
             logger?.LogWarning("Received {Command} TP3 message.", request.Command);
             return;
         }
+        if (request.Command == TP3Command.READ)
+        {
+            var path = request.Path;
+            var targetNode = Navigate(T, path);
+            var dataStream = targetNode.Data;
+
+            return;
+        }
+
+
         if (request.Command == TP3Command.LIST)
         {
             var targetNode = Navigate(T, request.Path);
