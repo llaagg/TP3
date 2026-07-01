@@ -110,7 +110,7 @@ public static class TP3Serializer
             var bytesRead = await stream.ReadAsync(buffer.AsMemory(offset, buffer.Length - offset), cancellationToken).ConfigureAwait(false);
             if (bytesRead == 0)
             {
-                throw new IOException("Unexpected EOF while reading TP3 packet.");
+                throw new EndOfStreamException("Unexpected EOF while reading TP3 packet.");
             }
 
             offset += bytesRead;

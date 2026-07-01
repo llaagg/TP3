@@ -39,7 +39,7 @@ public class SerializerTests
     [Fact]
     public void DeserializeBytes_RecognizesBinaryHeader()
     {
-        var message = new TP3Message(TP3Command.HELP, "foo", "bar");
+        var message = new TP3Message(TP3Command.LIST, "foo", "bar");
         var payload = TP3Serializer.SerializeBytes(message, TP3SerializationFormat.Binary);
         var roundTripped = TP3Serializer.DeserializeBytes(payload);
 
@@ -51,12 +51,29 @@ public class SerializerTests
     [Fact]
     public void DeserializeBytes_RecognizesJsonHeader()
     {
-        var message = new TP3Message(TP3Command.QUIT, "foo", "bar");
+        var message = new TP3Message(TP3Command.HI, "foo", "bar");
         var payload = TP3Serializer.SerializeBytes(message, TP3SerializationFormat.Json);
         var roundTripped = TP3Serializer.DeserializeBytes(payload);
 
         Assert.Equal(message.Command, roundTripped.Command);
         Assert.Equal(message.Target, roundTripped.Target);
         Assert.Equal(message.Payload, roundTripped.Payload);
+    }
+
+    [Fact]
+    public async Task ReadMessageAsync_TruncatedPayload_ThrowsEndOfStreamException()
+    {
+        var message = new TP3Message(TP3Command.LIST, "target", "payload");
+        var payload = TP3Serializer.SerializeBytes(message, TP3SerializationFormat.Binary);
+        using var stream = new MemoryStream(payload, 0, payload.Length - 5);
+
+        await Assert.ThrowsAsync<EndOfStreamException>(() => TP3Serializer.ReadMessageAsync(stream, default));
+    }
+
+    [Fact]
+    public async Task ReadMessageAsync_EmptyStream_ThrowsEndOfStreamException()
+    {
+        using var stream = new MemoryStream();
+        await Assert.ThrowsAsync<EndOfStreamException>(() => TP3Serializer.ReadMessageAsync(stream, default));
     }
 }

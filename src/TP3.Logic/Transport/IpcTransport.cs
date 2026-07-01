@@ -120,7 +120,27 @@ public sealed class IpcTransport : INetworkTransport
     {
         while (!cancellationToken.IsCancellationRequested && session.Client.Connected)
         {
-            var message = await TP3Serializer.ReadMessageAsync(session.Stream, cancellationToken).ConfigureAwait(false);
+            TP3Message message;
+            try
+            {
+                message = await TP3Serializer.ReadMessageAsync(session.Stream, cancellationToken).ConfigureAwait(false);
+            }
+            catch (EndOfStreamException)
+            {
+                // Client closed the connection cleanly.
+                break;
+            }
+            catch (IOException ex)
+            {
+                logger?.LogWarning(ex, "IPC stream closed unexpectedly.");
+                break;
+            }
+            catch (InvalidDataException ex)
+            {
+                logger?.LogWarning(ex, "Invalid TP3 packet received from IPC client.");
+                break;
+            }
+
             Console.WriteLine($"IPC RX: {message}");
 
             currentSession.Value = session;
