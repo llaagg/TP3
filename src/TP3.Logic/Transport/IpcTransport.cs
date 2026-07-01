@@ -148,12 +148,6 @@ public sealed class IpcTransport : INetworkTransport
         }
     }
 
-    public Task PublishEventAsync(string eventText)
-    {
-        Console.WriteLine($"IPC EVENT: {eventText}");
-        return Task.CompletedTask;
-    }
-
     private sealed class ClientSession
     {
         public ClientSession(TcpClient client, NetworkStream stream)

@@ -21,11 +21,6 @@ public sealed class TP3Transport : ITP3Transport
         return transport.Start();
     }
 
-    public Task PublishEventAsync(string eventText)
-    {
-        return transport.PublishEventAsync(eventText);
-    }
-
     public Task Send(TP3Message message)
     {
         return transport.Send(message);

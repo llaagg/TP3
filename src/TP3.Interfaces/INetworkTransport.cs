@@ -8,6 +8,5 @@ public interface INetworkTransport : IDisposable
 {
     Task Start();
     void Stop();
-    Task PublishEventAsync(string eventText);
     Task Send(TP3Message message);
 }

@@ -16,54 +16,49 @@ public enum TP3SerializationFormat
     Json
 }
 
+public interface ITP3Serializer
+{
+    byte[] Header { get; }
+    TP3SerializationFormat Format { get; }
+    byte[] SerializePayload(TP3Message message);
+    TP3Message DeserializePayload(ReadOnlySpan<byte> payload);
+}
+
 public static class TP3Serializer
 {
     private static readonly Encoding Utf8 = Encoding.UTF8;
-    private static readonly byte[] BinaryHeader = Utf8.GetBytes("TP30");
-    private static readonly byte[] JsonHeader = Utf8.GetBytes("TP31");
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-    };
+    private static readonly int HeaderLength = 4;
+    private static readonly ITP3Serializer BinarySerializer = new BinaryTP3Serializer();
+    private static readonly ITP3Serializer JsonSerializer = new JsonTP3Serializer();
 
     public static byte[] SerializeBytes(TP3Message message, TP3SerializationFormat format = TP3SerializationFormat.Binary)
     {
-        var header = format == TP3SerializationFormat.Json ? JsonHeader : BinaryHeader;
-        var payload = format == TP3SerializationFormat.Json
-            ? SerializeJsonPayload(message)
-            : SerializeBinaryPayload(message);
-
-        var packet = new byte[header.Length + sizeof(int) + payload.Length];
-        Buffer.BlockCopy(header, 0, packet, 0, header.Length);
-        var lengthBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(payload.Length));
-        Buffer.BlockCopy(lengthBytes, 0, packet, header.Length, lengthBytes.Length);
-        Buffer.BlockCopy(payload, 0, packet, header.Length + lengthBytes.Length, payload.Length);
-
-        return packet;
+        var serializer = GetSerializer(format);
+        var payload = serializer.SerializePayload(message);
+        return BuildPacket(serializer.Header, payload);
     }
 
     public static TP3Message DeserializeBytes(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.Length < BinaryHeader.Length + sizeof(int))
+        if (bytes.Length < HeaderLength + sizeof(int))
         {
             throw new InvalidDataException("Invalid TP3 packet.");
         }
 
-        var header = bytes.Slice(0, BinaryHeader.Length);
-        var format = GetFormat(header);
-        var payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(bytes.Slice(BinaryHeader.Length, sizeof(int)).ToArray(), 0));
-        var payload = bytes.Slice(BinaryHeader.Length + sizeof(int), payloadLength);
+        var header = bytes.Slice(0, HeaderLength);
+        var serializer = GetSerializer(header);
+        var payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(bytes.Slice(HeaderLength, sizeof(int)).ToArray(), 0));
+        var payload = bytes.Slice(HeaderLength + sizeof(int), payloadLength);
 
-        return DeserializePayload(payload, format);
+        return serializer.DeserializePayload(payload);
     }
 
     public static async Task<TP3Message> ReadMessageAsync(Stream stream, CancellationToken cancellationToken)
     {
-        var header = new byte[BinaryHeader.Length];
+        var header = new byte[HeaderLength];
         await ReadExactAsync(stream, header, cancellationToken).ConfigureAwait(false);
 
-        var format = GetFormat(header);
+        var serializer = GetSerializer(header);
         var lengthBytes = new byte[sizeof(int)];
         await ReadExactAsync(stream, lengthBytes, cancellationToken).ConfigureAwait(false);
         var payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(lengthBytes, 0));
@@ -75,72 +70,32 @@ public static class TP3Serializer
 
         var payload = new byte[payloadLength];
         await ReadExactAsync(stream, payload, cancellationToken).ConfigureAwait(false);
-        return DeserializePayload(payload, format);
+        return serializer.DeserializePayload(payload);
     }
 
-    private static byte[] SerializeBinaryPayload(TP3Message message)
+    private static byte[] BuildPacket(byte[] header, byte[] payload)
     {
-        using var memoryStream = new MemoryStream();
-        using var writer = new BinaryWriter(memoryStream, Utf8, leaveOpen: true);
-
-        writer.Write((int)message.Command);
-        writer.Write(message.Target ?? string.Empty);
-        writer.Write(message.Payload ?? string.Empty);
-        writer.Flush();
-
-        return memoryStream.ToArray();
+        var packet = new byte[header.Length + sizeof(int) + payload.Length];
+        Buffer.BlockCopy(header, 0, packet, 0, header.Length);
+        var lengthBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(payload.Length));
+        Buffer.BlockCopy(lengthBytes, 0, packet, header.Length, lengthBytes.Length);
+        Buffer.BlockCopy(payload, 0, packet, header.Length + lengthBytes.Length, payload.Length);
+        return packet;
     }
 
-    private static byte[] SerializeJsonPayload(TP3Message message)
+    private static ITP3Serializer GetSerializer(TP3SerializationFormat format)
+        => format == TP3SerializationFormat.Json ? JsonSerializer : BinarySerializer;
+
+    private static ITP3Serializer GetSerializer(ReadOnlySpan<byte> header)
     {
-        return Utf8.GetBytes(JsonSerializer.Serialize(message, JsonOptions));
-    }
-
-    private static TP3Message DeserializePayload(ReadOnlySpan<byte> payload, TP3SerializationFormat format)
-    {
-        return format == TP3SerializationFormat.Json
-            ? DeserializeJsonPayload(payload)
-            : DeserializeBinaryPayload(payload);
-    }
-
-    private static TP3Message DeserializeBinaryPayload(ReadOnlySpan<byte> payload)
-    {
-        using var memoryStream = new MemoryStream(payload.ToArray());
-        using var reader = new BinaryReader(memoryStream, Utf8, leaveOpen: true);
-
-        var commandValue = reader.ReadInt32();
-        var command = Enum.IsDefined(typeof(TP3Command), commandValue)
-            ? (TP3Command)commandValue
-            : TP3Command.ECHO;
-
-        var target = reader.ReadString();
-        var messagePayload = reader.ReadString();
-
-        return new TP3Message
+        if (header.SequenceEqual(BinarySerializer.Header))
         {
-            Command = command,
-            Target = target,
-            Payload = messagePayload
-        };
-    }
-
-    private static TP3Message DeserializeJsonPayload(ReadOnlySpan<byte> payload)
-    {
-        var json = Utf8.GetString(payload);
-        return JsonSerializer.Deserialize<TP3Message>(json, JsonOptions)
-            ?? new TP3Message();
-    }
-
-    private static TP3SerializationFormat GetFormat(ReadOnlySpan<byte> header)
-    {
-        if (header.SequenceEqual(BinaryHeader))
-        {
-            return TP3SerializationFormat.Binary;
+            return BinarySerializer;
         }
 
-        if (header.SequenceEqual(JsonHeader))
+        if (header.SequenceEqual(JsonSerializer.Header))
         {
-            return TP3SerializationFormat.Json;
+            return JsonSerializer;
         }
 
         throw new InvalidDataException("Unknown TP3 header.");
@@ -160,5 +115,69 @@ public static class TP3Serializer
 
             offset += bytesRead;
         }
+    }
+}
+
+internal sealed class BinaryTP3Serializer : ITP3Serializer
+{
+    private static readonly Encoding Utf8 = Encoding.UTF8;
+    public byte[] Header { get; } = Utf8.GetBytes("TP30");
+    public TP3SerializationFormat Format => TP3SerializationFormat.Binary;
+
+    public byte[] SerializePayload(TP3Message message)
+    {
+        using var memoryStream = new MemoryStream();
+        using var writer = new BinaryWriter(memoryStream, Utf8, leaveOpen: true);
+
+        writer.Write((int)message.Command);
+        writer.Write(message.Target ?? string.Empty);
+        writer.Write(message.Payload ?? string.Empty);
+        writer.Flush();
+
+        return memoryStream.ToArray();
+    }
+
+    public TP3Message DeserializePayload(ReadOnlySpan<byte> payload)
+    {
+        using var memoryStream = new MemoryStream(payload.ToArray());
+        using var reader = new BinaryReader(memoryStream, Utf8, leaveOpen: true);
+
+        var commandValue = reader.ReadInt32();
+        var command = Enum.IsDefined(typeof(TP3Command), commandValue)
+            ? (TP3Command)commandValue
+            : TP3Command.ECHO;
+
+        var target = reader.ReadString();
+        var messagePayload = reader.ReadString();
+
+        return new TP3Message
+        {
+            Command = command,
+            Target = target,
+            Payload = messagePayload
+        };
+    }
+}
+
+internal sealed class JsonTP3Serializer : ITP3Serializer
+{
+    private static readonly Encoding Utf8 = Encoding.UTF8;
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+    };
+
+    public byte[] Header { get; } = Utf8.GetBytes("TP31");
+    public TP3SerializationFormat Format => TP3SerializationFormat.Json;
+
+    public byte[] SerializePayload(TP3Message message)
+        => Utf8.GetBytes(JsonSerializer.Serialize(message, JsonOptions));
+
+    public TP3Message DeserializePayload(ReadOnlySpan<byte> payload)
+    {
+        var json = Utf8.GetString(payload);
+        return JsonSerializer.Deserialize<TP3Message>(json, JsonOptions)
+            ?? new TP3Message();
     }
 }
