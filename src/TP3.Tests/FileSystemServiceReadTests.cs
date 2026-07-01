@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using TP3.Agent.Logic.Agent;
 using TP3.Messages;
 using TP3.Service.FileSystem;
 
@@ -9,8 +10,9 @@ public class FileSystemServiceReadTests
     public async Task WalkThenReadDirectory_StreamsJsonEntries_AndEndsWithEof()
     {
         var service = new FileSystemService();
+        var walker = new PathWalker(() => new[] { service });
 
-        var walkResponse = await service.WalkAsync(new TP3WalkRequest
+        var walkResponse = await walker.WalkAsync(new TP3WalkRequest
         {
             Args = new List<string>()
         });
@@ -25,7 +27,7 @@ public class FileSystemServiceReadTests
 
         for (var i = 0; i < 512; i++)
         {
-            var readResponse = await service.ReadAsync(new TP3ReadRequest
+            var readResponse = await walker.ReadAsync(new TP3ReadRequest
             {
                 Qid = qid,
                 Offset = offset,

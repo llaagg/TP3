@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
 using TP3.Interfaces;
-using TP3.Messages;
 
 namespace TP3.Service.FileSystem;
 
@@ -10,9 +9,6 @@ namespace TP3.Service.FileSystem;
 /// </summary>
 public class FileSystemService : IPathDataService
 {
-    private readonly Dictionary<string, RegisteredNode> nodesByQid = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object sync = new();
-
     public FileSystemService()
     {
         this.State = new StateNode("fs:state");
@@ -38,81 +34,21 @@ public class FileSystemService : IPathDataService
         return string.Equals(fullPath[0], nameof(FileSystemService), StringComparison.OrdinalIgnoreCase);
     }
 
-    public bool CanHandleQid(string qid)
+    public INode? ResolvePath(IReadOnlyList<string> fullPath)
     {
-        lock (sync)
-        {
-            return nodesByQid.ContainsKey(qid);
-        }
+        return ResolveNodeByPath(fullPath);
     }
 
-    public Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
+    public ServiceReader CreateReader(INode node)
     {
-        var node = ResolveNodeByPath(request.Args);
-        if (node is null)
+        if (node is FileSystemNode fsNode)
         {
-            return Task.FromResult(new TP3WalkResponse
-            {
-                Args = request.Args,
-                Tag = request.Tag,
-                Error = "NotFound"
-            });
+            return fsNode.IsDirectory
+                ? new DirectoryJsonReader(isRootState: false, fsNode.AbsolutePath)
+                : new FileBinaryReader(fsNode.AbsolutePath);
         }
 
-        var nodeType = node is FileSystemNode fsNode && !fsNode.IsDirectory
-            ? NodeType.File
-            : NodeType.Directory;
-
-        EnsureRegisteredNode(node);
-
-        return Task.FromResult(new TP3WalkResponse
-        {
-            Args = request.Args,
-            Tag = request.Tag,
-            Qid = node.Qid,
-            NodeType = nodeType
-        });
-
-        return Task.FromResult(new TP3WalkResponse
-        {
-            Args = request.Args,
-            Tag = request.Tag,
-            Error = "NotFound"
-        });
-    }
-
-    public async Task<TP3ReadResponse> ReadAsync(TP3ReadRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.Qid))
-        {
-            return new TP3ReadResponse
-            {
-                Args = request.Args,
-                Tag = request.Tag,
-                Error = "QidRequired"
-            };
-        }
-
-        RegisteredNode? registered;
-        lock (sync)
-        {
-            nodesByQid.TryGetValue(request.Qid, out registered);
-        }
-
-        if (registered is null)
-        {
-            return new TP3ReadResponse
-            {
-                Args = request.Args,
-                Tag = request.Tag,
-                Qid = request.Qid,
-                Error = "NotFound"
-            };
-        }
-
-        return await ReaderChunkerEngine
-            .ReadAsync(request, request.Qid!, registered.NodeType, registered.Reader)
-            .ConfigureAwait(false);
+        return new DirectoryJsonReader(isRootState: true, absolutePath: null);
     }
 
     private INode? ResolveNodeByPath(IReadOnlyList<string> requestPath)
@@ -165,75 +101,6 @@ public class FileSystemService : IPathDataService
     private static string NormalizePathSegment(string segment)
     {
         return segment.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-    }
-
-    private void RegisterNode(string qid, INode node, NodeType nodeType, ServiceReader reader)
-    {
-        lock (sync)
-        {
-            nodesByQid[qid] = new RegisteredNode
-            {
-                Node = node,
-                NodeType = nodeType,
-                Reader = reader
-            };
-        }
-    }
-
-    private void EnsureRegisteredStateNode(string qid)
-    {
-        lock (sync)
-        {
-            if (!nodesByQid.ContainsKey(qid))
-            {
-                var node = new StateNode(qid);
-                nodesByQid[qid] = new RegisteredNode
-                {
-                    Node = node,
-                    NodeType = NodeType.Directory,
-                    Reader = new DirectoryJsonReader(isRootState: true, absolutePath: null)
-                };
-            }
-        }
-    }
-
-    private void EnsureRegisteredNode(INode node)
-    {
-        lock (sync)
-        {
-            if (nodesByQid.ContainsKey(node.Qid))
-            {
-                return;
-            }
-
-            if (node is FileSystemNode fsNode)
-            {
-                nodesByQid[node.Qid] = new RegisteredNode
-                {
-                    Node = node,
-                    NodeType = fsNode.IsDirectory ? NodeType.Directory : NodeType.File,
-                    Reader = fsNode.IsDirectory
-                        ? new DirectoryJsonReader(isRootState: false, fsNode.AbsolutePath)
-                        : new FileBinaryReader(fsNode.AbsolutePath)
-                };
-            }
-            else
-            {
-                nodesByQid[node.Qid] = new RegisteredNode
-                {
-                    Node = node,
-                    NodeType = NodeType.Directory,
-                    Reader = new DirectoryJsonReader(isRootState: true, absolutePath: null)
-                };
-            }
-        }
-    }
-
-    private sealed class RegisteredNode
-    {
-        public required INode Node { get; init; }
-        public required NodeType NodeType { get; init; }
-        public required ServiceReader Reader { get; init; }
     }
 
     private sealed class FileBinaryReader : ServiceReader

@@ -15,11 +15,13 @@ public class Agent : IAgent
 {
     private readonly IRouter router;
     private readonly ILogger? logger;
+    private readonly PathWalker walker;
 
     public Agent(IRouter router, ILogger? logger = null)
     {
         this.router = router;
         this.logger = logger;
+        this.walker = new PathWalker(() => this.Services.OfType<IPathDataService>());
 
         logger?.LogInformation("Initializing agent logic.");
     }
@@ -66,19 +68,7 @@ public class Agent : IAgent
         if (effectiveRequest.Command == TP3Command.WALK)
         {
             var walkRequest = TP3WalkRequest.From(effectiveRequest);
-            var service = ResolvePathService(effectiveRequest.Args);
-            if (service is null)
-            {
-                await Respond(request, new TP3WalkResponse
-                {
-                    Args = effectiveRequest.Args,
-                    Tag = effectiveRequest.Tag,
-                    Error = "NotFound"
-                });
-                return;
-            }
-
-            var response = await service.WalkAsync(walkRequest).ConfigureAwait(false);
+            var response = await walker.WalkAsync(walkRequest).ConfigureAwait(false);
             await Respond(request, response).ConfigureAwait(false);
             return;
         }
@@ -86,25 +76,7 @@ public class Agent : IAgent
         if (effectiveRequest.Command == TP3Command.READ)
         {
             var readRequest = TP3ReadRequest.From(effectiveRequest);
-            IPathDataService? service = null;
-            if (!string.IsNullOrWhiteSpace(readRequest.Qid))
-            {
-                service = ResolveQidService(readRequest.Qid);
-            }
-
-            service ??= ResolvePathService(effectiveRequest.Args);
-            if (service is null)
-            {
-                await Respond(request, new TP3ReadResponse
-                {
-                    Args = effectiveRequest.Args,
-                    Tag = effectiveRequest.Tag,
-                    Error = "NotFound"
-                });
-                return;
-            }
-
-            var response = await service.ReadAsync(readRequest).ConfigureAwait(false);
+            var response = await walker.ReadAsync(readRequest).ConfigureAwait(false);
             await Respond(request, response).ConfigureAwait(false);
             return;
         }
@@ -114,11 +86,6 @@ public class Agent : IAgent
     private IPathDataService? ResolvePathService(IReadOnlyList<string> requestPath)
     {
         return Services.OfType<IPathDataService>().FirstOrDefault(s => s.CanHandlePath(requestPath));
-    }
-
-    private IPathDataService? ResolveQidService(string qid)
-    {
-        return Services.OfType<IPathDataService>().FirstOrDefault(s => s.CanHandleQid(qid));
     }
 
     private async Task Respond(TP3Message request, TP3Message tP3Message)

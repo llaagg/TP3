@@ -28,23 +28,21 @@ public class FileSystemNode : INode
     {
         get
         {
-            if (IsDirectory)
+            if (!IsDirectory)
             {
-                var directories = Directory.GetDirectories(this.AbsolutePath);
-                foreach (var directory in directories)
-                {
-                    yield return new FileSystemNode(directory, $"fs:{Guid.NewGuid():N}");
-                }
-
-                var files = Directory.GetFiles(this.AbsolutePath);
-                foreach (var file in files)
-                {
-                    yield return new FileSystemNode(file, $"fs:{Guid.NewGuid():N}");
-                }
+                yield break;
             }
-            else
+
+            var directories = Directory.GetDirectories(this.AbsolutePath);
+            foreach (var directory in directories)
             {
-                yield return null!;
+                yield return new FileSystemNode(directory, $"fs:{Guid.NewGuid():N}");
+            }
+
+            var files = Directory.GetFiles(this.AbsolutePath);
+            foreach (var file in files)
+            {
+                yield return new FileSystemNode(file, $"fs:{Guid.NewGuid():N}");
             }
         }
     }
