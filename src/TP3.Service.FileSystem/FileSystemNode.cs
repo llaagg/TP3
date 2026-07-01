@@ -1,4 +1,5 @@
 using TP3.Interfaces;
+using TP3.Messages;
 
 namespace TP3.Service.FileSystem;
 
@@ -19,6 +20,12 @@ public class FileSystemNode : INode
     public string Qid { get; }
 
     public string Name { get; set; }
+
+    public NodeType NodeType => IsDirectory ? NodeType.Directory : NodeType.File;
+
+    public ServiceReader? Reader => IsDirectory
+        ? new DirectoryJsonReader(isRootState: false, AbsolutePath)
+        : new FileBinaryReader(AbsolutePath);
 
     public string AbsolutePath { get; private set; }
 

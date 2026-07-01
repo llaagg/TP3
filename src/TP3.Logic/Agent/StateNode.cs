@@ -1,4 +1,5 @@
 using TP3.Interfaces;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Agent;
 
@@ -9,12 +10,15 @@ public class StateNode : INode
     public StateNode(INode state)
     {
         this.state = state;
-
     }
 
     public string Qid => $"state:{Name}";
 
     public string Name => "state";
+
+    public NodeType NodeType => NodeType.Directory;
+
+    public ServiceReader? Reader => state.Reader;
 
     public IEnumerable<INode>? Children => state.Children;
 

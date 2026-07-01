@@ -8,29 +8,19 @@ namespace TP3.Agent.Logic.Agent;
 
 public sealed class PathWalker
 {
-    private readonly Func<IEnumerable<IPathDataService>> servicesProvider;
     private readonly Dictionary<string, RegisteredQid> nodesByQid = new(StringComparer.OrdinalIgnoreCase);
     private readonly object sync = new();
+    private readonly INode trunk;
 
-    public PathWalker(Func<IEnumerable<IPathDataService>> servicesProvider)
+    public PathWalker(INode trunk)
     {
-        this.servicesProvider = servicesProvider ?? throw new ArgumentNullException(nameof(servicesProvider));
+        this.trunk = trunk;
     }
 
     public Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
     {
-        var service = ResolvePathService(request.Args);
-        if (service is null)
-        {
-            return Task.FromResult(new TP3WalkResponse
-            {
-                Args = request.Args,
-                Tag = request.Tag,
-                Error = "NotFound"
-            });
-        }
 
-        var node = service.ResolvePath(request.Args);
+        var node = ResolveNode(trunk, request.Args);
         if (node is null)
         {
             return Task.FromResult(new TP3WalkResponse
@@ -41,7 +31,7 @@ public sealed class PathWalker
             });
         }
 
-        var registered = EnsureRegisteredNode(node, service);
+        var registered = EnsureRegisteredNode(node);
 
         return Task.FromResult(new TP3WalkResponse
         {
@@ -81,16 +71,35 @@ public sealed class PathWalker
             });
         }
 
-        return ReaderChunkerEngine.ReadAsync(request, request.Qid!, registered.NodeType, registered.Reader);
+        return ReaderChunkerEngine.ReadAsync(request, request.Qid!, registered.NodeType, registered.Node.Reader);
     }
 
-    private IPathDataService? ResolvePathService(IReadOnlyList<string> requestPath)
+    private INode? ResolveNode(INode trunk, IReadOnlyList<string> requestPath)
     {
-        return servicesProvider()
-            .FirstOrDefault(s => s.CanHandlePath(requestPath));
+        var segments = requestPath
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Trim())
+            .ToList();
+
+        INode current = trunk;
+        foreach (var segment in segments)
+        {
+            if (current.Children is null)
+            {
+                return null;
+            }
+
+            current = current.Children.FirstOrDefault(child => string.Equals(child?.Name, segment, StringComparison.OrdinalIgnoreCase));
+            if (current is null)
+            {
+                return null;
+            }
+        }
+
+        return current;
     }
 
-    private RegisteredQid EnsureRegisteredNode(INode node, IPathDataService service)
+    private RegisteredQid EnsureRegisteredNode(INode node)
     {
         lock (sync)
         {
@@ -99,14 +108,10 @@ public sealed class PathWalker
                 return existing;
             }
 
-            var nodeType = DetermineNodeType(node);
-            var reader = service.CreateReader(node);
             existing = new RegisteredQid
             {
                 Node = node,
-                Service = service,
-                NodeType = nodeType,
-                Reader = reader
+                NodeType = node.NodeType,
             };
 
             nodesByQid[node.Qid] = existing;
@@ -114,29 +119,9 @@ public sealed class PathWalker
         }
     }
 
-    private static NodeType DetermineNodeType(INode node)
-    {
-        if (node.Children is null)
-        {
-            return NodeType.File;
-        }
-
-        foreach (var child in node.Children)
-        {
-            if (child is not null)
-            {
-                return NodeType.Directory;
-            }
-        }
-
-        return NodeType.File;
-    }
-
     private sealed class RegisteredQid
     {
         public required INode Node { get; init; }
-        public required IPathDataService Service { get; init; }
         public required NodeType NodeType { get; init; }
-        public required ServiceReader Reader { get; init; }
     }
 }

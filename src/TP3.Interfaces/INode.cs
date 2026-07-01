@@ -1,3 +1,5 @@
+using TP3.Messages;
+
 namespace TP3.Interfaces
 {
     public interface INode
@@ -6,8 +8,12 @@ namespace TP3.Interfaces
 
         string Name { get; }
 
-        public IEnumerable<INode>? Children{ get; }
+        NodeType NodeType { get; }
+
+        public IEnumerable<INode>? Children { get; }
     
         public ITP3Stream? Data { get; }
+
+        public ServiceReader? Reader { get; }
     }
 }

@@ -1,4 +1,5 @@
 using TP3.Interfaces;
+using TP3.Messages;
 
 namespace TP3.Service.FileSystem;
 
@@ -13,6 +14,10 @@ public class StateNode : INode
     public string Qid { get; }
 
     public string Name { get; set; }
+
+    public NodeType NodeType => NodeType.Directory;
+
+    public ServiceReader? Reader => new DirectoryJsonReader(isRootState: true, absolutePath: null);
 
     public ITP3Stream? Data => null;
 

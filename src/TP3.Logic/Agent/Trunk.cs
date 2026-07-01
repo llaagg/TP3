@@ -1,4 +1,5 @@
 using TP3.Interfaces;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Agent;
 
@@ -25,6 +26,10 @@ public class Trunk : INode
     public string Qid => "trunk:/";
 
     public string Name => "/";
+
+    public NodeType NodeType => NodeType.Directory;
+
+    public ServiceReader? Reader => null;
 
     public IEnumerable<INode>? Children
     {

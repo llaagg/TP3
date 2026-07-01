@@ -21,7 +21,7 @@ public class Agent : IAgent
     {
         this.router = router;
         this.logger = logger;
-        this.walker = new PathWalker(() => this.Services.OfType<IPathDataService>());
+        this.walker = new PathWalker(this.T);
 
         logger?.LogInformation("Initializing agent logic.");
     }
@@ -81,11 +81,6 @@ public class Agent : IAgent
             return;
         }
 
-    }
-
-    private IPathDataService? ResolvePathService(IReadOnlyList<string> requestPath)
-    {
-        return Services.OfType<IPathDataService>().FirstOrDefault(s => s.CanHandlePath(requestPath));
     }
 
     private async Task Respond(TP3Message request, TP3Message tP3Message)
