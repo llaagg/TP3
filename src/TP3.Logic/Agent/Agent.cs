@@ -64,27 +64,23 @@ public class Agent : IAgent
             logger?.LogWarning("Received null TP3 message.");
             return;
         }
-        
-        if (effectiveRequest.Command == TP3Command.WALK)
+        else if (effectiveRequest.Command == TP3Command.WALK)
         {
             var walkRequest = TP3WalkRequest.From(effectiveRequest);
             var response = await walker.WalkAsync(walkRequest).ConfigureAwait(false);
-            await Respond(request, response).ConfigureAwait(false);
+
+            await router.Respond(this, request, response);
             return;
         }
-
-        if (effectiveRequest.Command == TP3Command.READ)
+        else if (effectiveRequest.Command == TP3Command.READ)
         {
             var readRequest = TP3ReadRequest.From(effectiveRequest);
             var response = await walker.ReadAsync(readRequest).ConfigureAwait(false);
-            await Respond(request, response).ConfigureAwait(false);
+
+            await router.Respond(this, request, response);
             return;
         }
 
-    }
-
-    private async Task Respond(TP3Message request, TP3Message tP3Message)
-    {
-        await router.Respond(this, request, tP3Message);
+        logger?.LogWarning("Agent received unhandled TP3 message: {Command} {Path}", effectiveRequest.Command, string.Join(" ", effectiveRequest.Args));
     }
 }

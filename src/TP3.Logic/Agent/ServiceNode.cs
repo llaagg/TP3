@@ -18,8 +18,6 @@ internal partial class ServiceNode : INode
 
     public NodeType NodeType => NodeType.Directory;
 
-    public ServiceReader? Reader => null;
-
     public IEnumerable<INode>? Children
     {
         get
@@ -33,7 +31,5 @@ internal partial class ServiceNode : INode
             // if (s.Events != null) children.Add(s.Events);   
         }
     }
-
-    ITP3Stream? INode.Data => null;
 
 }

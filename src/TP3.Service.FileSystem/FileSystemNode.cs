@@ -23,10 +23,6 @@ public class FileSystemNode : INode
 
     public NodeType NodeType => IsDirectory ? NodeType.Directory : NodeType.File;
 
-    public ServiceReader? Reader => IsDirectory
-        ? new DirectoryJsonReader(isRootState: false, AbsolutePath)
-        : new FileBinaryReader(AbsolutePath);
-
     public string AbsolutePath { get; private set; }
 
     public bool IsDirectory { get; private set; }
@@ -54,16 +50,4 @@ public class FileSystemNode : INode
         }
     }
 
-    public ITP3Stream? Data
-    {
-        get
-        {
-            if (this.IsDirectory)
-                return null!;
-            else
-            {
-                throw new NotImplementedException("File data streaming is not implemented yet.");
-            }
-        }
-    }
 }

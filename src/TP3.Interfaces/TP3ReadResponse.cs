@@ -2,6 +2,7 @@ namespace TP3.Messages;
 
 public sealed class TP3ReadResponse : TP3Message
 {
+    #warning TODO: remove args and command
     public TP3ReadResponse()
     {
         Command = TP3Command.READ;

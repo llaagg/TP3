@@ -1,6 +1,6 @@
 namespace TP3.Interfaces;
 
-public abstract class ServiceReader
+public abstract class Reader
 {
     public abstract Task<ServiceReadResult> ReadAsync(long offset, int maxBytes);
 }

@@ -1,1 +1,0 @@
-// IPathDataService is no longer needed. Use IService directly with node-based traversal.

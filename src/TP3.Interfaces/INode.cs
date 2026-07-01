@@ -12,8 +12,5 @@ namespace TP3.Interfaces
 
         public IEnumerable<INode>? Children { get; }
     
-        public ITP3Stream? Data { get; }
-
-        public ServiceReader? Reader { get; }
     }
 }

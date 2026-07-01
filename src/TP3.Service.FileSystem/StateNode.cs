@@ -17,10 +17,6 @@ public class StateNode : INode
 
     public NodeType NodeType => NodeType.Directory;
 
-    public ServiceReader? Reader => new DirectoryJsonReader(isRootState: true, absolutePath: null);
-
-    public ITP3Stream? Data => null;
-
     public IEnumerable<INode>? Children
     {
         get

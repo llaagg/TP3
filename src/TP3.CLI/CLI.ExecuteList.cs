@@ -13,12 +13,11 @@ public static partial class CLI
         var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
 
-        var command = path != null ? $"walk {path}" : "walk";
-        logger.LogInformation("Sending message to IPC server: {Message}", command);
-        var request = MessageHelper.ParseMessage(command);
+        var request = MessageHelper.ParseMessage(path != null ? $"walk {path}" : "walk");
         await ipcClient.SendMessageAsync(request);
 
-        var walkMessage = await ReceiveSingleResponse(ipcClient).ConfigureAwait(false);
+        var walkMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
+        
         if (walkMessage is not TP3WalkResponse walkResponse)
         {
             logger.LogWarning("No WALK response received.");
@@ -50,7 +49,8 @@ public static partial class CLI
             var readCommand = MessageHelper.ParseMessage($"read {qid} {offset} {maxBytes}");
             await ipcClient.SendMessageAsync(readCommand);
 
-            var readMessage = await ReceiveSingleResponse(ipcClient).ConfigureAwait(false);
+            var readMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
+            logger.LogDebug(" {Qid}-> Received response: {ResponseCommand} {ResponseArgs}", qid, readMessage.Command, readMessage.Args);
             if (readMessage is not TP3ReadResponse response)
             {
                 break;

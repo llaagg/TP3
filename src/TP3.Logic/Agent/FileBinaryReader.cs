@@ -2,7 +2,7 @@ using TP3.Interfaces;
 
 namespace TP3.Service.FileSystem;
 
-internal sealed class FileBinaryReader : ServiceReader
+internal sealed class FileBinaryReader : Reader
 {
     private readonly string absolutePath;
 

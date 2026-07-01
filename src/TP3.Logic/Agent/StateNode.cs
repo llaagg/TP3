@@ -18,8 +18,6 @@ public class StateNode : INode
 
     public NodeType NodeType => NodeType.Directory;
 
-    public ServiceReader? Reader => state.Reader;
-
     public IEnumerable<INode>? Children => state.Children;
 
     public ITP3Stream? Data => null;

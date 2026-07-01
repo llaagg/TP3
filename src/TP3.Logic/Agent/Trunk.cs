@@ -29,8 +29,6 @@ public class Trunk : INode
 
     public NodeType NodeType => NodeType.Directory;
 
-    public ServiceReader? Reader => null;
-
     public IEnumerable<INode>? Children
     {
         get

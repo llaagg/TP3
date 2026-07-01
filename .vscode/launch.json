@@ -40,12 +40,25 @@
       "cwd": "${workspaceFolder}/src/TP3.CLI",
       "console": "integratedTerminal",
       "stopAtEntry": false
+    },
+    {
+      "name": "CLI - LIST",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build TP3.CLI",
+      "program": "${workspaceFolder}/src/TP3.CLI/bin/Debug/net10.0/TP3.CLI.dll",
+      "args": [
+        "list",
+      ],
+      "cwd": "${workspaceFolder}/src/TP3.CLI",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
     }
   ],
   "compounds": [
     {
       "name": "Compound",
-      "configurations": [ "Server", "CLI - Walk (get root folder)" ],
+      "configurations": [ "Server", "CLI - LIST"],
       "stopAll": true
     }
   ]

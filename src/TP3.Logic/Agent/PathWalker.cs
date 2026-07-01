@@ -19,8 +19,8 @@ public sealed class PathWalker
 
     public Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
     {
-
         var node = ResolveNode(trunk, request.Args);
+
         if (node is null)
         {
             return Task.FromResult(new TP3WalkResponse
@@ -71,7 +71,7 @@ public sealed class PathWalker
             });
         }
 
-        return ReaderChunkerEngine.ReadAsync(request, request.Qid!, registered.NodeType, registered.Node.Reader);
+        return ReaderChunkerEngine.ReadAsync(request, request.Qid!, registered.NodeType);
     }
 
     private INode? ResolveNode(INode trunk, IReadOnlyList<string> requestPath)
@@ -94,6 +94,7 @@ public sealed class PathWalker
             {
                 return null;
             }
+
         }
 
         return current;

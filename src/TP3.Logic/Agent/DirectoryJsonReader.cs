@@ -3,7 +3,7 @@ using TP3.Interfaces;
 
 namespace TP3.Service.FileSystem;
 
-internal sealed class DirectoryJsonReader : ServiceReader
+internal sealed class DirectoryJsonReader : Reader
 {
     private readonly byte[][] records;
 
