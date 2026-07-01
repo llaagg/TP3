@@ -8,4 +8,5 @@
   <Project Path="TP3.Messages/TP3.Messages.csproj" />
   <Project Path="TP3.Service.FileSystem/TP3.Service.FileSystem.csproj" />
   <Project Path="TP3.Service.Screen/TP3.Service.Screen.csproj" />
+  <Project Path="TP3.Tests/TP3.Tests.csproj" />
 </Solution>
