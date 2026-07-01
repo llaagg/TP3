@@ -17,33 +17,19 @@ public sealed class Router
         this.logger = logger;
     }
 
-    public string Route(TP3Message message)
+    public async Task Route(TP3Message message)
     {
         if (message.Command == TP3Command.NONE)
         {
-            logger?.LogWarning("Received empty TP3 message.");
-            return string.Empty;
+            logger?.LogWarning($"Received {message.Command} TP3 message.");
+            return;
         }
 
         logger?.LogDebug("Routing TP3 message: {Command} {Target}", message.Command, message.Target);
 
-        return RouteAgentRequest(message);
-    }
-
-
-    private string RouteAgentRequest(TP3Message message)
-    {
         #warning TODO: namespace filtering
-        #warning TODO: tcp forward
-        var request = string.IsNullOrWhiteSpace(message.Target)
-            ? message.Payload
-            : $"{message.Target} {message.Payload}".Trim();
-
-        return host.Me.HandleRequest(new TP3Message
-        {
-            Command = message.Command,
-            Target = message.Target,
-            Payload = request
-        });
+        #warning TODO: tcp forward, currelnty we only send to our local agent, but we should forward to other agents if the target is not local
+        
+        await host.Me.Handle(message);
     }
 }

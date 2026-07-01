@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Protocol;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
 
@@ -12,11 +13,11 @@ public sealed class IpcTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;
-    private readonly Func<string, string> requestHandler;
+    private readonly Func<TP3Message, Task> requestHandler;
     private readonly ILogger? logger;
     private bool disposed;
 
-    public IpcTransport(int port, Func<string, string> requestHandler, ILogger? logger = null)
+    public IpcTransport(int port, Func<TP3Message, Task> requestHandler, ILogger? logger = null)
     {
         this.requestHandler = requestHandler ?? throw new ArgumentNullException(nameof(requestHandler));
         this.logger = logger;
@@ -111,8 +112,7 @@ public sealed class IpcTransport : INetworkTransport
                 }
 
                 var message = TP3Serializer.Deserialize(trimmed);
-                var response = requestHandler(TP3Serializer.SerializeText(message));
-                await writer.WriteLineAsync(response).ConfigureAwait(false);
+                await requestHandler(message).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)

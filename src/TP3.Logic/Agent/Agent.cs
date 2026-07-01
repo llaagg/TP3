@@ -93,16 +93,32 @@ public class Agent : IAgent
         return result;
     }
 
-    public string HandleRequest(TP3Message request)
+    public async Task Handle(TP3Message request)
     {
-        return request.Command switch
+        if(request == null)
         {
-            TP3Command.LIST => 
-                this.NodeChildrenToString(
-                    this.Navigate(this.T, request.Target)),
-            TP3Command.ECHO => $"ECHO: {request}",
-            TP3Command.HI => $"HI,I am {request.Target}.",
-        };
+            logger?.LogWarning("Received null TP3 message.");
+            return;
+        }
+        if(request.Command == TP3Command.NONE)
+        {
+            logger?.LogWarning("Received {Command} TP3 message.", request.Command);
+            return;
+        }
+        if(request.Command == TP3Command.LIST)
+        {
+            var targetNode = Navigate(T, request.Target);
+            var childrenList = NodeChildrenToString(targetNode);
+
+            logger?.LogInformation("LIST command received for target '{Target}'. Children: {Children}", request.Target, childrenList);
+            #warning TODO: return the list of children to the requester
+            return;
+        }
+        if(request.Command == TP3Command.ECHO)
+        {
+            logger?.LogInformation("ECHO command received with payload: {Payload}", request.Payload);
+            return;
+        }
     }
 }
 

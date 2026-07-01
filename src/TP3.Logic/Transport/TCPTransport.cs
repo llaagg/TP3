@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using TP3.Agent.Logic.Protocol;
+using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
 
@@ -9,14 +11,14 @@ public sealed partial class TCPTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly TcpListener listener;
-    private readonly Func<string, string> responseFactory;
+    private readonly Func<TP3Message, Task> responseFactory;
     private readonly SubscriptionManager subscriptionManager;
     private readonly Dictionary<string, StreamSession> streamSessions = new(StringComparer.OrdinalIgnoreCase);
     private readonly object streamSessionsLock = new();
     private bool disposed;
     private readonly ILogger? logger;
 
-    public TCPTransport(int port, Func<string, string> responseFactory, ILogger? logger = null)
+    public TCPTransport(int port, Func<TP3Message, Task> responseFactory, ILogger? logger = null)
     {
         this.responseFactory = responseFactory ?? throw new ArgumentNullException(nameof(responseFactory));
         this.logger = logger;
@@ -104,14 +106,10 @@ public sealed partial class TCPTransport : INetworkTransport
                     return;
                 }
 
-                var responseText = responseFactory(request);
-                var responseBytes = Encoding.UTF8.GetBytes(responseText + "\n");
-                await networkStream.WriteAsync(responseBytes.AsMemory(0, responseBytes.Length), cancellationToken).ConfigureAwait(false);
+                var message = TP3ProtocolHelpers.Parse(request);
 
-                if (request.Equals("QUIT", StringComparison.OrdinalIgnoreCase))
-                {
-                    break;
-                }
+                await responseFactory(message);
+                
             }
         }
         catch (OperationCanceledException)

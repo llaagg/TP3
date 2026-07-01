@@ -4,7 +4,7 @@ using TP3.Messages;
 
 namespace TP3.Agent.Logic.Protocol;
 
-public static class TP3Protocol
+public static class TP3ProtocolHelpers
 {
     public static TP3Message Parse(string request)
     {

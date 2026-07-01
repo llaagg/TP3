@@ -6,5 +6,5 @@ public interface IAgent
 {    
     INode T { get; }
     Task AddService(IService service);
-    string HandleRequest(TP3Message request);
+    Task Handle(TP3Message request);
 }

@@ -16,7 +16,7 @@ public sealed class TP3Transport : ITP3Transport
         this.logger = logger;
     }
 
-    public static TP3Transport Create(int port, Func<TP3Message, string> messageHandler, ILogger? logger = null, bool useIpc = false)
+    public static TP3Transport Create(int port, Func<TP3Message, Task> messageHandler, ILogger? logger = null, bool useIpc = false)
     {
         if (messageHandler is null)
         {
@@ -24,8 +24,8 @@ public sealed class TP3Transport : ITP3Transport
         }
 
         INetworkTransport transport = useIpc
-            ? new IpcTransport(port, rawRequest => messageHandler(TP3Protocol.Parse(rawRequest)), logger)
-            : new TCPTransport(port, rawRequest => messageHandler(TP3Protocol.Parse(rawRequest)), logger);
+            ? new IpcTransport(port, messageHandler, logger)
+            : new TCPTransport(port, messageHandler, logger);
 
         return new TP3Transport(transport, logger);
     }
