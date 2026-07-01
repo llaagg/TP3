@@ -3,6 +3,8 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Protocol;
 using TP3.Interfaces;
@@ -13,6 +15,8 @@ namespace TP3.Agent.Logic.Transport;
 public sealed class IpcTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
+    private readonly SemaphoreSlim writeLock = new(1, 1);
+    private readonly AsyncLocal<ClientSession?> currentSession = new();
     private readonly TcpListener listener;
     private readonly IRouter router;
     private readonly ILogger? logger;
@@ -20,7 +24,7 @@ public sealed class IpcTransport : INetworkTransport
 
     public IpcTransport(int port, IRouter router, ILogger? logger = null)
     {
-        this.router = router ;
+        this.router = router;
         this.logger = logger;
         listener = new TcpListener(IPAddress.Loopback, port);
     }
@@ -36,6 +40,7 @@ public sealed class IpcTransport : INetworkTransport
         cancellationTokenSource.Cancel();
         listener.Stop();
         cancellationTokenSource.Dispose();
+        writeLock.Dispose();
     }
 
     public async Task Start()
@@ -53,7 +58,6 @@ public sealed class IpcTransport : INetworkTransport
             Console.WriteLine($"Failed to start IPC listener: {ex.Message}");
         }
     }
-
 
     public void Stop()
     {
@@ -89,27 +93,16 @@ public sealed class IpcTransport : INetworkTransport
         using var reader = new StreamReader(networkStream, Encoding.UTF8, leaveOpen: true);
         using var writer = new StreamWriter(networkStream, Encoding.UTF8, leaveOpen: true) { AutoFlush = true };
 
+        var session = new ClientSession(client, reader, writer);
+        var previousSession = currentSession.Value;
+        currentSession.Value = session;
+
         try
         {
             logger?.LogInformation("IPC client connected: {ClientEndpoint}", client.Client.RemoteEndPoint);
-            while (!cancellationToken.IsCancellationRequested && client.Connected)
-            {
-                var request = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-                if (request is null)
-                {
-                    break;
-                }
 
-                var trimmed = request.Trim();
-                if (trimmed.Length == 0)
-                {
-                    continue;
-                }
-
-                var message = TP3Serializer.Deserialize(trimmed);
-
-                await this.router.Route(this, message);
-            }
+            var readTask = Task.Run(() => ReadLoopAsync(session, cancellationToken));
+            await readTask.ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -122,13 +115,72 @@ public sealed class IpcTransport : INetworkTransport
         }
         finally
         {
+            currentSession.Value = previousSession;
             client.Close();
         }
     }
 
-    public Task Send(TP3Message message)
+    private async Task ReadLoopAsync(ClientSession session, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        while (!cancellationToken.IsCancellationRequested && session.Client.Connected)
+        {
+            var request = await session.Reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            if (request is null)
+            {
+                break;
+            }
+
+            var trimmed = request.Trim();
+            if (trimmed.Length == 0)
+            {
+                continue;
+            }
+
+            Console.WriteLine($"IPC RX: {trimmed}");
+
+            var message = TP3Serializer.Deserialize(trimmed);
+            currentSession.Value = session;
+            await router.Route(this, message).ConfigureAwait(false);
+        }
     }
 
+    public async Task Send(TP3Message message)
+    {
+        var session = currentSession.Value;
+        if (session is null || !session.Client.Connected)
+        {
+            throw new InvalidOperationException("No active IPC client session is available for sending.");
+        }
+
+        var payload = TP3Serializer.SerializeText(message);
+        await writeLock.WaitAsync(cancellationTokenSource.Token).ConfigureAwait(false);
+        try
+        {
+            await session.Writer.WriteLineAsync(payload).ConfigureAwait(false);
+        }
+        finally
+        {
+            writeLock.Release();
+        }
+    }
+
+    public Task PublishEventAsync(string eventText)
+    {
+        Console.WriteLine($"IPC EVENT: {eventText}");
+        return Task.CompletedTask;
+    }
+
+    private sealed class ClientSession
+    {
+        public ClientSession(TcpClient client, StreamReader reader, StreamWriter writer)
+        {
+            Client = client;
+            Reader = reader;
+            Writer = writer;
+        }
+
+        public TcpClient Client { get; }
+        public StreamReader Reader { get; }
+        public StreamWriter Writer { get; }
+    }
 }

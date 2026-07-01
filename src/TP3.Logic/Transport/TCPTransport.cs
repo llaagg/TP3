@@ -383,7 +383,12 @@ public sealed partial class TCPTransport : INetworkTransport
 
     public Task Send(TP3Message message)
     {
+        throw new NotImplementedException();
         
-        return subscriptionManager.(eventText, cancellationTokenSource.Token);
+    }
+
+    public Task PublishEventAsync(string eventText)
+    {
+        throw new NotImplementedException();
     }
 }
