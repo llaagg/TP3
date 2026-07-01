@@ -33,7 +33,7 @@ public sealed class Router
 
     public string Route(TP3Message message)
     {
-        if (message.IsEmpty)
+        if (message.Command == TP3Command.NONE)
         {
             logger?.LogWarning("Received empty TP3 message.");
             return string.Empty;

@@ -50,15 +50,65 @@ public class Agent : IAgent
         // Agent logic has no transport of its own.
     }
 
+
+    private INode Navigate(INode node, string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return node;
+        }
+
+        var segments = path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+        var currentNode = node;
+
+        foreach (var segment in segments)
+        {
+            if (currentNode.Children == null)
+            {
+                logger?.LogWarning("Node '{NodeName}' has no children. Cannot navigate to '{Segment}'.", currentNode.Name, segment);
+                return new EmptyNode();
+            }
+
+            var nextNode = currentNode.Children.FirstOrDefault(c => c.Name.Equals(segment, StringComparison.OrdinalIgnoreCase));
+            if (nextNode == null)
+            {
+                logger?.LogWarning("Child node '{Segment}' not found under '{NodeName}'.", segment, currentNode.Name);
+                return new EmptyNode();
+            }
+
+            currentNode = nextNode;
+        }
+
+        return currentNode;
+    }
+
+    private string NodeChildrenToString(INode node)
+    {
+        var children = node.Children?.ToList() ?? new List<INode>();
+
+        var result =  children.Any()
+            ? string.Join(Environment.NewLine, children.Select(c => c.Name))
+            : "(empty)";
+
+        return result;
+    }
+
     public string HandleRequest(TP3Message request)
     {
         return request.Command switch
         {
             TP3Command.LIST => 
-                string.Join(",", this.Services.Select(s => s.GetType().Name)),
-            
+                this.NodeChildrenToString(
+                    this.Navigate(this.T, request.Target)),
             TP3Command.ECHO => $"ECHO: {request}",
             TP3Command.HI => $"HI,I am {request.Target}.",
         };
     }
+}
+
+internal class EmptyNode : INode
+{
+    public string Name => "EmptyNode";
+    public IEnumerable<INode> Children => Enumerable.Empty<INode>();
+    public Stream Data => Stream.Null;
 }

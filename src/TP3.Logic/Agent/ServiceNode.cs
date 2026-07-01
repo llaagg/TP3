@@ -2,7 +2,7 @@ namespace TP3.Agent.Logic.Agent;
 
 internal class ServiceNode : INode
 {
-    private IService s;
+    private readonly IService s;
 
     public ServiceNode(IService s)
     {
@@ -15,13 +15,32 @@ internal class ServiceNode : INode
     {
         get
         {
-            var children = new List<INode>();
-            if (s.State != null) children.Add(s.State);
-            if (s.Control != null) children.Add(s.Control);
-            if (s.Events != null) children.Add(s.Events);   
-            return children;
+            if (s.State != null) 
+            {
+                yield return new StateNode(s.State);
+                
+            }
+            // if (s.Control != null) children.Add(s.Control);
+            // if (s.Events != null) children.Add(s.Events);   
         }
     }
+
+    public Stream? Data => null;
+}
+
+internal class StateNode : INode
+{
+    private INode state;
+
+    public StateNode(INode state)
+    {
+        this.state = state;
+
+    }
+
+    public string Name => "state";
+
+    public IEnumerable<INode>? Children => state.Children;
 
     public Stream? Data => null;
 }
