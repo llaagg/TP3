@@ -46,14 +46,14 @@ public class FileSystemService : IPathDataService
         }
     }
 
-    public Task<TP3Message> WalkAsync(TP3Message request)
+    public Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
     {
         if (!TryResolvePath(request.Args, out var absolutePath, out var isRootState, out var error))
         {
-            return Task.FromResult(new TP3Message
+            return Task.FromResult(new TP3WalkResponse
             {
-                Command = TP3Command.WALK,
                 Args = request.Args,
+                Tag = request.Tag,
                 Error = error
             });
         }
@@ -64,9 +64,8 @@ public class FileSystemService : IPathDataService
             var node = new StateNode(qid);
             RegisterNode(qid, node, NodeType.Directory, new DirectoryJsonReader(isRootState: true, absolutePath: null));
 
-            return Task.FromResult(new TP3Message
+            return Task.FromResult(new TP3WalkResponse
             {
-                Command = TP3Command.WALK,
                 Args = request.Args,
                 Tag = request.Tag,
                 Qid = qid,
@@ -80,9 +79,8 @@ public class FileSystemService : IPathDataService
             var node = new FileSystemNode(absolutePath, qid);
             RegisterNode(qid, node, NodeType.Directory, new DirectoryJsonReader(isRootState: false, absolutePath));
 
-            return Task.FromResult(new TP3Message
+            return Task.FromResult(new TP3WalkResponse
             {
-                Command = TP3Command.WALK,
                 Args = request.Args,
                 Tag = request.Tag,
                 Qid = qid,
@@ -96,9 +94,8 @@ public class FileSystemService : IPathDataService
             var node = new FileSystemNode(absolutePath, qid);
             RegisterNode(qid, node, NodeType.File, new FileBinaryReader(absolutePath));
 
-            return Task.FromResult(new TP3Message
+            return Task.FromResult(new TP3WalkResponse
             {
-                Command = TP3Command.WALK,
                 Args = request.Args,
                 Tag = request.Tag,
                 Qid = qid,
@@ -106,21 +103,20 @@ public class FileSystemService : IPathDataService
             });
         }
 
-        return Task.FromResult(new TP3Message
+        return Task.FromResult(new TP3WalkResponse
         {
-            Command = TP3Command.WALK,
             Args = request.Args,
+            Tag = request.Tag,
             Error = "NotFound"
         });
     }
 
-    public async Task<TP3Message> ReadAsync(TP3Message request)
+    public async Task<TP3ReadResponse> ReadAsync(TP3ReadRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Qid))
         {
-            return new TP3Message
+            return new TP3ReadResponse
             {
-                Command = TP3Command.READ,
                 Args = request.Args,
                 Tag = request.Tag,
                 Error = "QidRequired"
@@ -135,9 +131,8 @@ public class FileSystemService : IPathDataService
 
         if (registered is null)
         {
-            return new TP3Message
+            return new TP3ReadResponse
             {
-                Command = TP3Command.READ,
                 Args = request.Args,
                 Tag = request.Tag,
                 Qid = request.Qid,

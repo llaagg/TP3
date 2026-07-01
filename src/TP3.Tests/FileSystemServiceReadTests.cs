@@ -10,9 +10,8 @@ public class FileSystemServiceReadTests
     {
         var service = new FileSystemService();
 
-        var walkResponse = await service.WalkAsync(new TP3Message
+        var walkResponse = await service.WalkAsync(new TP3WalkRequest
         {
-            Command = TP3Command.WALK,
             Args = new List<string>()
         });
 
@@ -26,9 +25,8 @@ public class FileSystemServiceReadTests
 
         for (var i = 0; i < 512; i++)
         {
-            var readResponse = await service.ReadAsync(new TP3Message
+            var readResponse = await service.ReadAsync(new TP3ReadRequest
             {
-                Command = TP3Command.READ,
                 Qid = qid,
                 Offset = offset,
                 MaxBytes = 4096

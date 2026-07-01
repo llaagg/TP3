@@ -142,9 +142,8 @@ internal sealed class IpcClient
                 throw new ArgumentException($"Invalid READ maxBytes: {parts[3]}", nameof(message));
             }
 
-            return new TP3Message
+            return new TP3ReadRequest
             {
-                Command = command,
                 Tag = tag,
                 Qid = qid,
                 Offset = offset,
@@ -154,6 +153,15 @@ internal sealed class IpcClient
         }
 
         var pathSegments = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
+        if (command == TP3Command.WALK)
+        {
+            return new TP3WalkRequest
+            {
+                Tag = tag,
+                Args = pathSegments.ToList()
+            };
+        }
+
         return new TP3Message(command, pathSegments)
         {
             Tag = tag

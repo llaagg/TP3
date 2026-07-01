@@ -63,25 +63,27 @@ public class Agent : IAgent
         
         if (request.Command == TP3Command.WALK)
         {
+            var walkRequest = TP3WalkRequest.From(request);
             var service = ResolvePathService(request.Args);
             if (service is null)
             {
-                await Respond(request, new TP3Message
+                await Respond(request, new TP3WalkResponse
                 {
-                    Command = TP3Command.WALK,
                     Args = request.Args,
+                    Tag = request.Tag,
                     Error = "NotFound"
                 });
                 return;
             }
 
-            var response = await service.WalkAsync(request).ConfigureAwait(false);
+            var response = await service.WalkAsync(walkRequest).ConfigureAwait(false);
             await Respond(request, response).ConfigureAwait(false);
             return;
         }
 
         if (request.Command == TP3Command.READ)
         {
+            var readRequest = TP3ReadRequest.From(request);
             IPathDataService? service = null;
             if (!string.IsNullOrWhiteSpace(request.Qid))
             {
@@ -91,16 +93,16 @@ public class Agent : IAgent
             service ??= ResolvePathService(request.Args);
             if (service is null)
             {
-                await Respond(request, new TP3Message
+                await Respond(request, new TP3ReadResponse
                 {
-                    Command = TP3Command.READ,
                     Args = request.Args,
+                    Tag = request.Tag,
                     Error = "NotFound"
                 });
                 return;
             }
 
-            var response = await service.ReadAsync(request).ConfigureAwait(false);
+            var response = await service.ReadAsync(readRequest).ConfigureAwait(false);
             await Respond(request, response).ConfigureAwait(false);
             return;
         }

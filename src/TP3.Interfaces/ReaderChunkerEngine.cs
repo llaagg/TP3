@@ -7,8 +7,8 @@ public static class ReaderChunkerEngine
 {
     public const int DefaultMaxBytes = 16 * 1024;
 
-    public static async Task<TP3Message> ReadAsync(
-        TP3Message request,
+    public static async Task<TP3ReadResponse> ReadAsync(
+        TP3ReadRequest request,
         string qid,
         NodeType nodeType,
         ServiceReader reader)
@@ -21,9 +21,8 @@ public static class ReaderChunkerEngine
             ? Encoding.UTF8.GetBytes("EOF")
             : result.Data;
 
-        return new TP3Message
+        return new TP3ReadResponse
         {
-            Command = TP3Command.READ,
             Args = request.Args,
             Tag = request.Tag,
             Qid = qid,
