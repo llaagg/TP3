@@ -48,60 +48,30 @@ public class FileSystemService : IPathDataService
 
     public Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
     {
-        if (!TryResolvePath(request.Args, out var absolutePath, out var isRootState, out var error))
+        var node = ResolveNodeByPath(request.Args);
+        if (node is null)
         {
             return Task.FromResult(new TP3WalkResponse
             {
                 Args = request.Args,
                 Tag = request.Tag,
-                Error = error
+                Error = "NotFound"
             });
         }
 
-        if (isRootState)
+        var nodeType = node is FileSystemNode fsNode && !fsNode.IsDirectory
+            ? NodeType.File
+            : NodeType.Directory;
+
+        EnsureRegisteredNode(node);
+
+        return Task.FromResult(new TP3WalkResponse
         {
-            var qid = CreateQid();
-            var node = new StateNode(qid);
-            RegisterNode(qid, node, NodeType.Directory, new DirectoryJsonReader(isRootState: true, absolutePath: null));
-
-            return Task.FromResult(new TP3WalkResponse
-            {
-                Args = request.Args,
-                Tag = request.Tag,
-                Qid = qid,
-                NodeType = NodeType.Directory
-            });
-        }
-
-        if (Directory.Exists(absolutePath))
-        {
-            var qid = CreateQid();
-            var node = new FileSystemNode(absolutePath, qid);
-            RegisterNode(qid, node, NodeType.Directory, new DirectoryJsonReader(isRootState: false, absolutePath));
-
-            return Task.FromResult(new TP3WalkResponse
-            {
-                Args = request.Args,
-                Tag = request.Tag,
-                Qid = qid,
-                NodeType = NodeType.Directory
-            });
-        }
-
-        if (File.Exists(absolutePath))
-        {
-            var qid = CreateQid();
-            var node = new FileSystemNode(absolutePath, qid);
-            RegisterNode(qid, node, NodeType.File, new FileBinaryReader(absolutePath));
-
-            return Task.FromResult(new TP3WalkResponse
-            {
-                Args = request.Args,
-                Tag = request.Tag,
-                Qid = qid,
-                NodeType = NodeType.File
-            });
-        }
+            Args = request.Args,
+            Tag = request.Tag,
+            Qid = node.Qid,
+            NodeType = nodeType
+        });
 
         return Task.FromResult(new TP3WalkResponse
         {
@@ -145,12 +115,8 @@ public class FileSystemService : IPathDataService
             .ConfigureAwait(false);
     }
 
-    private static bool TryResolvePath(IReadOnlyList<string> requestPath, out string absolutePath, out bool isRootState, out string error)
+    private INode? ResolveNodeByPath(IReadOnlyList<string> requestPath)
     {
-        absolutePath = string.Empty;
-        error = string.Empty;
-        isRootState = false;
-
         var segments = requestPath
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Select(s => s.Trim())
@@ -168,40 +134,37 @@ public class FileSystemService : IPathDataService
 
         if (segments.Count == 0)
         {
-            isRootState = true;
-            return true;
+            return this.State;
         }
 
-        var first = segments[0].Replace('/', '\\');
-        var root = first;
-
-        if (root.Length == 2 && char.IsLetter(root[0]) && root[1] == ':')
+        INode current = this.State;
+        foreach (var segment in segments)
         {
-            root += "\\";
-        }
-
-        string resolved;
-        if (Path.IsPathRooted(root))
-        {
-            resolved = root;
-            for (var i = 1; i < segments.Count; i++)
+            if (current.Children is null)
             {
-                resolved = Path.Combine(resolved, segments[i]);
+                return null;
             }
-        }
-        else
-        {
-            error = "InvalidPath";
-            return false;
+
+            var next = current.Children.FirstOrDefault(child => EqualsPathSegment(child.Name, segment));
+            if (next is null)
+            {
+                return null;
+            }
+
+            current = next;
         }
 
-        absolutePath = resolved;
-        return true;
+        return current;
     }
 
-    private static string CreateQid()
+    private static bool EqualsPathSegment(string value, string segment)
     {
-        return $"fs:{Guid.NewGuid():N}";
+        return string.Equals(NormalizePathSegment(value), NormalizePathSegment(segment), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizePathSegment(string segment)
+    {
+        return segment.Trim().TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
     }
 
     private void RegisterNode(string qid, INode node, NodeType nodeType, ServiceReader reader)
@@ -214,6 +177,55 @@ public class FileSystemService : IPathDataService
                 NodeType = nodeType,
                 Reader = reader
             };
+        }
+    }
+
+    private void EnsureRegisteredStateNode(string qid)
+    {
+        lock (sync)
+        {
+            if (!nodesByQid.ContainsKey(qid))
+            {
+                var node = new StateNode(qid);
+                nodesByQid[qid] = new RegisteredNode
+                {
+                    Node = node,
+                    NodeType = NodeType.Directory,
+                    Reader = new DirectoryJsonReader(isRootState: true, absolutePath: null)
+                };
+            }
+        }
+    }
+
+    private void EnsureRegisteredNode(INode node)
+    {
+        lock (sync)
+        {
+            if (nodesByQid.ContainsKey(node.Qid))
+            {
+                return;
+            }
+
+            if (node is FileSystemNode fsNode)
+            {
+                nodesByQid[node.Qid] = new RegisteredNode
+                {
+                    Node = node,
+                    NodeType = fsNode.IsDirectory ? NodeType.Directory : NodeType.File,
+                    Reader = fsNode.IsDirectory
+                        ? new DirectoryJsonReader(isRootState: false, fsNode.AbsolutePath)
+                        : new FileBinaryReader(fsNode.AbsolutePath)
+                };
+            }
+            else
+            {
+                nodesByQid[node.Qid] = new RegisteredNode
+                {
+                    Node = node,
+                    NodeType = NodeType.Directory,
+                    Reader = new DirectoryJsonReader(isRootState: true, absolutePath: null)
+                };
+            }
         }
     }
 

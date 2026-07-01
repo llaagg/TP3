@@ -14,6 +14,7 @@ public class StateNode : INode
 
     public string Name { get; set; }
 
+    public ITP3Stream? Data => null;
 
     public IEnumerable<INode>? Children
     {
@@ -22,16 +23,10 @@ public class StateNode : INode
             var drives = DriveInfo.GetDrives();
             foreach (var drive in drives)
             {
-                yield return new FileSystemNode(drive.Name, $"fs:{Guid.NewGuid():N}");
+                var normalized = drive.Name.TrimEnd(Path.DirectorySeparatorChar);
+                var qid = $"fs:{normalized}:{Guid.NewGuid():N}";
+                yield return new FileSystemNode(drive.Name, qid);
             }
-        }
-    }
-
-    public ITP3Stream? Data
-    {
-        get
-        {
-            return null!;
         }
     }
 }
