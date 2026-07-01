@@ -11,7 +11,7 @@ public class CliClient
         while (isRunning)
         {
             Console.Write("# ");
-            
+
             var input = Console.ReadLine();
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -34,37 +34,23 @@ public class CliClient
 
     private static readonly Dictionary<string, Func<IpcClient, string, Task>> commandHandlers = new()
     {
-        { "LIST", async (ipcClient, message) => {
-            var response = await ipcClient.SendAsync(new TP3Message
-            {
-                Command = TP3Command.LIST,
-                Target = message
-            });
-            Console.WriteLine(response);
-        }},
+        {
+            "READ", async (ipcClient, message) => {
+                var response = await ipcClient.SendAsync(new TP3Message
+                {
+                    Command = TP3Command.READ,
+                    Path = message.Split('/').ToList()
+                });
+                Console.WriteLine(response);
+            }
+        },
         { "HELP", async (ipcClient, message) => {
             Console.WriteLine("Available local commands:");
             Console.WriteLine("HELP - Show this help message");
             Console.WriteLine("LIST - List available services");
             Console.WriteLine("ECHO <message> - Send an ECHO message to the local IPC server");
             Console.WriteLine("QUIT - Exit the CLI");
-        }},
-        { "ECHO", async (ipcClient, message) => {
-            var response = await ipcClient.SendAsync(new TP3Message
-            {
-                Command = TP3Command.ECHO,
-                Payload = message
-            });
-            Console.WriteLine(response);
-        }},
-        { "QUIT", async (ipcClient, message) => {
-            var response = await ipcClient.SendAsync(new TP3Message
-            {
-                Command = TP3Command.ECHO,
-                Payload = "QUIT"
-            });
-            Console.WriteLine(response);
-            isRunning = false;
         }}
+
     };
 }

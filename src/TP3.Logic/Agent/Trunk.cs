@@ -1,3 +1,5 @@
+using TP3.Interfaces;
+
 namespace TP3.Agent.Logic.Agent;
 
 /// <summary>

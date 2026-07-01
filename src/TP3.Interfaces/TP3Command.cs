@@ -6,7 +6,7 @@ public enum TP3Command
     ECHO,
     LIST,
     HI,
-    SUBSCRIBE,
-    UNSUBSCRIBE,
-    EVENT
+
+    READ,
+    WRITE,
 }

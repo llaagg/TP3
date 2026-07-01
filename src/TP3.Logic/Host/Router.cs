@@ -41,7 +41,7 @@ public sealed class Router : IRouter
             return;
         }
 
-        logger?.LogDebug("Routing TP3 message: {Command} {Target}", message.Command, message.Target);
+        logger?.LogDebug("Routing TP3 message: {Command} {Path}", message.Command, message.Path);
 
         #warning TODO: namespace filtering
         #warning TODO: tcp forward, currelnty we only send to our local agent, but we should forward to other agents if the target is not local

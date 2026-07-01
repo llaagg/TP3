@@ -46,13 +46,12 @@ public sealed partial class TCPTransport : INetworkTransport
         {
             listener.Start();
             logger?.LogInformation("Agent TCP listener started on port {Port}", listener.LocalEndpoint);
-            Console.WriteLine($"Agent TCP listener started on port {listener.LocalEndpoint}");
             _ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
         }
         catch (Exception ex)
         {
             logger?.LogError(ex, "Failed to start TCP listener.");
-            Console.WriteLine($"Failed to start TCP listener: {ex.Message}");
+            logger?.LogError("Failed to start TCP listener: {Message}", ex.Message);
         }
     }
 
@@ -74,7 +73,7 @@ public sealed partial class TCPTransport : INetworkTransport
         catch (Exception ex)
         {
             logger?.LogError(ex, "TCP accept loop error.");
-            Console.WriteLine($"TCP accept loop error: {ex.Message}");
+            logger?.LogError("TCP accept loop error: {Message}", ex.Message);
         }
     }
 
@@ -94,22 +93,9 @@ public sealed partial class TCPTransport : INetworkTransport
                     break;
                 }
 
-                var request = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
-                if (request.Equals("SUBSCRIBE", StringComparison.OrdinalIgnoreCase))
-                {
-                    await subscriptionManager.SubscribeClientAsync(client, networkStream, cancellationToken).ConfigureAwait(false);
-                    return;
-                }
+                var data = TP3Serializer.DeserializeBytes(buffer.AsSpan(0, bytesRead));
 
-                if (request.Equals("STREAM", StringComparison.OrdinalIgnoreCase))
-                {
-                    await HandleStreamConnectionAsync(client, networkStream, cancellationToken).ConfigureAwait(false);
-                    return;
-                }
-
-                var message = TP3ProtocolHelpers.Parse(request);
-
-                await router.Route(this, message);
+                await router.Route(this, data);
                 
             }
         }
@@ -121,7 +107,7 @@ public sealed partial class TCPTransport : INetworkTransport
         catch (Exception ex)
         {
             logger?.LogError(ex, "TCP client handler error.");
-            Console.WriteLine($"TCP client handler error: {ex.Message}");
+            logger?.LogError("TCP client handler error: {Message}", ex.Message  );
         }
         finally
         {

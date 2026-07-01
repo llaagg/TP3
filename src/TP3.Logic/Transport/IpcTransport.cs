@@ -49,7 +49,6 @@ public sealed class IpcTransport : INetworkTransport
         {
             listener.Start();
             logger?.LogInformation("IPC listener started on port {Port}", listener.LocalEndpoint);
-            Console.WriteLine($"IPC listener started on port {listener.LocalEndpoint}");
             _ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
         }
         catch (Exception ex)
@@ -141,7 +140,7 @@ public sealed class IpcTransport : INetworkTransport
                 break;
             }
 
-            Console.WriteLine($"IPC RX: {message}");
+            logger?.LogInformation("IPC RX: {Message}", message);
 
             currentSession.Value = session;
             await router.Route(this, message).ConfigureAwait(false);

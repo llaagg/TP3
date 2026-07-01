@@ -109,10 +109,10 @@ public class Agent : IAgent
         }
         if (request.Command == TP3Command.LIST)
         {
-            var targetNode = Navigate(T, request.Target);
+            var targetNode = Navigate(T, request.Path);
             var childrenList = NodeChildrenToString(targetNode);
 
-            logger?.LogInformation("LIST command received for target '{Target}'. Children: {Children}", request.Target, childrenList);
+            logger?.LogInformation("LIST command received for target '{Target}'. Children: {Children}", request.Path, childrenList.Count());
 #warning TODO: return the list of children to the requester
 
             // let's send the response
@@ -120,8 +120,8 @@ public class Agent : IAgent
                 request,
                 new TP3Message
                 {
-                    Command = TP3Command.LIST,
-                    Target = request.Target,
+                    Command = TP3Command.LISTRESPONSE,
+                    Path = request.Path,
                     Payload = childrenList
                 });
             return;

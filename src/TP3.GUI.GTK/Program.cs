@@ -6,7 +6,11 @@ using TP3.GUI.GTK;
 var loggerFactory = LoggerFactory.Create(builder =>
 {
     builder
-        .AddConsole()
+        .AddSimpleConsole(options =>
+        {
+            options.SingleLine = true;
+            options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
+        })
         .SetMinimumLevel(LogLevel.Information);
 });
 
