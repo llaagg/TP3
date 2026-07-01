@@ -2,12 +2,12 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build TP3.GUI.GTK",
+      "label": "build TP3.Server",
       "type": "shell",
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/src/TP3.GUI.GTK/TP3.GUI.GTK.csproj"
+        "${workspaceFolder}/src/TP3.Server/TP3.Server.csproj"
       ],
       "group": {
         "kind": "build",

@@ -49,7 +49,7 @@ public sealed class IpcTransport : INetworkTransport
         {
             listener.Start();
             logger?.LogInformation("IPC listener started on port {Port}", listener.LocalEndpoint);
-            _ = Task.Run(() => AcceptLoopAsync(cancellationTokenSource.Token));
+            await AcceptLoopAsync(cancellationTokenSource.Token);
         }
         catch (Exception ex)
         {

@@ -1,7 +1,6 @@
 using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
-using TP3.Messages;
 using TP3.Service.FileSystem;
 
 namespace TP3.CLI;
@@ -38,7 +37,7 @@ public static class CommandLineApplication
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
 
-        var ah = new AgentHost(port, logger, new[] { new FileSystemService() });
+        var ah = new AgentHost(port, ipcPort, logger, new[] { new FileSystemService() });
         await ah.Start();
 
         logger.LogInformation("Agent service started. Press Ctrl+C to exit.");

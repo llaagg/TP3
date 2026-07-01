@@ -2,41 +2,29 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "GUI",
+      "name": "Server",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build TP3.GUI.GTK",
-      "program": "${workspaceFolder}/src/TP3.GUI.GTK/bin/Debug/net10.0/TP3.GUI.GTK.dll",
+      "preLaunchTask": "build TP3.Server",
+      "program": "${workspaceFolder}/src/TP3.Server/bin/Debug/net10.0/TP3.Server.dll",
       "args": [
         "run"
       ],
-      "cwd": "${workspaceFolder}/src/TP3.GUI.GTK",
-      "console": "internalConsole",
+      "cwd": "${workspaceFolder}/src/TP3.Server",
+      "console": "integratedTerminal",
       "stopAtEntry": false
     },
     {
-      "name": "Node",
+      "name": "CLI - Read",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build TP3.CLI",
       "program": "${workspaceFolder}/src/TP3.CLI/bin/Debug/net10.0/TP3.CLI.dll",
       "args": [
-        "run"
+        "read",
+        "/"
       ],
       "cwd": "${workspaceFolder}/src/TP3.CLI",
-      "console": "integratedTerminal",
-      "stopAtEntry": false>
-    },
-    {
-      "name": "Send echo",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build TP3.GUI.GTK",
-      "program": "${workspaceFolder}/src/TP3.GUI.GTK/bin/Debug/net10.0/TP3.GUI.GTK.dll",
-      "args": [
-        "echo"
-      ],
-      "cwd": "${workspaceFolder}/src/TP3.GUI.GTK",
       "console": "internalConsole",
       "stopAtEntry": false
     }
@@ -44,7 +32,8 @@
   "compounds": [
     {
       "name": "Compound",
-      "configurations": []
+      "configurations": [ "Server", "CLI - Read" ],
+      "stopAll": true
     }
   ]
 }

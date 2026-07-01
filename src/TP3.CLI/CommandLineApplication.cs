@@ -11,19 +11,23 @@ public static class CommandLineApplication
     public static Task<int> RunAsync(string[] args, ILogger logger)
     {
         var portOption = new Option<int>(new[] { "--port", "-p" }, () => 5000, "Port to listen on");
-        var ipcPortOption = new Option<int>(new[] { "--ipc-port", "-i" }, () => 5001, "IPC port to connect to or listen on");
+        var ipcPortOption = new Option<int>(new[] { "--ipc-port", "-i" }, () => 5001, "IPC port to connect to");
         var messageArgument = new Argument<string>("message", "Message to send to IPC server");
-
-        var runCommand = new Command("run", "Start the agent host")
+        var consumeResponses = new Option<bool>(new[] { "--consume-responses", "-c" } , () => true, "Consume responses from the IPC server");
+        var bePatientAndWaitForServer = new Option<int>(new[] { "--wait-for-server", "-w" }, ()=>60, "Wait for the IPC server to be ready before sending messages");
+        var readCommand = new Command("read", "Read a message from the IPC server")
         {
-            portOption,
-            ipcPortOption
+            ipcPortOption,
+            messageArgument,
+            consumeResponses,
+            bePatientAndWaitForServer
         };
-        runCommand.SetHandler(async (int port, int ipcPort) => await ExecuteStart(port, ipcPort, logger), portOption, ipcPortOption);
+        
+        readCommand.SetHandler(async (int ipcPort, string message, bool consumeResponses, int waitForServer) => await ExecuteRead(ipcPort, message, consumeResponses, waitForServer, logger), ipcPortOption, messageArgument, consumeResponses, bePatientAndWaitForServer);
 
         var rootCommand = new RootCommand("TP3 CLI")
         {
-            runCommand
+            readCommand
         };
 
         rootCommand.SetHandler(() =>
@@ -34,13 +38,24 @@ public static class CommandLineApplication
         return rootCommand.InvokeAsync(args);
     }
 
-    private static async Task ExecuteStart(int port, int ipcPort, ILogger logger)
+    private static async Task ExecuteRead(int ipcPort, string message, bool consumeResponses, int waitForServer, ILogger logger)
     {
-        logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
+        logger.LogInformation("Connecting to IPC server on port {IpcPort} to send message: {Message}", ipcPort, message);
 
-        var ah = new AgentHost(port, logger, new[] { new FileSystemService() });
-        await ah.Start();
+        var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
+        await ipcClient.ConnectAsync();
+        await ipcClient.SendMessageAsync(message);
 
-        logger.LogInformation("Agent service started. Press Ctrl+C to exit.");
+        if(consumeResponses)
+        {
+            logger.LogInformation("Consuming responses from IPC server...");
+            // Simulate consuming responses
+            await ipcClient.ListenAsync();
+            logger.LogInformation("Finished consuming responses.");
+        }
+
+        logger.LogInformation("Message sent to IPC server. Disconnecting.");
+        await ipcClient.DisconnectAsync();
     }
+
 }
