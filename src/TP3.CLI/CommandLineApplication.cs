@@ -51,6 +51,10 @@ public static class CommandLineApplication
 
         logger.LogInformation("Agent service started. Press Ctrl+C to exit.");
 
+
+        var cliClinet = new CliClient();
+        var ipcClient = new IpcClient("127.0.0.1", ipcPort);
+
         CancellationTokenSource cts = new CancellationTokenSource();
 
         Console.CancelKeyPress += (sender, e) => {
@@ -60,10 +64,10 @@ public static class CommandLineApplication
             logger.LogInformation("Stopping IPC connection...");
             cts.Cancel();
             logger.LogInformation("IPC connection stopped.");
-        };       
-        
-        var cliClinet = new CliClient();
-        cliClinet.CliInternalClient(new IpcClient("127.0.0.1", ipcPort)).Wait(cts.Token);
+            CliClient.isRunning = false;
+        };
+
+        cliClinet.CliInternalClient(ipcClient).Wait(cts.Token);
     }
 
     private static async Task ExecuteEchoAsync(int ipcPort, string message, ILogger logger)
@@ -72,7 +76,6 @@ public static class CommandLineApplication
         var response = await new IpcClient("127.0.0.1", ipcPort).SendAsync(new TP3Message
         {
             Command = TP3Command.ECHO,
-            Payload = message
         }).ConfigureAwait(false);
         Console.WriteLine(response);
     }

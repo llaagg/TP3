@@ -4,15 +4,15 @@ namespace TP3.CLI;
 
 public class CliClient
 {
-    private static bool isRunning = true;
+    public static bool isRunning = true;
 
     public async Task CliInternalClient(IpcClient ipcClient)
     {
         while (isRunning)
         {
             Console.Write("# ");
-
             var input = Console.ReadLine();
+
             if (string.IsNullOrWhiteSpace(input))
             {
                 continue;
@@ -44,13 +44,14 @@ public class CliClient
                 Console.WriteLine(response);
             }
         },
-        { "HELP", async (ipcClient, message) => {
-            Console.WriteLine("Available local commands:");
-            Console.WriteLine("HELP - Show this help message");
-            Console.WriteLine("LIST - List available services");
-            Console.WriteLine("ECHO <message> - Send an ECHO message to the local IPC server");
-            Console.WriteLine("QUIT - Exit the CLI");
-        }}
-
+        {
+            "HELP", async (ipcClient, message) => {
+                Console.WriteLine("Available local commands:");
+                Console.WriteLine("HELP - Show this help message");
+                Console.WriteLine("READ <path> - Read a file from the local filesystem");
+                Console.WriteLine("ECHO <message> - Send an ECHO message to the local IPC server");
+                Console.WriteLine("QUIT - Exit the CLI");
+            }
+        }
     };
 }

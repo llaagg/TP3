@@ -130,7 +130,6 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         using var writer = new BinaryWriter(memoryStream, Utf8, leaveOpen: true);
 
         writer.Write((int)message.Command);
-        writer.Write(message.Path);
         writer.Flush();
 
         return memoryStream.ToArray();
@@ -151,9 +150,7 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
 
         return new TP3Message
         {
-            Command = command,
-            Path = path,
-            Payload = messagePayload
+            Command = command
         };
     }
 }
