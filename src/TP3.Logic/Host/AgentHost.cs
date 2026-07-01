@@ -35,8 +35,8 @@ public class AgentHost : IDisposable
         router = new Router(this, logger);
 
         peerConnectionManager = new PeerConnectionManager(logger);
-        tp3Transport = new TP3Transport(port, HandleTP3Message, logger);
-        ipcTransport = new TP3Transport(ipcPort, HandleTP3Message, logger, useIpc: true);
+        tp3Transport = TP3Transport.Create(port, HandleTP3Message, logger);
+        ipcTransport = TP3Transport.Create(ipcPort, HandleTP3Message, logger, useIpc: true);
 
         this.services = services ?? Array.Empty<IService>();
     }

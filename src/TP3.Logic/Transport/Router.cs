@@ -17,20 +17,6 @@ public sealed class Router
         this.logger = logger;
     }
 
-    public string Route(string message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
-        {
-            return string.Empty;
-        }
-
-        var request = message.Trim();
-        logger?.LogDebug("Routing message: {Message}", request);
-
-        var tp3Message = TP3Protocol.Parse(request);
-        return Route(tp3Message);
-    }
-
     public string Route(TP3Message message)
     {
         if (message.Command == TP3Command.NONE)

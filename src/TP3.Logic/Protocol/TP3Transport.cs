@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
@@ -12,12 +10,24 @@ public sealed class TP3Transport : ITP3Transport
     private readonly INetworkTransport transport;
     private readonly ILogger? logger;
 
-    public TP3Transport(int port, Func<TP3Message, string> messageHandler, ILogger? logger = null, bool useIpc = false)
+    public TP3Transport(INetworkTransport transport, ILogger? logger = null)
     {
+        this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         this.logger = logger;
-        transport = useIpc
+    }
+
+    public static TP3Transport Create(int port, Func<TP3Message, string> messageHandler, ILogger? logger = null, bool useIpc = false)
+    {
+        if (messageHandler is null)
+        {
+            throw new ArgumentNullException(nameof(messageHandler));
+        }
+
+        INetworkTransport transport = useIpc
             ? new IpcTransport(port, rawRequest => messageHandler(TP3Protocol.Parse(rawRequest)), logger)
             : new TCPTransport(port, rawRequest => messageHandler(TP3Protocol.Parse(rawRequest)), logger);
+
+        return new TP3Transport(transport, logger);
     }
 
     public Task Start()

@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using TP3.Agent.Logic.Protocol;
 
 namespace TP3.Agent.Logic.Transport;
 
@@ -109,7 +110,8 @@ public sealed class IpcTransport : INetworkTransport
                     continue;
                 }
 
-                var response = requestHandler(trimmed);
+                var message = TP3Serializer.Deserialize(trimmed);
+                var response = requestHandler(TP3Serializer.SerializeText(message));
                 await writer.WriteLineAsync(response).ConfigureAwait(false);
             }
         }
