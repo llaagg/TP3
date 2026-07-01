@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Protocol;
+using TP3.Interfaces;
 using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
@@ -16,11 +17,12 @@ public sealed partial class TCPTransport : INetworkTransport
     private readonly Dictionary<string, StreamSession> streamSessions = new(StringComparer.OrdinalIgnoreCase);
     private readonly object streamSessionsLock = new();
     private bool disposed;
+    private readonly IRouter router;
     private readonly ILogger? logger;
 
-    public TCPTransport(int port, Func<TP3Message, Task> responseFactory, ILogger? logger = null)
+    public TCPTransport(int port, IRouter router, ILogger? logger = null)
     {
-        this.responseFactory = responseFactory ?? throw new ArgumentNullException(nameof(responseFactory));
+        this.router = router;
         this.logger = logger;
         listener = new TcpListener(IPAddress.Any, port);
         subscriptionManager = new SubscriptionManager(logger);
@@ -108,7 +110,7 @@ public sealed partial class TCPTransport : INetworkTransport
 
                 var message = TP3ProtocolHelpers.Parse(request);
 
-                await responseFactory(message);
+                await router.Route(message);
                 
             }
         }

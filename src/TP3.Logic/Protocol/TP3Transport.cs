@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
-using TP3.Messages;
 
 namespace TP3.Agent.Logic.Protocol;
 
@@ -16,19 +15,6 @@ public sealed class TP3Transport : ITP3Transport
         this.logger = logger;
     }
 
-    public static TP3Transport Create(int port, Func<TP3Message, Task> messageHandler, ILogger? logger = null, bool useIpc = false)
-    {
-        if (messageHandler is null)
-        {
-            throw new ArgumentNullException(nameof(messageHandler));
-        }
-
-        INetworkTransport transport = useIpc
-            ? new IpcTransport(port, messageHandler, logger)
-            : new TCPTransport(port, messageHandler, logger);
-
-        return new TP3Transport(transport, logger);
-    }
 
     public Task Start()
     {
@@ -49,4 +35,6 @@ public sealed class TP3Transport : ITP3Transport
     {
         transport.Dispose();
     }
+
+    
 }

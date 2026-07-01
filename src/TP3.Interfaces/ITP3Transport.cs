@@ -7,5 +7,4 @@ public interface ITP3Transport : IDisposable
 {
     Task Start();
     void Stop();
-    Task PublishEventAsync(string eventText);
 }

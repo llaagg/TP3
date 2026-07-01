@@ -32,8 +32,8 @@ public class AgentHost : IDisposable
         agent = new Agent.Agent(logger);
         router = new Router(this, logger);
 
-        tp3Transport = TP3Transport.Create(port, async message => await HandleTP3Message(message), logger);
-        ipcTransport = TP3Transport.Create(ipcPort, HandleTP3Message, logger, useIpc: true);
+        tp3Transport = TP3TransportFactory.CreateIPC(port, router, logger);
+        ipcTransport = TP3TransportFactory.CreateTCP(ipcPort, router, logger);
 
         this.services = services ?? Array.Empty<IService>();
     }

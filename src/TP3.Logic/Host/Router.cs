@@ -2,11 +2,12 @@ using System;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Protocol;
+using TP3.Interfaces;
 using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
 
-public sealed class Router
+public sealed class Router : IRouter
 {
     private readonly AgentHost host;
     private readonly ILogger? logger;
