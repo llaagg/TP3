@@ -6,6 +6,7 @@ public enum TP3Command
     ECHO,
     LIST,
     HI,
+    WALK,
 
     READ,
     WRITE,

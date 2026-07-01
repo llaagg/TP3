@@ -33,6 +33,20 @@ public class TP3Message
     
     public ITP3Stream? Payload { get; init; }
 
+    public string? Qid { get; init; }
+
+    public string? NodeType { get; init; }
+
+    public bool IsChunk { get; init; }
+
+    public int ChunkIndex { get; init; }
+
+    public bool IsFinalChunk { get; init; }
+
+    public byte[]? Data { get; init; }
+
+    public string? Error { get; init; }
+
     public override string ToString()
     {
         if (Command == TP3Command.NONE)
@@ -40,15 +54,32 @@ public class TP3Message
             return string.Empty;
         }
 
+        var suffix = string.Empty;
+        if (IsChunk)
+        {
+            var dataLength = Data?.Length ?? 0;
+            suffix = $" chunk={ChunkIndex} final={IsFinalChunk} bytes={dataLength}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(Qid))
+        {
+            suffix += $" qid={Qid}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(Error))
+        {
+            suffix += $" error={Error}";
+        }
+
         if (Path.Count == 0)
         {
             return Payload == null
-                ? Command.ToString()
-                : $"{Command} {Payload}";
+                ? $"{Command}{suffix}"
+                : $"{Command} {Payload}{suffix}";
         }
 
         return Payload == null
-            ? $"{Command} {string.Join("/", Path)}"
-            : $"{Command} {string.Join("/", Path)} {Payload}";
+            ? $"{Command} {string.Join("/", Path)}{suffix}"
+            : $"{Command} {string.Join("/", Path)} {Payload}{suffix}";
     }
 }

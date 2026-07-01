@@ -31,7 +31,7 @@ public static class TP3Serializer
     private static readonly ITP3Serializer BinarySerializer = new BinaryTP3Serializer();
     private static readonly ITP3Serializer JsonSerializer = new JsonTP3Serializer();
 
-    public static byte[] SerializeBytes(TP3Message message, TP3SerializationFormat format = TP3SerializationFormat.Binary)
+    public static byte[] SerializeBytes(TP3Message message, TP3SerializationFormat format = TP3SerializationFormat.Json)
     {
         var serializer = GetSerializer(format);
         var payload = serializer.SerializePayload(message);
@@ -130,6 +130,23 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         using var writer = new BinaryWriter(memoryStream, Utf8, leaveOpen: true);
 
         writer.Write((int)message.Command);
+        writer.Write(message.Path.Count);
+        foreach (var segment in message.Path)
+        {
+            writer.Write(segment ?? string.Empty);
+        }
+
+        writer.Write(message.Qid ?? string.Empty);
+        writer.Write(message.NodeType ?? string.Empty);
+        writer.Write(message.IsChunk);
+        writer.Write(message.ChunkIndex);
+        writer.Write(message.IsFinalChunk);
+
+        var data = message.Data ?? Array.Empty<byte>();
+        writer.Write(data.Length);
+        writer.Write(data);
+
+        writer.Write(message.Error ?? string.Empty);
         writer.Flush();
 
         return memoryStream.ToArray();
@@ -145,12 +162,33 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
             ? (TP3Command)commandValue
             : TP3Command.ECHO;
 
-        var path = reader.ReadString();
-        var messagePayload = reader.ReadString();
+        var pathCount = reader.ReadInt32();
+        var path = new List<string>(pathCount);
+        for (var i = 0; i < pathCount; i++)
+        {
+            path.Add(reader.ReadString());
+        }
+
+        var qid = reader.ReadString();
+        var nodeType = reader.ReadString();
+        var isChunk = reader.ReadBoolean();
+        var chunkIndex = reader.ReadInt32();
+        var isFinalChunk = reader.ReadBoolean();
+        var dataLength = reader.ReadInt32();
+        var data = dataLength > 0 ? reader.ReadBytes(dataLength) : Array.Empty<byte>();
+        var error = reader.ReadString();
 
         return new TP3Message
         {
-            Command = command
+            Command = command,
+            Path = path,
+            Qid = string.IsNullOrWhiteSpace(qid) ? null : qid,
+            NodeType = string.IsNullOrWhiteSpace(nodeType) ? null : nodeType,
+            IsChunk = isChunk,
+            ChunkIndex = chunkIndex,
+            IsFinalChunk = isFinalChunk,
+            Data = dataLength > 0 ? data : null,
+            Error = string.IsNullOrWhiteSpace(error) ? null : error
         };
     }
 }

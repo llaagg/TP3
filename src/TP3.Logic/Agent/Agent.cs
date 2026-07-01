@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
 using TP3.Messages;
@@ -53,48 +52,6 @@ public class Agent : IAgent
     }
 
 
-    private INode Navigate(INode node, params string[] path)
-    {
-        if (path == null || path.Length == 0)
-        {
-            return node;
-        }
-
-        var segments = path.SelectMany(p => p.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)).ToArray();
-        var currentNode = node;
-
-        foreach (var segment in segments)
-        {
-            if (currentNode.Children == null)
-            {
-                logger?.LogWarning("Node '{NodeName}' has no children. Cannot navigate to '{Segment}'.", currentNode.Name, segment);
-                return new ZeroNodesNode();
-            }
-
-            var nextNode = currentNode.Children.FirstOrDefault(c => c.Name.Equals(segment, StringComparison.OrdinalIgnoreCase));
-            if (nextNode == null)
-            {
-                logger?.LogWarning("Child node '{Segment}' not found under '{NodeName}'.", segment, currentNode.Name);
-                return new ZeroNodesNode();
-            }
-
-            currentNode = nextNode;
-        }
-
-        return currentNode;
-    }
-
-    private string NodeChildrenToString(INode node)
-    {
-        var children = node.Children?.ToList() ?? new List<INode>();
-
-        var result = children.Any()
-            ? string.Join(Environment.NewLine, children.Select(c => c.Name))
-            : "(empty)";
-
-        return result;
-    }
-
     public async Task Handle(TP3Message request)
     {
         if (request == null)
@@ -107,12 +64,44 @@ public class Agent : IAgent
             logger?.LogWarning("Received {Command} TP3 message.", request.Command);
             return;
         }
+        if (request.Command == TP3Command.WALK)
+        {
+            var service = ResolvePathService(request.Path);
+            if (service is null)
+            {
+                await Respond(request, new TP3Message
+                {
+                    Command = TP3Command.WALK,
+                    Path = request.Path,
+                    Error = "NotFound"
+                });
+                return;
+            }
+
+            var response = await service.WalkAsync(request).ConfigureAwait(false);
+            await Respond(request, response).ConfigureAwait(false);
+            return;
+        }
+
         if (request.Command == TP3Command.READ)
         {
-            var path = request.Path;
-            var targetNode = Navigate(T, path.ToArray());
-            var dataStream = targetNode.Data;
+            var service = ResolvePathService(request.Path);
+            if (service is null)
+            {
+                await Respond(request, new TP3Message
+                {
+                    Command = TP3Command.READ,
+                    Path = request.Path,
+                    Error = "NotFound"
+                });
+                return;
+            }
 
+            var responses = await service.ReadAsync(request).ConfigureAwait(false);
+            foreach (var response in responses)
+            {
+                await Respond(request, response).ConfigureAwait(false);
+            }
             return;
         }
 
@@ -143,15 +132,13 @@ public class Agent : IAgent
         }
     }
 
+    private IPathDataService? ResolvePathService(IReadOnlyList<string> requestPath)
+    {
+        return Services.OfType<IPathDataService>().FirstOrDefault(s => s.CanHandlePath(requestPath));
+    }
+
     private async Task Respond(TP3Message request, TP3Message tP3Message)
     {
         await router.Respond(this, request, tP3Message);
     }
-}
-
-internal class ZeroNodesNode : INode
-{
-    public string Name => "EmptyNode";
-    public IEnumerable<INode> Children => Enumerable.Empty<INode>();
-    public ITP3Stream Data => null!;
 }

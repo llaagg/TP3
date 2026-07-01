@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Protocol;
 using TP3.Messages;
@@ -92,7 +93,23 @@ internal sealed class IpcClient
                 break;
             }
 
-            logger.LogInformation("Received response from IPC server: {Response}", response);
+            if (response.IsChunk)
+            {
+                var bytes = response.Data ?? Array.Empty<byte>();
+                if (string.Equals(response.NodeType, "directory", StringComparison.OrdinalIgnoreCase))
+                {
+                    var text = Encoding.UTF8.GetString(bytes);
+                    logger.LogInformation("RX CHUNK cmd={Command} qid={Qid} idx={ChunkIndex} final={Final} text=\n{Text}", response.Command, response.Qid, response.ChunkIndex, response.IsFinalChunk, text);
+                }
+                else
+                {
+                    logger.LogInformation("RX CHUNK cmd={Command} qid={Qid} idx={ChunkIndex} final={Final} bytes={Bytes}", response.Command, response.Qid, response.ChunkIndex, response.IsFinalChunk, bytes.Length);
+                }
+            }
+            else
+            {
+                logger.LogInformation("Received response from IPC server: {Response}", response);
+            }
         }
     }
 
