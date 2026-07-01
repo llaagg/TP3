@@ -41,7 +41,7 @@ public class FileSystemNode : INode
 
     public bool IsDirectory { get; private set; }
 
-    public IEnumerable<INode> Children
+    public IEnumerable<INode>? Children
     {
         get
         {
@@ -61,17 +61,17 @@ public class FileSystemNode : INode
             }
             else
             {
-                yield break;
+                yield return null!;
             }
         }
     }
 
-    public Stream Data
+    public Stream? Data
     {
         get
         {
             if (this.IsDirectory)
-                return null;
+                return null!;
             else
             {
                 return File.OpenRead(this.AbsolutePath);
