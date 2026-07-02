@@ -70,4 +70,26 @@ public class TP3Transport : ITP3Transport
     {
         this.NetwokSessions.AttachTagToPointer(tag, rootNode, incomingNetworkSession);
     }
+
+    public async Task<ITP3DataStream> GetData(INetworkPipe incomingTransport, string tag)
+    {
+        var pointer = this.NetwokSessions.GetPointer(incomingTransport, tag);
+        if (pointer == null)
+        {
+            throw new Exception($"No pointer found for tag: {tag}");
+        }
+
+        if(pointer.Data == null)
+        {
+            pointer.Data = await pointer.Node.Get();
+        }
+
+        if(pointer.Data == null && pointer.Node.NodeType == NodeType.Directory)
+        {
+            // for directory we can create a stream on the fly
+            pointer.Data = new DirectoryStreamData(pointer.Node);
+        }
+
+        return pointer.Data!;
+    }
 }

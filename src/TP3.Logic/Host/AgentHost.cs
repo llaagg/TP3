@@ -40,11 +40,11 @@ public class AgentHost : IDisposable
 
     public async Task Init()
     {
-        if(this.transports != null)
+        if (this.transports != null)
         {
             // check if tags are uniq in tranbsports
             var tags = transports.Select(t => t.Tag).ToList();
-            if(tags.Count != tags.Distinct().Count())
+            if (tags.Count != tags.Distinct().Count())
             {
                 throw new Exception("Transport tags are not unique.");
             }
@@ -53,7 +53,7 @@ public class AgentHost : IDisposable
             {
                 await t.Init(router);
             }
-            
+
         }
     }
 
@@ -74,11 +74,11 @@ public class AgentHost : IDisposable
             }
         }
 
-        if(transports == null || transports.Length == 0)
+        if (transports == null || transports.Length == 0)
         {
             logger?.LogWarning("No transports configured for AgentHost.");
         }
-        
+
         List<Task> transportStartTasks = new List<Task>();
         if (transports != null)
         {

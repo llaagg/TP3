@@ -81,7 +81,10 @@ public class FlowTest
         var lastWalkResponse = lastMessageSent as TP3WalkResponse;
         Assert.NotNull(lastWalkResponse);
         Assert.Equal(tag, lastWalkResponse!.Tag);
-
+        // after the walk there should be a pointer setup for this user
+        var pointer = transport.NetwokSessions.GetPointer(pipe, tag);
+        Assert.NotNull(pointer);
+        
         // 3. Client opens the object
         //    Topen(fid, mode)
         //  -> Ropen(qid, iounit)

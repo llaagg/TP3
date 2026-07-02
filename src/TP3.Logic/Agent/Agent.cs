@@ -114,15 +114,11 @@ public class Agent : IAgent
         }
 
         var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tP3OpenRequest.Tag);
-        var service = FindServiceForTag(node);
-
-        return new TP3OpenResponse(tP3OpenRequest.Tag, null, 0);
         
-    }
-
-    private INode FindServiceForTag(INode node)
-    {
-        throw new NotImplementedException();
+        var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tP3OpenRequest.Tag);
+        
+        return new TP3OpenResponse(tP3OpenRequest.Tag, new NodeInfo(node), data.Iounit);
+        
     }
 
     private async Task SendToNetwork(INode nodeObj, TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)

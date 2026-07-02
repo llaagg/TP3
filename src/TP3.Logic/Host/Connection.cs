@@ -22,4 +22,12 @@ public class Pointer
 
 public class DirectoryStreamData : ITP3DataStream
 {
+    private readonly INode node;
+
+    public DirectoryStreamData(INode node)
+    {
+        this.node = node;
+    }
+
+    public uint Iounit => 0;
 }

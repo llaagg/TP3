@@ -6,14 +6,14 @@ public class TP3OpenResponse : TP3Message
         : base(TP3Command.OPEN)
     {
         Tag = tag;
-        Qid = nodeInfo;
+        Info = nodeInfo;
         Iounit = iounit;
     }
 
-    public NodeInfo Qid { get; }
+    public NodeInfo Info { get; }
 
     /// <summary>
-    /// Suggeted amount of bytes to read perchunk. Usually service knows and maps to most reasoble size
+    /// Suggested amount of bytes to read per chunk. Usually service knows and maps to most reasonable size
     /// for ex.: disk allocation block size, or network MTU size, etc.
     /// frame for sound or video streaming, etc.
     /// if 0 then no limit, read as much as possible.
