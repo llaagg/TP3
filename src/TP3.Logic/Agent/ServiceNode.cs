@@ -32,4 +32,8 @@ internal partial class ServiceNode : INode
         }
     }
 
+    public Task<ITP3DataStream?> Get()
+    {
+        return Task.FromResult<ITP3DataStream?>(null);
+    }
 }

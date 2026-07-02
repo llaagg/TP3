@@ -11,6 +11,7 @@ public class FileSystemNode : INode
         this.Qid = qid;
         this.IsDirectory = Directory.Exists(absolutePath);
         this.Name = Path.GetFileName(absolutePath);
+
         if (string.IsNullOrWhiteSpace(this.Name))
         {
             this.Name = absolutePath;
@@ -50,4 +51,8 @@ public class FileSystemNode : INode
         }
     }
 
+    public Task<ITP3DataStream?> Get()
+    {
+        throw new NotImplementedException();
+    }
 }

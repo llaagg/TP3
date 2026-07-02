@@ -79,7 +79,8 @@ public class FlowTest
             Path = new List<string> { }
         });
         var lastWalkResponse = lastMessageSent as TP3WalkResponse;
-
+        Assert.NotNull(lastWalkResponse);
+        Assert.Equal(tag, lastWalkResponse!.Tag);
 
         // 3. Client opens the object
         //    Topen(fid, mode)

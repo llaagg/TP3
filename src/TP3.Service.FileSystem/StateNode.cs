@@ -30,4 +30,9 @@ public class StateNode : INode
             }
         }
     }
+
+    public Task<ITP3DataStream?> Get()
+    {
+        return Task.FromResult<ITP3DataStream?>(null);
+    }
 }

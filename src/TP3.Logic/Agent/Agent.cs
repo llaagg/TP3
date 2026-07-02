@@ -96,14 +96,38 @@ public class Agent : IAgent
             await router.Respond(this, response, incomingTransport);
             return;
         }
+        else if (request.Command == TP3Command.OPEN && request is TP3OpenRequest tP3OpenRequest)
+        {
+            var response = await OpenStream(incomingTransport, tP3OpenRequest);
+            return;
+        }
 
-        logger?.LogWarning("Agent received unhandled TP3 message: {Command}", request.Command);
+        throw new NotImplementedException($"Unhandled TP3 message: {request.Command}");
+    }
+
+    private async Task<TP3OpenResponse> OpenStream(INetworkPipe incomingTransport, TP3OpenRequest tP3OpenRequest)
+    {
+        // let's find the node in this connection
+        if(string.IsNullOrEmpty(tP3OpenRequest.Tag))
+        {
+            throw new ArgumentException("Tag cannot be null or empty for open request.");
+        }
+
+        var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tP3OpenRequest.Tag);
+        var service = FindServiceForTag(node);
+
+        return new TP3OpenResponse(tP3OpenRequest.Tag, null, 0);
+        
+    }
+
+    private INode FindServiceForTag(INode node)
+    {
+        throw new NotImplementedException();
     }
 
     private async Task SendToNetwork(INode nodeObj, TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)
     {
         TP3Message response = null!;
-
 
         // let's find node from our session identified by tag
         // le'ts offset and 

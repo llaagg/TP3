@@ -40,5 +40,8 @@ public class Trunk : INode
         }
     }
 
-    public ITP3Stream? Data => null;
+    public async Task<ITP3DataStream?> Get()
+    {
+        return null;
+    }
 }

@@ -20,5 +20,8 @@ public class StateNode : INode
 
     public IEnumerable<INode>? Children => state.Children;
 
-    public ITP3Stream? Data => null;
+    public async Task<ITP3DataStream?> Get()
+    {
+        return null!;
+    }
 }
