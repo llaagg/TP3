@@ -15,7 +15,7 @@ public class NodeInfo
     }
 
     public NodeInfo(INode node)
-        : this(node.Qid, node.NodeType)
+        : this(node.Id, node.NodeType)
     {
     }
     

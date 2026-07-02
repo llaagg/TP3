@@ -57,7 +57,7 @@ public static partial class CLI
                 Console.WriteLine(payload);
             }
 
-            offset = response.Offset;
+            offset += response.Data.Length;
         }
 
         await ipcClient.DisconnectAsync().ConfigureAwait(false);

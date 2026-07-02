@@ -11,23 +11,3 @@ public class Connection
     /// </summary>
     public Dictionary<string, Pointer> Pointers { get; set; } = new Dictionary<string, Pointer>();    
 }
-
-
-public class Pointer
-{
-    public INode Node { get; set; }
-
-    public ITP3DataStream? Data { get; set; } = null!;
-}
-
-public class DirectoryStreamData : ITP3DataStream
-{
-    private readonly INode node;
-
-    public DirectoryStreamData(INode node)
-    {
-        this.node = node;
-    }
-
-    public uint Iounit => 0;
-}

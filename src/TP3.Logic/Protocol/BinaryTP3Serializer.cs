@@ -28,17 +28,9 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
                 break;
 
             case TP3ReadResponse readResponse:
-                writer.Write(readResponse.Qid ?? string.Empty);
-                writer.Write(readResponse.Offset);
-                writer.Write(readResponse.MaxBytes);
-                writer.Write(readResponse.NodeType?.ToString().ToLowerInvariant() ?? string.Empty);
-                writer.Write(readResponse.IsChunk);
-                writer.Write(readResponse.ChunkIndex);
-                writer.Write(readResponse.IsFinalChunk);
                 var data = readResponse.Data ?? Array.Empty<byte>();
                 writer.Write(data.Length);
                 writer.Write(data);
-                writer.Write(readResponse.Error ?? string.Empty);
                 break;
 
             case TP3WalkRequest:
@@ -75,8 +67,8 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
             TP3Command.READ => isResponse ? ReadReadResponse(args, tag, reader) : new TP3ReadRequest
             {
                 Tag = NormalizeOptionalString(tag),
-                Offset = reader.ReadInt64(),
-                MaxBytes = reader.ReadInt32()
+                Offset = (ulong)reader.ReadInt64(),
+                MaxBytes = (uint)reader.ReadInt32()
             },
             _ => new TP3GenericMessage(command)
             {
@@ -95,13 +87,6 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
 
     private static TP3ReadResponse ReadReadResponse(List<string> args, string tag, BinaryReader reader)
     {
-        var qid = NormalizeOptionalString(reader.ReadString());
-        var offset = reader.ReadInt64();
-        var maxBytes = reader.ReadInt32();
-        var nodeType = TryReadNodeType(reader.ReadString());
-        var isChunk = reader.ReadBoolean();
-        var chunkIndex = reader.ReadInt32();
-        var isFinalChunk = reader.ReadBoolean();
         var dataLength = reader.ReadInt32();
         var data = dataLength > 0 ? reader.ReadBytes(dataLength) : Array.Empty<byte>();
         var error = NormalizeOptionalString(reader.ReadString());
@@ -109,15 +94,7 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         return new TP3ReadResponse
         {
             Tag = NormalizeOptionalString(tag),
-            Qid = qid,
-            Offset = offset,
-            MaxBytes = maxBytes,
-            NodeType = nodeType,
-            IsChunk = isChunk,
-            ChunkIndex = chunkIndex,
-            IsFinalChunk = isFinalChunk,
             Data = dataLength > 0 ? data : null,
-            Error = error
         };
     }
 

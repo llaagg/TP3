@@ -18,11 +18,11 @@ public static class ReaderChunkerEngine
         Reader reader = node.NodeType switch
         {
             NodeType.Directory => new DirectoryJsonReader(node),
-            NodeType.File => new FileBinaryReader(node.Qid),
+            NodeType.File => new FileBinaryReader(node.Id),
             _ => throw new InvalidOperationException($"Unknown node type: {node.NodeType}.")
         };
 
-        var result = await reader.ReadAsync(offset, maxBytes).ConfigureAwait(false);
+        var result = await reader.ReadAsync((ulong)offset, (uint)maxBytes).ConfigureAwait(false);
 
         var data = result.IsEof
             ? Encoding.UTF8.GetBytes("EOF")
@@ -31,13 +31,6 @@ public static class ReaderChunkerEngine
         return new TP3ReadResponse
         {
             Tag = request.Tag,
-            Qid = node.Qid,
-            Offset = result.NextOffset,
-            MaxBytes = maxBytes,
-            NodeType = node.NodeType,
-            IsChunk = true,
-            ChunkIndex = offset > int.MaxValue ? int.MaxValue : (int)offset,
-            IsFinalChunk = result.IsEof,
             Data = data
         };
     }

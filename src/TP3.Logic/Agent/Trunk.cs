@@ -23,7 +23,7 @@ public class Trunk : INode
         this.service = service;
     }
 
-    public string Qid => "trunk:/";
+    public string Id => "trunk:/";
 
     public string Name => "/";
 

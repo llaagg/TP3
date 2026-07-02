@@ -75,8 +75,6 @@ public class Agent : IAgent
         else if (request.Command == TP3Command.READ && request is TP3ReadRequest tP3ReadRequest)
         {
             var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tP3ReadRequest.Tag);
-            ;
-
 
             if(node != null)
             {
@@ -99,6 +97,7 @@ public class Agent : IAgent
         else if (request.Command == TP3Command.OPEN && request is TP3OpenRequest tP3OpenRequest)
         {
             var response = await OpenStream(incomingTransport, tP3OpenRequest);
+            await router.Respond(this, response, incomingTransport);
             return;
         }
 
@@ -123,36 +122,16 @@ public class Agent : IAgent
 
     private async Task SendToNetwork(INode nodeObj, TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)
     {
-        TP3Message response = null!;
-
-        // let's find node from our session identified by tag
-        // le'ts offset and 
-        // let's send it back to customer, one or many messages
-        if(nodeObj.NodeType == NodeType.Directory)
-        {
-            response = this.SendDirecotryToNetwork(nodeObj, tP3ReadRequest, incomingTransport);
-        }else
-        {
-            throw new NotImplementedException("File node reading is not implemented yet.");
-        }
-        
-        await router.Respond(this, response, incomingTransport);
-    }
-
-    private TP3Message SendDirecotryToNetwork(INode nodeObj, TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)
-    {
-
-
-        //// the idea is not that simple
-        var response = new TP3ReadResponse
+        TP3ReadResponse response = new TP3ReadResponse
         {
             Tag = tP3ReadRequest.Tag,
         };
-        var offset = tP3ReadRequest.Offset;
-        
-        logger?.LogError("Node object is a directory for tag: {Tag} in session: {AgentID}", tP3ReadRequest.Tag, incomingTransport.AgentID);
-        
-        return response;
+
+        var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tP3ReadRequest.Tag);
+        var bytes = await data.Read(tP3ReadRequest.Offset, tP3ReadRequest.MaxBytes);
+        response.Data = bytes;       
+
+        await router.Respond(this, response, incomingTransport);
     }
 
     private async Task<TP3AttachResponse> AttachTagToConnectionAndGetRootGiq(INetworkPipe incomingNetworkSession, TP3AttachRequest tP3AttachRequest)

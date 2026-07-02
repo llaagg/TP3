@@ -42,8 +42,8 @@ public class MessageHelper
             return new TP3ReadRequest
             {
                 Tag = tag,
-                Offset = offset,
-                MaxBytes = maxBytes,
+                Offset = (ulong)offset,
+                MaxBytes = (uint)maxBytes,
             };
         }
 

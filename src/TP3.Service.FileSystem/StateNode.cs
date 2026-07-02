@@ -7,11 +7,11 @@ public class StateNode : INode
 {
     public StateNode(string qid)
     {
-        this.Qid = qid;
+        this.Id = qid;
         this.Name = "state";
     }
 
-    public string Qid { get; }
+    public string Id { get; }
 
     public string Name { get; set; }
 

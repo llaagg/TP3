@@ -106,11 +106,11 @@ public sealed class PathWalker
     {
         lock (sync)
         {
-            if (nodesByQid.TryGetValue(node.Qid, out var existing))
+            if (nodesByQid.TryGetValue(node.Id, out var existing))
             {
                 return new NodeInfo
                 {
-                    Id = existing.Node.Qid,
+                    Id = existing.Node.Id,
                     NodeType = existing.NodeType
                 };
             }
@@ -121,10 +121,10 @@ public sealed class PathWalker
                 NodeType = node.NodeType,
             };
 
-            nodesByQid[node.Qid] = existing;
+            nodesByQid[node.Id] = existing;
             return new NodeInfo
             {
-                Id = existing.Node.Qid,
+                Id = existing.Node.Id,
                 NodeType = existing.NodeType
             };
         }

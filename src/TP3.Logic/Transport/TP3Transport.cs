@@ -90,6 +90,13 @@ public class TP3Transport : ITP3Transport
             pointer.Data = new DirectoryStreamData(pointer.Node);
         }
 
+        if(pointer.Data == null)
+        {
+            throw new Exception($"No data stream available for tag: {tag}");
+        }
+
+        await pointer.Data.Open();
+
         return pointer.Data!;
     }
 }

@@ -8,7 +8,7 @@ public class FileSystemNode : INode
     public FileSystemNode(string absolutePath, string qid)
     {
         this.AbsolutePath = absolutePath;
-        this.Qid = qid;
+        this.Id = qid;
         this.IsDirectory = Directory.Exists(absolutePath);
         this.Name = Path.GetFileName(absolutePath);
 
@@ -18,7 +18,7 @@ public class FileSystemNode : INode
         }
     }
 
-    public string Qid { get; }
+    public string Id { get; }
 
     public string Name { get; set; }
 

@@ -84,18 +84,31 @@ public class FlowTest
         // after the walk there should be a pointer setup for this user
         var pointer = transport.NetwokSessions.GetPointer(pipe, tag);
         Assert.NotNull(pointer);
-        
+        Assert.Null(pointer!.Data);
+
         // 3. Client opens the object
         //    Topen(fid, mode)
         //  -> Ropen(qid, iounit)
         await sut.router.Route(pipe, new TP3OpenRequest(tag: tag));
         var lastOpenResponse = lastMessageSent as TP3OpenResponse;
+        // there will be stream assigned to the pointer
+        Assert.NotNull(pointer!.Data);
+        var iounit = lastOpenResponse!.Iounit;
+        var nodeType = lastOpenResponse!.Info.NodeType;
+        Assert.Equal(NodeType.Directory, nodeType);
 
-
-        // 2. Client lists folder (trunk)
+        // 4. Client lists folder (trunk)
         await sut.router.Route(pipe, new TP3ReadRequest(tag: tag));
+        var lastReadResponse = lastMessageSent as TP3ReadResponse;
+        Assert.NotNull(lastReadResponse);
+        Assert.Equal(tag, lastReadResponse!.Tag);
+        // we know it is a directory, so the data should be a JSON array of Stat objects
+        Assert.NotNull(lastReadResponse.Data);
+        var data = lastReadResponse.Data;
+        var stats = 
+            TP3Stat.DataAsFolders(new []{lastReadResponse}).ToList();
 
-        // 2. Client navigates to a path
+        // 5. Client navigates to a path
         //    Twalk(fid=root, newfid=fileFid, ["usr", "bin"])
         //    -> Rwalk([qid_usr, qid_bin])
         await sut.router.Route(pipe, new TP3WalkRequest()

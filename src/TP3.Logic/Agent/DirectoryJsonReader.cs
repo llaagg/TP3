@@ -10,7 +10,7 @@ internal sealed class DirectoryJsonReader : Reader
 
     public DirectoryJsonReader(INode directory)
     {
-        if (string.IsNullOrWhiteSpace(directory.Qid))
+        if (string.IsNullOrWhiteSpace(directory.Id))
         {
             records = Array.Empty<byte[]>();
             return;
@@ -29,7 +29,7 @@ internal sealed class DirectoryJsonReader : Reader
         this.data = directory.Children;
     }
 
-    public override Task<ServiceReadResult> ReadAsync(long offset, int maxBytes)
+    public override Task<ServiceReadResult> ReadAsync(ulong offset, uint maxBytes)
     {
         // var index = offset < 0 ? 0 : offset;
 
@@ -58,12 +58,12 @@ internal sealed class DirectoryJsonReader : Reader
 
             var bytes = data?.Select(d => JsonSerializer.SerializeToUtf8Bytes(new DirectoryEntryDto(d.Name, d.NodeType.ToString().ToLowerInvariant()))).ToArray();
 
-            if (data is null || index >= data.Count())
+            if (data is null || offset >= (ulong)data.Count())
             {
                 return new ServiceReadResult
                 {
                     Data = Array.Empty<byte>(),
-                    NextOffset = index,
+                    NextOffset = offset,
                     IsEof = true
                 };
             }
@@ -72,11 +72,12 @@ internal sealed class DirectoryJsonReader : Reader
             return new ServiceReadResult
             {
                 Data = record,
-                NextOffset = index + 1,
+                NextOffset = offset + 1,
                 IsEof = false
             };
         });
     }
+
 }
 
 

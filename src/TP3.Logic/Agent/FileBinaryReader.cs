@@ -11,10 +11,10 @@ internal sealed class FileBinaryReader : Reader
         this.absolutePath = absolutePath;
     }
 
-    public override async Task<ServiceReadResult> ReadAsync(long offset, int maxBytes)
+    public override async Task<ServiceReadResult> ReadAsync(ulong offset, uint maxBytes)
     {
         await using var stream = File.OpenRead(absolutePath);
-        if (offset >= stream.Length)
+        if (offset >= (ulong)stream.Length)
         {
             return new ServiceReadResult
             {
@@ -24,7 +24,7 @@ internal sealed class FileBinaryReader : Reader
             };
         }
 
-        stream.Seek(offset, SeekOrigin.Begin);
+        stream.Seek((long)offset, SeekOrigin.Begin);
         var buffer = new byte[maxBytes];
         var bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length)).ConfigureAwait(false);
         if (bytesRead <= 0)
@@ -43,7 +43,7 @@ internal sealed class FileBinaryReader : Reader
         return new ServiceReadResult
         {
             Data = payload,
-            NextOffset = offset + bytesRead,
+            NextOffset = offset + (ulong)bytesRead,
             IsEof = false
         };
     }

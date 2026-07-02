@@ -12,7 +12,7 @@ public class StateNode : INode
         this.state = state;
     }
 
-    public string Qid => $"state:{Name}";
+    public string Id => $"state:{Name}";
 
     public string Name => "state";
 
