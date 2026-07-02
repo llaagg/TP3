@@ -30,7 +30,6 @@ public static class ReaderChunkerEngine
 
         return new TP3ReadResponse
         {
-            Args = request.Args,
             Tag = request.Tag,
             Qid = node.Qid,
             Offset = result.NextOffset,

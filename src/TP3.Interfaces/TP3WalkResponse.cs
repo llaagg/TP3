@@ -3,8 +3,8 @@ namespace TP3.Messages;
 public sealed class TP3WalkResponse : TP3Message
 {
     public TP3WalkResponse()
+        : base(TP3Command.WALK)
     {
-        Command = TP3Command.WALK;
     }
 
     public string? Qid { get; init; }

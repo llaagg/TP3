@@ -55,32 +55,31 @@ public class Agent : IAgent
     }
 
 
-    public async Task Handle(TP3Message request)
+    public async Task Handle(
+            ITP3Transport incomingTransport,
+            TP3Message request)
     {
-        var effectiveRequest = request is RouteTP3Message routed ? routed.InnerMessage : request;
-        logger?.LogDebug("Agent handling TP3 message: {Command} {Path}", effectiveRequest.Command, string.Join(" ", effectiveRequest.Args));
+        logger?.LogDebug("Agent handling TP3 message: {Command}", request.Command);
         if (request == null)
         {
             logger?.LogWarning("Received null TP3 message.");
             return;
         }
-        else if (effectiveRequest.Command == TP3Command.WALK)
+        else if (request.Command == TP3Command.WALK && request is TP3WalkRequest tP3WalkRequest)
         {
-            var walkRequest = TP3WalkRequest.From(effectiveRequest);
-            var response = await walker.WalkAsync(walkRequest).ConfigureAwait(false);
+            var response = await walker.WalkAsync(tP3WalkRequest).ConfigureAwait(false);
 
-            await router.Respond(this, request, response);
+            await router.Respond(this, request, incomingTransport);
             return;
         }
-        else if (effectiveRequest.Command == TP3Command.READ)
+        else if (request.Command == TP3Command.READ && request is TP3ReadRequest tP3ReadRequest)
         {
-            var readRequest = TP3ReadRequest.From(effectiveRequest);
-            var response = await walker.ReadAsync(readRequest).ConfigureAwait(false);
+            var response = await walker.ReadAsync(tP3ReadRequest).ConfigureAwait(false);
 
-            await router.Respond(this, request, response);
+            await router.Respond(this, request, incomingTransport);
             return;
         }
 
-        logger?.LogWarning("Agent received unhandled TP3 message: {Command} {Path}", effectiveRequest.Command, string.Join(" ", effectiveRequest.Args));
+        logger?.LogWarning("Agent received unhandled TP3 message: {Command}", request.Command);
     }
 }

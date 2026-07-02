@@ -4,42 +4,18 @@ namespace TP3.Messages;
 
 public abstract class TP3Message
 {
-    protected TP3Message()
-    {
-        Args = new List<string>();
-    }
-    
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TP3Message"/> class with the specified command and arguments.
-    /// </summary>
-    protected TP3Message(TP3Command command, params string[] args)
+    protected TP3Message(TP3Command command, string? tag = null)
     {
         Command = command;
-        Args = args.ToList();
+        
+        Tag = tag ?? Guid.NewGuid().ToString("N").Substring(0, 8);
     }
+
+    public TP3Command Command { get; init; } = TP3Command.READ;
 
     /// <summary>
-    /// Copy constructor for TP3Message.
+    /// The tag is used to match requests and responses. It is a string that is used 
+    /// to identify user context. The server will echo the tag back in the response.
     /// </summary>
-    protected TP3Message(TP3Message other) : this(other.Command, other.Args.ToArray())
-    {
-        Tag = other.Tag;
-    }
-    
-    public TP3Command Command { get; init; } = TP3Command.WALK;
-
-    /// <summary>
-    /// The arguments for the TP3 message.
-    /// </summary>
-    public List<string> Args
-    {
-        get;set;
-    }
-
-    public string? Tag { get; set; }
-
-    public override string ToString()
-    {
-        return $"TP3Message cmd={Command} args={string.Join('/', Args)}";
-    }
+    public string Tag { get; init; } = string.Empty;
 }

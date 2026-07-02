@@ -45,7 +45,6 @@ public class MessageHelper
                 Qid = qid,
                 Offset = offset,
                 MaxBytes = maxBytes,
-                Args = parts.Length > 4 ? parts[4..].ToList() : new List<string>()
             };
         }
 
@@ -54,8 +53,7 @@ public class MessageHelper
         {
             return new TP3WalkRequest
             {
-                Tag = tag,
-                Args = pathSegments.ToList()
+                Tag = tag
             };
         }
 

@@ -18,28 +18,19 @@ public sealed class Router : IRouter
         this.logger = logger;
     }
 
-    public async Task Respond(IAgent agent, TP3Message request, TP3Message response)
+    public async Task Respond(IAgent agent, TP3Message message, ITP3Transport targetTransport)
     {
         // someone asked about this while ago, and i can respond to it but where :-)
-        if(request is RouteTP3Message routeMessage && routeMessage.IncomingTransport != null)
-        {
-            logger?.LogDebug("Responding to request {RequestCommand} with response {ResponseCommand} via transport {TransportType}.", request.Command, response.Command, routeMessage.IncomingTransport.GetType().Name);
-            await routeMessage.IncomingTransport.Send(response);
-        }
-        else
-        {
-            logger?.LogWarning("Request is null, cannot respond.");
-            return;
-        }
+        await targetTransport.Send(message);
     }
 
-    public async Task Route(INetworkTransport ipcTransport, TP3Message message)
+    public async Task Route(ITP3Transport sourceTransport, TP3Message message)
     {
-        logger?.LogDebug("Routing TP3 message: {Command} {Path}", message.Command, message.Args);
+        logger?.LogDebug("Routing TP3 message: {Command}", message.Command);
 
         #warning TODO: namespace filtering
         #warning TODO: tcp forward, currelnty we only send to our local agent, but we should forward to other agents if the target is not local
         
-        await host.Me.Handle(new RouteTP3Message(message) { IncomingTransport = ipcTransport });
+        await host.Me.Handle(sourceTransport, message);
     }
 }

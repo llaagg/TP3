@@ -6,5 +6,5 @@ public interface IAgent
 {    
     INode T { get; }
     Task AddService(IService service);
-    Task Handle(TP3Message request);
+    Task Handle(ITP3Transport incomingTransport, TP3Message request);
 }

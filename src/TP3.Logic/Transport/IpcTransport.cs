@@ -1,10 +1,5 @@
-using System;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Protocol;
 using TP3.Interfaces;
@@ -18,13 +13,13 @@ public sealed class IpcTransport : INetworkTransport
     private readonly SemaphoreSlim writeLock = new(1, 1);
     private readonly AsyncLocal<ClientSession?> currentSession = new();
     private readonly TcpListener listener;
-    private readonly IRouter router;
+    private IRouter? router = null!;
+    private ITP3Transport transport;
     private readonly ILogger? logger;
     private bool disposed;
 
-    public IpcTransport(int port, IRouter router, ILogger? logger = null)
+    public IpcTransport(int port, ILogger? logger = null)
     {
-        this.router = router;
         this.logger = logger;
         listener = new TcpListener(IPAddress.Loopback, port);
     }
@@ -39,9 +34,10 @@ public sealed class IpcTransport : INetworkTransport
         disposed = true;
         cancellationTokenSource.Cancel();
         listener.Stop();
-        cancellationTokenSource.Dispose();
+        cancellationTokenSource.Dispose();  
         writeLock.Dispose();
     }
+
 
     public async Task Start()
     {
@@ -143,7 +139,13 @@ public sealed class IpcTransport : INetworkTransport
             logger?.LogInformation("IPC RX: {Message}", message);
 
             currentSession.Value = session;
-            await router.Route(this, message).ConfigureAwait(false);
+            
+            if (router == null)
+            {
+                throw new InvalidOperationException("Router is not initialized.");
+            }
+
+            await router.Route(transport, message).ConfigureAwait(false);
         }
     }
 
@@ -165,6 +167,13 @@ public sealed class IpcTransport : INetworkTransport
         {
             writeLock.Release();
         }
+    }
+
+    public Task Init(IRouter router, ITP3Transport transport)
+    {
+        this.router = router;
+        this.transport = transport;
+        return Task.CompletedTask;
     }
 
     private sealed class ClientSession

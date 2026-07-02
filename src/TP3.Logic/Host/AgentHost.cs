@@ -21,22 +21,32 @@ namespace TP3.Agent.Logic.Host;
 public class AgentHost : IDisposable
 {
     public readonly IAgent Me;
-    private readonly ITP3Transport tcpTransport;
-    private readonly ITP3Transport ipcTransport;
     private readonly IService[] services;
+    private readonly ITP3Transport[]? transports;
     private readonly ILogger? logger;
-    private readonly Router router;
+    public readonly Router router;
 
-    public AgentHost(int port = 5000, int ipcPort = 5001, ILogger? logger = null, IService[]? services = null)
+    public AgentHost(ILogger? logger = null, IService[]? services = null, ITP3Transport[]? transports = null)
     {
         this.logger = logger;
 
         router = new Router(this, logger);
         Me = new Agent.Agent(router, logger);
 
-        tcpTransport = TP3TransportFactory.CreateTCP(port, router, logger);
-        ipcTransport = TP3TransportFactory.CreateIPC(ipcPort, router, logger);
         this.services = services ?? Array.Empty<IService>();
+        this.transports = transports;
+    }
+
+
+    public async Task Init()
+    {
+        if(this.transports != null)
+        {
+            foreach (var t in transports)
+            {
+                await t.Init(router);
+            }
+        }
     }
 
     public async Task Start()
@@ -56,22 +66,43 @@ public class AgentHost : IDisposable
             }
         }
 
-        var tcpTask = tcpTransport.Start();
-        var ipcTask = ipcTransport.Start();
+        if(transports == null || transports.Length == 0)
+        {
+            logger?.LogWarning("No transports configured for AgentHost.");
+        }
+        
+        List<Task> transportStartTasks = new List<Task>();
+        if (transports != null)
+        {
+            foreach (var t in transports)
+            {
+                transportStartTasks.Add(t.Start());
+            }
+        }
 
-        await Task.WhenAll(tcpTask, ipcTask);
+        await Task.WhenAll(transportStartTasks);
     }
 
     public void Dispose()
     {
         logger?.LogInformation("Disposing agent host.");
-        tcpTransport.Dispose();
-        ipcTransport.Dispose();
+        if (transports != null)
+        {
+            foreach (var t in transports)
+            {
+                t.Dispose();
+            }
+        }
     }
 
     public void Stop()
     {
-        tcpTransport.Stop();
-        ipcTransport.Stop();
+        if (transports != null)
+        {
+            foreach (var t in transports)
+            {
+                t.Stop();
+            }
+        }
     }
 }

@@ -19,13 +19,12 @@ public sealed class PathWalker
 
     public Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
     {
-        var node = ResolveNode(trunk, request.Args);
+        var node = ResolveNode(trunk, request.Path);
 
         if (node is null)
         {
             return Task.FromResult(new TP3WalkResponse
             {
-                Args = request.Args,
                 Tag = request.Tag,
                 Error = "NotFound"
             });
@@ -35,7 +34,6 @@ public sealed class PathWalker
 
         return Task.FromResult(new TP3WalkResponse
         {
-            Args = request.Args,
             Tag = request.Tag,
             Qid = node.Qid,
             NodeType = registered.NodeType
@@ -48,7 +46,6 @@ public sealed class PathWalker
         {
             return Task.FromResult(new TP3ReadResponse
             {
-                Args = request.Args,
                 Tag = request.Tag,
                 Error = "QidRequired"
             });
@@ -64,7 +61,6 @@ public sealed class PathWalker
         {
             return Task.FromResult(new TP3ReadResponse
             {
-                Args = request.Args,
                 Tag = request.Tag,
                 Qid = request.Qid,
                 Error = "NotFound"
@@ -73,10 +69,10 @@ public sealed class PathWalker
 
 
 
-        return ReaderChunkerEngine.ReadAsync(request, registered);
+        return ReaderChunkerEngine.ReadAsync(request, registered.Node);
     }
 
-    private INode? ResolveNode(INode trunk, IReadOnlyList<string> requestPath)
+    private INode? ResolveNode(INode trunk, IList<string> requestPath)
     {
         var segments = requestPath
             .Where(s => !string.IsNullOrWhiteSpace(s))

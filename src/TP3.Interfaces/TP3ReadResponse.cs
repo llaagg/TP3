@@ -4,8 +4,8 @@ public sealed class TP3ReadResponse : TP3Message
 {
     #warning TODO: remove args and command
     public TP3ReadResponse()
+        : base(TP3Command.READ)
     {
-        Command = TP3Command.READ;
     }
 
     public string? Qid { get; init; }

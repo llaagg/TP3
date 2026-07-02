@@ -12,10 +12,7 @@ public class FileSystemServiceReadTests
         var service = new FileSystemService();
         var walker = new PathWalker(service.State);
 
-        var walkResponse = await walker.WalkAsync(new TP3WalkRequest
-        {
-            Args = new List<string>()
-        });
+        var walkResponse = await walker.WalkAsync(new TP3WalkRequest());
 
         Assert.Null(walkResponse.Error);
         Assert.Equal(NodeType.Directory, walkResponse.NodeType);

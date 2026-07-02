@@ -50,7 +50,7 @@ public static partial class CLI
             await ipcClient.SendMessageAsync(readCommand);
 
             var readMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
-            logger.LogDebug(" {Qid}-> Received response: {ResponseCommand} {ResponseArgs}", qid, readMessage.Command, readMessage.Args);
+            logger.LogDebug(" {Qid}-> Received response: {ResponseCommand}", qid, readMessage.Command);
             if (readMessage is not TP3ReadResponse response)
             {
                 break;

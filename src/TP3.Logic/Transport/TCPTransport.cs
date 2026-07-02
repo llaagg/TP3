@@ -8,7 +8,7 @@ namespace TP3.Agent.Logic.Transport;
 /// TCP transport is intentionally disabled for now.
 /// IPC transport is the only active transport in the current MVP.
 /// </summary>
-public sealed class TCPTransport : INetworkTransport
+public sealed class TCPTransport 
 {
     private readonly ILogger? logger;
 
