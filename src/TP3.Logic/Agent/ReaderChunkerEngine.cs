@@ -10,17 +10,16 @@ public static class ReaderChunkerEngine
 
     public static async Task<TP3ReadResponse> ReadAsync(
         TP3ReadRequest request,
-        string qid,
-        NodeType nodeType)
+        INode node)
     {
         var offset = request.Offset < 0 ? 0 : request.Offset;
         var maxBytes = request.MaxBytes > 0 ? request.MaxBytes : DefaultMaxBytes;
 
-        Reader reader = nodeType switch
+        Reader reader = node.NodeType switch
         {
-            NodeType.Directory => new DirectoryJsonReader(isRootState: false, qid),
-            NodeType.File => new FileBinaryReader(qid),
-            _ => throw new InvalidOperationException($"Unknown node type: {nodeType}.")
+            NodeType.Directory => new DirectoryJsonReader(node),
+            NodeType.File => new FileBinaryReader(node.Qid),
+            _ => throw new InvalidOperationException($"Unknown node type: {node.NodeType}.")
         };
 
         var result = await reader.ReadAsync(offset, maxBytes).ConfigureAwait(false);
@@ -33,10 +32,10 @@ public static class ReaderChunkerEngine
         {
             Args = request.Args,
             Tag = request.Tag,
-            Qid = qid,
+            Qid = node.Qid,
             Offset = result.NextOffset,
             MaxBytes = maxBytes,
-            NodeType = nodeType,
+            NodeType = node.NodeType,
             IsChunk = true,
             ChunkIndex = offset > int.MaxValue ? int.MaxValue : (int)offset,
             IsFinalChunk = result.IsEof,

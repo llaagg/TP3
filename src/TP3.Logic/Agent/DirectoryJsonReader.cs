@@ -6,52 +6,75 @@ namespace TP3.Service.FileSystem;
 internal sealed class DirectoryJsonReader : Reader
 {
     private readonly byte[][] records;
+    private IEnumerable<INode>? data;
 
-    public DirectoryJsonReader(bool isRootState, string? absolutePath)
+    public DirectoryJsonReader(INode directory)
     {
-        if (isRootState)
-        {
-            records = DriveInfo.GetDrives()
-                .Select(d => new DirectoryEntryDto(d.Name, "directory"))
-                .Select(e => JsonSerializer.SerializeToUtf8Bytes(e))
-                .ToArray();
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(absolutePath))
+        if (string.IsNullOrWhiteSpace(directory.Qid))
         {
             records = Array.Empty<byte[]>();
             return;
         }
 
-        var entries = Directory.GetFileSystemEntries(absolutePath)
-            .Select(p => new DirectoryEntryDto(
-                Path.GetFileName(p) ?? p,
-                Directory.Exists(p) ? "directory" : "file"));
-        records = entries
-            .Select(e => JsonSerializer.SerializeToUtf8Bytes(e))
-            .ToArray();
+        // var entries = Directory.GetFileSystemEntries(absolutePath)
+        //     .Select(p => new DirectoryEntryDto(
+        //         Path.GetFileName(p) ?? p,
+        //         Directory.Exists(p) ? "directory" : "file"));
+
+        // var childrens = directory.Children ?? Array.Empty<INode>();
+
+        // records = entries
+        //     .Select(e => JsonSerializer.SerializeToUtf8Bytes(e))
+        //     .ToArray();
+        this.data = directory.Children;
     }
 
     public override Task<ServiceReadResult> ReadAsync(long offset, int maxBytes)
     {
-        var index = offset < 0 ? 0 : offset;
-        if (index >= records.Length)
-        {
-            return Task.FromResult(new ServiceReadResult
-            {
-                Data = Array.Empty<byte>(),
-                NextOffset = index,
-                IsEof = true
-            });
-        }
+        // var index = offset < 0 ? 0 : offset;
 
-        var record = records[index];
-        return Task.FromResult(new ServiceReadResult
+        // var bytes = data?.Select(d => JsonSerializer.SerializeToUtf8Bytes(new DirectoryEntryDto(d.Name, d.NodeType.ToString().ToLowerInvariant()))).ToArray();
+
+        // if (data is null || index >= data.Count())
+        // {
+        //     return Task.FromResult(new ServiceReadResult
+        //     {
+        //         Data = Array.Empty<byte>(),
+        //         NextOffset = index,
+        //         IsEof = true
+        //     });
+        // }
+
+        // var record = bytes?[index] ?? Array.Empty<byte>();
+        // return Task.FromResult(new ServiceReadResult
+        // {
+        //     Data = record,
+        //     NextOffset = index + 1,
+        //     IsEof = false
+        // });
+        return new Task<ServiceReadResult>(() =>
         {
-            Data = record,
-            NextOffset = index + 1,
-            IsEof = false
+            var index = offset < 0 ? 0 : offset;
+
+            var bytes = data?.Select(d => JsonSerializer.SerializeToUtf8Bytes(new DirectoryEntryDto(d.Name, d.NodeType.ToString().ToLowerInvariant()))).ToArray();
+
+            if (data is null || index >= data.Count())
+            {
+                return new ServiceReadResult
+                {
+                    Data = Array.Empty<byte>(),
+                    NextOffset = index,
+                    IsEof = true
+                };
+            }
+
+            var record = bytes?[index] ?? Array.Empty<byte>();
+            return new ServiceReadResult
+            {
+                Data = record,
+                NextOffset = index + 1,
+                IsEof = false
+            };
         });
     }
 }

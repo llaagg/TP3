@@ -71,7 +71,9 @@ public sealed class PathWalker
             });
         }
 
-        return ReaderChunkerEngine.ReadAsync(request, request.Qid!, registered.NodeType);
+
+
+        return ReaderChunkerEngine.ReadAsync(request, registered);
     }
 
     private INode? ResolveNode(INode trunk, IReadOnlyList<string> requestPath)
