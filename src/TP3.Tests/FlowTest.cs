@@ -12,32 +12,32 @@ public class FlowTest
     public async Task AgentHost_StartsAndStopsSuccessfully()
     {
         // build some fake tree strucutre like in files sytsme
-        var nodes = A.Fake<INode>();
-        A.CallTo(() => nodes.Name).Returns("root");
-        A.CallTo(() => nodes.NodeType).Returns(NodeType.Directory);
-        A.CallTo(() => nodes.Children).Returns(new List<INode>
-        {
-            A.Fake<INode>(),
-            A.Fake<INode>()
-        });
-        
+        INode nodes = MockFileSystem();
+
         var fakeservice = A.Fake<IService>();
         A.CallTo(() => fakeservice.State).Returns(nodes);
 
 
         var fakeNetwrokTransport = A.Fake<INetworkTransport>();
-        A.CallTo(() => fakeNetwrokTransport.Send(A<TP3AttachRequest>.Ignored))
-            .Returns(Task.CompletedTask);
-        
+
         var transport = new TP3Transport(A.Fake<ILogger>(), fakeNetwrokTransport);
 
-        var sut = new AgentHost(A.Fake<ILogger>(), 
-            new List<IService> { fakeservice }.ToArray(), 
+        var pipe = A.Fake<INetworkPipe>();
+        A.CallTo(() => pipe.AgentID).Returns("agent1");
+        A.CallTo(() => pipe.TP3Transport).Returns(transport);
+
+        A.CallTo(() => fakeNetwrokTransport.Send(pipe, A<TP3AttachRequest>.Ignored))
+            .Returns(Task.CompletedTask);
+        A.CallTo(() => fakeNetwrokTransport.Send(pipe, A<TP3AttachResponse>.Ignored))
+            .Returns(Task.CompletedTask);
+
+        var sut = new AgentHost(A.Fake<ILogger>(),
+            new List<IService> { fakeservice }.ToArray(),
             new List<ITP3Transport> { transport }.ToArray());
-        
+
         await sut.Init();
-        
-        #warning TODO: auth
+
+#warning TODO: auth
         // auth
         // Tauth(afid, uname, aname)
         //     → Rauth(qid_auth)
@@ -48,13 +48,13 @@ public class FlowTest
         // 1. Client attaches to the server
         //    Tattach(fid=root)
         //    -> Rattach(qid_root)
-        
+
         // when message is incoming from network trasnport, router is asked to handle it.
         // we can use that to prtend we are some user and send a message to the agent host, and see if it is routed correctly.
-        await sut.router.Route(transport, new TP3AttachRequest(tag: "root"));
+        await sut.router.Route(pipe, new TP3AttachRequest(tag: "root"));
 
         // let's check what is incoming to the agent host, and see if it is routed correctly.
-        A.CallTo(() => fakeNetwrokTransport.Send(A<TP3AttachResponse>.That.Matches(m => m.Tag == "root")))
+        A.CallTo(() => fakeNetwrokTransport.Send(pipe, A<TP3AttachResponse>.That.Matches(m => m.Tag == "root")))
             .MustHaveHappenedOnceExactly();
 
         // 2. Client navigates to a path
@@ -93,7 +93,18 @@ public class FlowTest
         // | Clunk          | `fid`          | acknowledgment |
 
 
-       }
+    }
 
-
+    private static INode MockFileSystem()
+    {
+        var nodes = A.Fake<INode>();
+        A.CallTo(() => nodes.Name).Returns("root");
+        A.CallTo(() => nodes.NodeType).Returns(NodeType.Directory);
+        A.CallTo(() => nodes.Children).Returns(new List<INode>
+        {
+            A.Fake<INode>(),
+            A.Fake<INode>()
+        });
+        return nodes;
+    }
 }

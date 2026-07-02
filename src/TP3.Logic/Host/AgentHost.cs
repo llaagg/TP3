@@ -42,10 +42,18 @@ public class AgentHost : IDisposable
     {
         if(this.transports != null)
         {
+            // check if tags are uniq in tranbsports
+            var tags = transports.Select(t => t.Tag).ToList();
+            if(tags.Count != tags.Distinct().Count())
+            {
+                throw new Exception("Transport tags are not unique.");
+            }
+
             foreach (var t in transports)
             {
                 await t.Init(router);
             }
+            
         }
     }
 

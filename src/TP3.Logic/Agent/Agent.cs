@@ -56,7 +56,7 @@ public class Agent : IAgent
 
 
     public async Task Handle(
-            ITP3Transport incomingTransport,
+            INetworkPipe incomingTransport,
             TP3Message request)
     {
         logger?.LogDebug("Agent handling TP3 message: {Command}", request.Command);
@@ -79,7 +79,37 @@ public class Agent : IAgent
             await router.Respond(this, request, incomingTransport);
             return;
         }
+        else if (request.Command == TP3Command.ATTACH && request is TP3AttachRequest tP3AttachRequest)
+        {
+            var response = await AttachTagToConnectionAndGetRootGiq(incomingTransport, tP3AttachRequest);
+
+            await router.Respond(this, request, incomingTransport);
+            return;
+        }
 
         logger?.LogWarning("Agent received unhandled TP3 message: {Command}", request.Command);
+    }
+
+    private async Task<TP3AttachResponse> AttachTagToConnectionAndGetRootGiq(INetworkPipe incomingNetworkSession, TP3AttachRequest tP3AttachRequest)
+    {
+        var result = new TP3AttachResponse
+        {
+            Tag = tP3AttachRequest.Tag,
+        };
+
+        // check auth
+        #warning TODO: auth
+
+        // find root node
+        var rootNode = this.T;
+
+        // register Tag
+        
+
+        // get quid
+
+        // assing TCP connection to tag
+
+        return result;
     }
 }

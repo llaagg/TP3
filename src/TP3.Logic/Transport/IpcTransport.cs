@@ -11,9 +11,9 @@ public sealed class IpcTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly SemaphoreSlim writeLock = new(1, 1);
-    private readonly AsyncLocal<ClientSession?> currentSession = new();
+    private readonly AsyncLocal<IpcSession?> currentSession = new();
     private readonly TcpListener listener;
-    private IRouter? router = null!;
+    private IRouter router = null!;
     private ITP3Transport transport;
     private readonly ILogger? logger;
     private bool disposed;
@@ -86,7 +86,10 @@ public sealed class IpcTransport : INetworkTransport
     {
         await using var networkStream = client.GetStream();
 
-        var session = new ClientSession(client, networkStream);
+        var session = new IpcSession(client, networkStream, this.transport, this, "agentId");
+
+        this.transport.NewUserNetworkConnection(this, session);
+
         var previousSession = currentSession.Value;
         currentSession.Value = session;
 
@@ -111,7 +114,7 @@ public sealed class IpcTransport : INetworkTransport
         }
     }
 
-    private async Task ReadLoopAsync(ClientSession session, CancellationToken cancellationToken)
+    private async Task ReadLoopAsync(IpcSession session, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested && session.Client.Connected)
         {
@@ -145,23 +148,23 @@ public sealed class IpcTransport : INetworkTransport
                 throw new InvalidOperationException("Router is not initialized.");
             }
 
-            await router.Route(transport, message).ConfigureAwait(false);
+            await router.Route(session, message).ConfigureAwait(false);
         }
     }
 
-    public async Task Send(TP3Message message)
+    public async Task Send(INetworkPipe session, TP3Message message)
     {
-        var session = currentSession.Value;
-        if (session is null || !session.Client.Connected)
+        var s = session as IpcSession;
+        if (s == null)
         {
-            throw new InvalidOperationException("No active IPC client session is available for sending.");
+            throw new InvalidOperationException("Invalid session type for IPC transport.");
         }
 
         var payload = TP3Serializer.SerializeBytes(message);
         await writeLock.WaitAsync(cancellationTokenSource.Token).ConfigureAwait(false);
         try
         {
-            await session.Stream.WriteAsync(payload.AsMemory(0, payload.Length), cancellationTokenSource.Token).ConfigureAwait(false);
+            await s.Stream.WriteAsync(payload.AsMemory(0, payload.Length), cancellationTokenSource.Token).ConfigureAwait(false);
         }
         finally
         {
@@ -176,15 +179,25 @@ public sealed class IpcTransport : INetworkTransport
         return Task.CompletedTask;
     }
 
-    private sealed class ClientSession
+    private sealed class IpcSession : INetworkPipe
     {
-        public ClientSession(TcpClient client, NetworkStream stream)
+        public IpcSession(TcpClient client, NetworkStream stream, ITP3Transport transport, INetworkTransport networkTransport, string agentId)
         {
             Client = client;
             Stream = stream;
+            TP3Transport = transport;
+            Transport = networkTransport;
+            AgentID = agentId;
         }
 
         public TcpClient Client { get; }
+
         public NetworkStream Stream { get; }
+
+        public INetworkTransport Transport { get; }
+
+        public ITP3Transport TP3Transport { get; }
+
+        public string AgentID { get; }
     }
 }

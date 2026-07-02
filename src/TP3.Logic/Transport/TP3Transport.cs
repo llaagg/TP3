@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
 
@@ -8,16 +9,24 @@ public class TP3Transport : ITP3Transport
     private IRouter? router = null!;
     private readonly INetworkTransport networkTransport;
 
+    public UserSessions NetwokSessions { get; private set; }
+
+    /// <summary>
+    /// Identifies transport instance, used to route messages to the correct transport.
+    /// </summary>
+    public string Tag { get; } = Guid.NewGuid().ToString("N").Substring(0, 8);
+
     public TP3Transport(ILogger logger, INetworkTransport networkTransport)
     {
         this.logger = logger;
         this.networkTransport = networkTransport;
+        this.NetwokSessions = new UserSessions();
     }
 
-    public async Task Send(TP3Message message)
+    public async Task Send(INetworkPipe session, TP3Message message)
     {
         // thorws stuff into the network channel
-        await networkTransport.Send(message);
+        await networkTransport.Send(session, message);
     }
 
     public async Task Start()
@@ -43,5 +52,10 @@ public class TP3Transport : ITP3Transport
     {
         networkTransport.Dispose();
         logger.LogInformation("TP3Transport disposed.");
+    }
+
+    public void NewUserNetworkConnection(INetworkTransport ipcTransport, INetworkPipe session)
+    {
+        this.NetwokSessions.AddSession(session);
     }
 }
