@@ -59,7 +59,8 @@
     {
       "name": "Compound",
       "configurations": [ "Server", "CLI - LIST"],
-      "stopAll": true
+      "stopAll": true,
+      "preLaunchTask": "build solution"
     }
   ]
 }

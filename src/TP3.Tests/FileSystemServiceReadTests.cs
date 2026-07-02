@@ -10,7 +10,7 @@ public class FileSystemServiceReadTests
     public async Task WalkThenReadDirectory_StreamsJsonEntries_AndEndsWithEof()
     {
         var service = new FileSystemService();
-        var walker = new PathWalker(() => new[] { service });
+        var walker = new PathWalker(service.State);
 
         var walkResponse = await walker.WalkAsync(new TP3WalkRequest
         {
