@@ -31,9 +31,15 @@ public class DirectoryStreamData : ITP3DataStream
     }
 
 
+    ulong defaultMaxCount = 16 * 1024; // default max count
 
     public async Task<byte[]> Read(ulong offset, ulong maxCount)
     {
+        if(maxCount == 0)
+        {
+            maxCount = defaultMaxCount; 
+        }
+
         // i will try to put here serilizez folders from node children and return them as TP3Stat one after another one,
         // i will store enumerator over children and procezzed everytime some time will ask to read
         // i will store position and check if offest is in  the same place as postion if not i will reset enumerator and start from begining and skip to offset
