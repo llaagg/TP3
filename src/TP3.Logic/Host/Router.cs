@@ -12,28 +12,10 @@ public sealed class Router : IRouter
     private readonly AgentHost host;
     private readonly ILogger? logger;
 
-    private UserSessions agentTransports = new();
-
     public Router(AgentHost host, ILogger? logger)
     {
         this.host = host ?? throw new ArgumentNullException(nameof(host));
         this.logger = logger;
-    }
-
-    public void NewUserNetworkConnection(ITP3Transport transport, INetworkTransport ipcTransport, INetworkPipe session)
-    {
-        if (session is null)
-        {
-            throw new ArgumentNullException(nameof(session));
-        }
-        if (string.IsNullOrEmpty(session.AgentID))
-        {
-            throw new ArgumentException("Session must have a valid AgentID.", nameof(session));
-        }
-
-        this.logger?.LogInformation("New user network connection established. AgentID: {AgentID}", session.AgentID);
-
-        agentTransports.AddSession(session);
     }
 
     public async Task Respond(IAgent agent, TP3Message message, INetworkPipe targetTransport)

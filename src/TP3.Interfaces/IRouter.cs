@@ -5,14 +5,6 @@ namespace TP3.Interfaces;
 public interface IRouter
 {
     /// <summary>
-    /// Notifies router about pipe to a new user.
-    /// </summary>
-    /// <param name="transport"></param>
-    /// <param name="ipcTransport"></param>
-    /// <param name="session"></param>
-    void NewUserNetworkConnection(ITP3Transport transport, INetworkTransport ipcTransport, INetworkPipe session);
-
-    /// <summary>
     /// Responds to a specific request with a given message.
     /// </summary>
     /// <param name="agent">who</param>

@@ -69,25 +69,70 @@ public class Agent : IAgent
         {
             var response = await walker.WalkAsync(tP3WalkRequest).ConfigureAwait(false);
 
-            await router.Respond(this, request, incomingTransport);
+            await router.Respond(this, response, incomingTransport);
             return;
         }
         else if (request.Command == TP3Command.READ && request is TP3ReadRequest tP3ReadRequest)
         {
-            var response = await walker.ReadAsync(tP3ReadRequest).ConfigureAwait(false);
+            var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tP3ReadRequest.Tag);
+            ;
 
-            await router.Respond(this, request, incomingTransport);
+
+            if(node != null)
+            {
+                await SendToNetwork(node, tP3ReadRequest, incomingTransport);
+            }
+            else
+            {
+                logger?.LogError("No node found for tag: {Tag} in session: {AgentID}", tP3ReadRequest.Tag, incomingTransport.AgentID);
+            }
+            
             return;
         }
         else if (request.Command == TP3Command.ATTACH && request is TP3AttachRequest tP3AttachRequest)
         {
             var response = await AttachTagToConnectionAndGetRootGiq(incomingTransport, tP3AttachRequest);
 
-            await router.Respond(this, request, incomingTransport);
+            await router.Respond(this, response, incomingTransport);
             return;
         }
 
         logger?.LogWarning("Agent received unhandled TP3 message: {Command}", request.Command);
+    }
+
+    private async Task SendToNetwork(INode nodeObj, TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)
+    {
+        TP3Message response = null!;
+
+
+        // let's find node from our session identified by tag
+        // le'ts offset and 
+        // let's send it back to customer, one or many messages
+        if(nodeObj.NodeType == NodeType.Directory)
+        {
+            response = this.SendDirecotryToNetwork(nodeObj, tP3ReadRequest, incomingTransport);
+        }else
+        {
+            throw new NotImplementedException("File node reading is not implemented yet.");
+        }
+        
+        await router.Respond(this, response, incomingTransport);
+    }
+
+    private TP3Message SendDirecotryToNetwork(INode nodeObj, TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)
+    {
+
+
+        //// the idea is not that simple
+        var response = new TP3ReadResponse
+        {
+            Tag = tP3ReadRequest.Tag,
+        };
+        var offset = tP3ReadRequest.Offset;
+        
+        logger?.LogError("Node object is a directory for tag: {Tag} in session: {AgentID}", tP3ReadRequest.Tag, incomingTransport.AgentID);
+        
+        return response;
     }
 
     private async Task<TP3AttachResponse> AttachTagToConnectionAndGetRootGiq(INetworkPipe incomingNetworkSession, TP3AttachRequest tP3AttachRequest)
@@ -104,11 +149,11 @@ public class Agent : IAgent
         var rootNode = this.T;
 
         // register Tag
-        
+        incomingNetworkSession.TP3Transport.AttachTag(tP3AttachRequest.Tag, rootNode, incomingNetworkSession);
 
         // get quid
+        result.Info = new NodeInfo(rootNode); 
 
-        // assing TCP connection to tag
 
         return result;
     }

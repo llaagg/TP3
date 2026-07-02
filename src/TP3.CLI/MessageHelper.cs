@@ -42,7 +42,6 @@ public class MessageHelper
             return new TP3ReadRequest
             {
                 Tag = tag,
-                Qid = qid,
                 Offset = offset,
                 MaxBytes = maxBytes,
             };

@@ -14,5 +14,5 @@ public interface INetworkTransport : IDisposable
     Task Start();
     void Stop();
     Task Send(INetworkPipe session, TP3Message message);
-    Task Init(IRouter router, ITP3Transport transport);
+    Task Init(ITP3Transport transport);
 }

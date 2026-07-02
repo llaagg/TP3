@@ -7,9 +7,5 @@ public sealed class TP3WalkResponse : TP3Message
     {
     }
 
-    public string? Qid { get; init; }
-
-    public NodeType? NodeType { get; init; }
-
-    public string? Error { get; init; }
+    public List<NodeInfo> Infos { get; set; } = new List<NodeInfo>();
 }

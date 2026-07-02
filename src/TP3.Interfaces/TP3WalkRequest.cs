@@ -10,3 +10,14 @@ public sealed class TP3WalkRequest : TP3Message
 
     public List<string> Path { get; init; } = new List<string>();
 }
+
+public class TP3Error : TP3Message
+{
+    public TP3Error(string error)
+        : base(TP3Command.ERROR)
+    {
+        Error = error;
+    }
+
+    public string Error { get; init; }
+}

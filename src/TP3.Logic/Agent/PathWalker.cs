@@ -17,94 +17,102 @@ public sealed class PathWalker
         this.trunk = trunk;
     }
 
-    public Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
+    public async Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
     {
-        var node = ResolveNode(trunk, request.Path);
+        var nodes = ResolveNode(trunk, request.Path);
+        var registered = EnsureRegisteredNodes(nodes).ToList();
 
-        if (node is null)
-        {
-            return Task.FromResult(new TP3WalkResponse
-            {
-                Tag = request.Tag,
-                Error = "NotFound"
-            });
-        }
-
-        var registered = EnsureRegisteredNode(node);
-
-        return Task.FromResult(new TP3WalkResponse
+        return new TP3WalkResponse
         {
             Tag = request.Tag,
-            Qid = node.Qid,
-            NodeType = registered.NodeType
-        });
+            Infos = registered
+        };
     }
 
-    public Task<TP3ReadResponse> ReadAsync(TP3ReadRequest request)
+    public Task<TP3ReadResponse> ReadAsync(INetworkPipe incomingTransport, TP3ReadRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Qid))
-        {
-            return Task.FromResult(new TP3ReadResponse
-            {
-                Tag = request.Tag,
-                Error = "QidRequired"
-            });
-        }
-
-        RegisteredQid? registered;
-        lock (sync)
-        {
-            nodesByQid.TryGetValue(request.Qid!, out registered);
-        }
-
-        if (registered is null)
-        {
-            return Task.FromResult(new TP3ReadResponse
-            {
-                Tag = request.Tag,
-                Qid = request.Qid,
-                Error = "NotFound"
-            });
-        }
+        var node = incomingTransport.TP3Transport.GetNode(incomingTransport, request.Tag);
+        
+        
 
 
 
-        return ReaderChunkerEngine.ReadAsync(request, registered.Node);
+        // if (string.IsNullOrWhiteSpace(request.Qid))
+        // {
+        //     return Task.FromResult(new TP3ReadResponse
+        //     {
+        //         Tag = request.Tag,
+        //         Error = "QidRequired"
+        //     });
+        // }
+
+        // RegisteredQid? registered;
+        // lock (sync)
+        // {
+        //     nodesByQid.TryGetValue(request.Qid!, out registered);
+        // }
+
+        // if (registered is null)
+        // {
+        //     return Task.FromResult(new TP3ReadResponse
+        //     {
+        //         Tag = request.Tag,
+        //         Qid = request.Qid,
+        //         Error = "NotFound"
+        //     });
+        // }
+
+
+
+        return null;
     }
 
-    private INode? ResolveNode(INode trunk, IList<string> requestPath)
+    private IEnumerable<INode> ResolveNode(INode trunk, IList<string> requestPath)
     {
         var segments = requestPath
             .Where(s => !string.IsNullOrWhiteSpace(s))
-            .Select(s => s.Trim())
             .ToList();
 
-        INode current = trunk;
+        INode? current = trunk;
+        // trunk because why not
+        yield return current;
+
         foreach (var segment in segments)
         {
             if (current.Children is null)
             {
-                return null;
+                yield break;
             }
 
-            current = current.Children.FirstOrDefault(child => string.Equals(child?.Name, segment, StringComparison.OrdinalIgnoreCase));
+            current = current?.Children.FirstOrDefault(child => string.Equals(child?.Name, segment, StringComparison.OrdinalIgnoreCase));
+
             if (current is null)
             {
-                return null;
+                yield break;
             }
 
+            yield return current;
         }
-
-        return current;
     }
 
-    private RegisteredQid EnsureRegisteredNode(INode node)
+    private IEnumerable<NodeInfo> EnsureRegisteredNodes(IEnumerable<INode> nodes)
+    {
+        var result = nodes?.ToList().Select(child => EnsureRegisteredNode(child));
+
+        return result ?? Enumerable.Empty<NodeInfo>();
+    }
+
+    private NodeInfo EnsureRegisteredNode(INode node)
     {
         lock (sync)
         {
             if (nodesByQid.TryGetValue(node.Qid, out var existing))
             {
-                return existing;
+                return new NodeInfo
+                {
+                    Id = existing.Node.Qid,
+                    NodeType = existing.NodeType
+                };
             }
 
             existing = new RegisteredQid
@@ -114,7 +122,11 @@ public sealed class PathWalker
             };
 
             nodesByQid[node.Qid] = existing;
-            return existing;
+            return new NodeInfo
+            {
+                Id = existing.Node.Qid,
+                NodeType = existing.NodeType
+            };
         }
     }
 

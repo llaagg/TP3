@@ -7,4 +7,6 @@ public enum TP3Command
     READ,
     WRITE,
     ATTACH,
+    ERROR,
+    OPEN,
 }

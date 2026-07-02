@@ -25,21 +25,7 @@ public static partial class CLI
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(walkResponse.Error))
-        {
-            logger.LogWarning("WALK failed: {Error}", walkResponse.Error);
-            await ipcClient.DisconnectAsync();
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(walkResponse.Qid))
-        {
-            logger.LogWarning("WALK response did not include qid.");
-            await ipcClient.DisconnectAsync();
-            return;
-        }
-
-        var qid = walkResponse.Qid;
+        var qid = walkResponse.Infos.FirstOrDefault()?.Id;
         var offset = 0L;
         const int maxBytes = 16 * 1024;
 

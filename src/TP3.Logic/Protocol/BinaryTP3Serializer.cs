@@ -20,13 +20,9 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         switch (message)
         {
             case TP3WalkResponse walkResponse:
-                writer.Write(walkResponse.Qid ?? string.Empty);
-                writer.Write(walkResponse.NodeType?.ToString().ToLowerInvariant() ?? string.Empty);
-                writer.Write(walkResponse.Error ?? string.Empty);
                 break;
 
             case TP3ReadRequest readRequest:
-                writer.Write(readRequest.Qid ?? string.Empty);
                 writer.Write(readRequest.Offset);
                 writer.Write(readRequest.MaxBytes);
                 break;
@@ -79,7 +75,6 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
             TP3Command.READ => isResponse ? ReadReadResponse(args, tag, reader) : new TP3ReadRequest
             {
                 Tag = NormalizeOptionalString(tag),
-                Qid = NormalizeOptionalString(reader.ReadString()),
                 Offset = reader.ReadInt64(),
                 MaxBytes = reader.ReadInt32()
             },
@@ -95,9 +90,6 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         return new TP3WalkResponse
         {
             Tag = NormalizeOptionalString(tag),
-            Qid = NormalizeOptionalString(reader.ReadString()),
-            NodeType = TryReadNodeType(reader.ReadString()),
-            Error = NormalizeOptionalString(reader.ReadString())
         };
     }
 

@@ -20,7 +20,7 @@ public class TP3Transport : ITP3Transport
     {
         this.logger = logger;
         this.networkTransport = networkTransport;
-        this.NetwokSessions = new UserSessions();
+        this.NetwokSessions = new UserSessions(networkTransport.GetType().Name);
     }
 
     public async Task Send(INetworkPipe session, TP3Message message)
@@ -44,7 +44,7 @@ public class TP3Transport : ITP3Transport
     public async Task Init(IRouter router)
     {
         this.router = router;
-        await this.networkTransport.Init(router, this);
+        await this.networkTransport.Init(this);
         logger.LogInformation("TP3Transport initialized with router.");
     }
 
@@ -57,5 +57,17 @@ public class TP3Transport : ITP3Transport
     public void NewUserNetworkConnection(INetworkTransport ipcTransport, INetworkPipe session)
     {
         this.NetwokSessions.AddSession(session);
+    }
+
+    public INode GetNode(INetworkPipe incomingTransport, string tag)
+    {
+        INode result = this.NetwokSessions.FindNode(incomingTransport, tag);
+
+        return result;
+    }
+
+    public void AttachTag(string tag, INode rootNode, INetworkPipe incomingNetworkSession)
+    {
+        this.NetwokSessions.AttachTagToPointer(tag, rootNode, incomingNetworkSession);
     }
 }

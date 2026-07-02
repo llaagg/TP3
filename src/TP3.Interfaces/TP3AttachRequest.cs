@@ -7,6 +7,4 @@ public class TP3AttachRequest : TP3Message
     {
         Tag = tag;
     }
-
-    
 }

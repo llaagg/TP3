@@ -2,12 +2,14 @@ namespace TP3.Messages;
 
 public sealed class TP3ReadRequest : TP3Message
 {
-    public TP3ReadRequest()
+    public TP3ReadRequest(string? tag = null)
         : base(TP3Command.READ)
     {
+        if (tag != null)
+        {
+            Tag = tag;
+        }
     }
-
-    public string? Qid { get; init; }
 
     public long Offset { get; init; }
 

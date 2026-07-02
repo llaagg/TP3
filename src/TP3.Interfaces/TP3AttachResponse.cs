@@ -7,6 +7,8 @@ public class TP3AttachResponse : TP3Message
     {
     }
 
-    public string Tag { get; set; } = string.Empty;
-    public NodeType? NodeType { get; set; } = null;
+    /// <summary>
+    /// Return "/" alias trunk, sets client there
+    /// </summary>
+    public NodeInfo Info { get; set; } = new NodeInfo();
 }

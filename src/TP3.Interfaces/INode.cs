@@ -10,7 +10,6 @@ namespace TP3.Interfaces
 
         NodeType NodeType { get; }
 
-        public IEnumerable<INode>? Children { get; }
-    
+        IEnumerable<INode>? Children { get; }
     }
 }

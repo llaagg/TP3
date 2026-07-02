@@ -14,7 +14,7 @@ public sealed class IpcTransport : INetworkTransport
     private readonly AsyncLocal<IpcSession?> currentSession = new();
     private readonly TcpListener listener;
     private IRouter router = null!;
-    private ITP3Transport transport;
+    private ITP3Transport transport = null!;
     private readonly ILogger? logger;
     private bool disposed;
 
@@ -172,10 +172,9 @@ public sealed class IpcTransport : INetworkTransport
         }
     }
 
-    public Task Init(IRouter router, ITP3Transport transport)
+    public Task Init(ITP3Transport tp3CommunicationHandler)
     {
-        this.router = router;
-        this.transport = transport;
+        this.transport = tp3CommunicationHandler;
         return Task.CompletedTask;
     }
 
@@ -199,5 +198,8 @@ public sealed class IpcTransport : INetworkTransport
         public ITP3Transport TP3Transport { get; }
 
         public string AgentID { get; }
+
+        public Dictionary<string, INode> Pointers => throw new NotImplementedException();
+
     }
 }
