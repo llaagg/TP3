@@ -7,7 +7,7 @@ using TP3.Messages;
 
 namespace TP3.CLI;
 
-internal sealed class IpcClient
+public sealed class IpcClient
 {
     private readonly int ipcPort;
     private readonly ILogger logger;

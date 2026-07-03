@@ -13,10 +13,10 @@ public sealed class IpcTransport : INetworkTransport
     private readonly SemaphoreSlim writeLock = new(1, 1);
     private readonly AsyncLocal<IpcSession?> currentSession = new();
     private readonly TcpListener listener;
-    private IRouter router = null!;
     private ITP3Transport transport = null!;
     private readonly ILogger? logger;
     private bool disposed;
+    private bool Initialized;
 
     public IpcTransport(int port, ILogger? logger = null)
     {
@@ -41,6 +41,11 @@ public sealed class IpcTransport : INetworkTransport
 
     public async Task Start()
     {
+        if(this.Initialized == false)
+        {
+            throw new InvalidOperationException("Transport is not initialized. Call Init() before Start().");
+        }
+
         try
         {
             listener.Start();
@@ -85,7 +90,7 @@ public sealed class IpcTransport : INetworkTransport
     private async Task HandleClientAsync(TcpClient client, CancellationToken cancellationToken)
     {
         await using var networkStream = client.GetStream();
-
+    
         var session = new IpcSession(client, networkStream, this.transport, this, "agentId");
 
         this.transport.NewUserNetworkConnection(this, session);
@@ -96,6 +101,7 @@ public sealed class IpcTransport : INetworkTransport
         try
         {
             logger?.LogInformation("IPC client connected: {ClientEndpoint}", client.Client.RemoteEndPoint);
+            
             await ReadLoopAsync(session, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
@@ -142,13 +148,10 @@ public sealed class IpcTransport : INetworkTransport
             logger?.LogInformation("IPC RX: {Message}", message);
 
             currentSession.Value = session;
-            
-            if (router == null)
-            {
-                throw new InvalidOperationException("Router is not initialized.");
-            }
+    
+            await transport.Route(session, message).ConfigureAwait(false);
 
-            await router.Route(session, message).ConfigureAwait(false);
+            currentSession.Value = null;
         }
     }
 
@@ -175,6 +178,8 @@ public sealed class IpcTransport : INetworkTransport
     public Task Init(ITP3Transport tp3CommunicationHandler)
     {
         this.transport = tp3CommunicationHandler;
+
+        this.Initialized = true;
         return Task.CompletedTask;
     }
 

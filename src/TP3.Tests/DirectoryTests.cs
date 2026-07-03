@@ -23,7 +23,7 @@ namespace TP3.Tests.Protocol
                 TP3Helpers.SetupNode("file2.txt", NodeType.File),
                 TP3Helpers.SetupNode("file3.txt", NodeType.File)
             });
-            var directoryStreamData = new DirectoryStreamData(rootNode);
+            var directoryStreamData = new TP3DirectoryStreamData(rootNode);
             await directoryStreamData.Open(); // creates a stream that can be serilized and sent
 
             TP3Message lastMessageSent = null!;
@@ -84,7 +84,7 @@ namespace TP3.Tests.Protocol
             TP3Helpers.SetupNode("file2.txt", NodeType.File),
             TP3Helpers.SetupNode("file3.txt", NodeType.File)
         });
-            var directoryStreamData = new DirectoryStreamData(rootNode);
+            var directoryStreamData = new TP3DirectoryStreamData(rootNode);
 
             await directoryStreamData.Open();
 

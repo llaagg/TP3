@@ -6,7 +6,7 @@ namespace TP3.CLI;
 
 public static partial class CLI
 {
-    private static async Task ExecteWalk(int ipcPort, bool consumeResponses, int waitForServer, string? path, ILogger logger)
+    private static async Task ExecteWalk(int ipcPort, bool consumeResponses, int waitForServer, string[]? path, ILogger logger)
     {
         logger.LogInformation("Connecting to IPC server on port {IpcPort}", ipcPort);
 
@@ -15,10 +15,10 @@ public static partial class CLI
 
         if (path != null)
         {
-            logger.LogInformation("Sending message to IPC server: {Message}", path);
+            logger.LogInformation("Sending message to IPC server: {Message}", string.Join(" ", path));
         }
 
-        var request = MessageHelper.ParseMessage(path != null ? $"WalkRequest {path}" : "WalkRequest");
+        var request = MessageHelper.ParseMessage(path != null ? $"WalkRequest {string.Join(" ", path)}" : "WalkRequest");
         await ipcClient.SendMessageAsync(request);
 
         // let's wait a bit to allow the server to process the walk command and send responses

@@ -30,7 +30,6 @@ message TP3Message {
         TP3ClunkRequest clunkRequest = 18;
         TP3ClunkResponse clunkResponse = 19;
         TP3Error error = 20;
-        TP3ErrorResponse errorResponse = 21;
         TP3GenericMessage genericMessage = 22;
     }
 }
@@ -75,11 +74,8 @@ message TP3ClunkResponse {
 }
 
 message TP3Error {
-    string error = 1;
-}
-
-message TP3ErrorResponse {
-    string errorMessage = 1;
+    string message = 1;
+    repeated string args = 2;
 }
 
 message TP3GenericMessage {

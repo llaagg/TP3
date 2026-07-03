@@ -7,11 +7,11 @@ namespace TP3.Agent.Logic.Transport;
 /// <summary>
 /// Lazily converts an <see cref="INode"/> directory's children into read bytes for TP3 transport.
 /// </summary>
-public class DirectoryStreamData : ITP3DataStream
+public class TP3DirectoryStreamData : ITP3DataStream
 {
     private readonly INode node;
 
-    public DirectoryStreamData(INode node)
+    public TP3DirectoryStreamData(INode node)
     {
         this.node = node;
     }

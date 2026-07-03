@@ -53,6 +53,16 @@ public class FileSystemNode : INode
 
     public Task<ITP3DataStream?> Get()
     {
-        throw new NotImplementedException();
+        if(this.NodeType == NodeType.Directory)
+        {
+            return Task.FromResult<ITP3DataStream?>(null);
+        }else
+        {
+            var stream = new FileStream(this.AbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            //return Task.FromResult<ITP3DataStream?>(new TP3Stream(stream));
+
+            throw new NotImplementedException("File stream reading is not implemented yet.");
+        }
+
     }
 }

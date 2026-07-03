@@ -40,6 +40,11 @@ public static class CommandLineApplication
 
         var ah = new AgentHost(logger, new[] { new FileSystemService() }, new []{
                 new TP3Transport(logger, new IpcTransport(ipcPort, logger))});
+
+        logger.LogInformation("Initializing agent host...");
+        await ah.Init();
+
+        logger.LogInformation("Starting agent host...");
         await ah.Start();
 
         logger.LogInformation("Agent service started. Press Ctrl+C to exit.");

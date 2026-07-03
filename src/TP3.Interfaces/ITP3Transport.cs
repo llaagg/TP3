@@ -19,4 +19,5 @@ public interface ITP3Transport : IDisposable
     void AttachTag(string tag, INode rootNode, INetworkPipe incomingNetworkSession);
     Task<ITP3DataStream> GetData(INetworkPipe incomingTransport, string tag);
     IPointer GetPointer(INetworkPipe incomingTransport, string tag);
+    Task Route(INetworkPipe session, TP3Message message);
 }

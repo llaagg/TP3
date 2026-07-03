@@ -1,70 +1,143 @@
 using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using TP3.Messages;
+using TP3.Protocol;
 
 namespace TP3.CLI;
 
 public static partial class CLI
 {
 
-    private static async Task ExecuteList(int ipcPort, int waitForServer, string? path, ILogger logger)
+    public static async Task<TP3Message> Attach(this IpcClient ipcClient, ILogger logger)
+    {
+        var attachRequest = new TP3Message()
+        {
+            Tag = Guid.NewGuid().ToString("N").Substring(0, 8),
+            AttachRequest = new TP3AttachRequest()
+        };
+        var attachResponse = await SendAndWaitOne(ipcClient, logger, attachRequest).ConfigureAwait(false);
+
+        return attachResponse;
+    }
+
+    private static async Task<TP3Message> SendAndWaitOne(this IpcClient ipcClient, ILogger logger, TP3Message request)
+    {
+        logger.LogInformation("Sending request to IPC server: {Request}", request);
+        await ipcClient.SendMessageAsync(request).ConfigureAwait(false);
+        return await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
+    }
+
+    public static void ThrowIfError(this TP3Message message)
+    {
+        if (message is null)
+        {
+            throw new InvalidOperationException("Received null response from IPC server.");
+        }
+        if (message.Error is not null)
+        {
+            throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
+        }
+    }
+
+    private static async Task ExecuteList(int ipcPort, int waitForServer, string[]? path, ILogger logger)
     {
         logger.LogInformation("Connecting to IPC server on port {IpcPort}", ipcPort);
         var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
+        var attachResponse = await ipcClient.Attach(logger).ConfigureAwait(false);
+        var tag = attachResponse.Tag;
 
-        var request = MessageHelper.ParseMessage(path != null ? $"WalkRequest {path}" : "WalkRequest");
-        await ipcClient.SendMessageAsync(request);
-
-        var walkMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
-        
-        if (walkMessage?.WalkResponse is not TP3WalkResponse walkResponse)
+        logger.LogInformation("Preparing to send list request for path: {Path}", path);
+        var walkRequest = new TP3WalkRequest();
+        if(path != null && path.Length > 0)
         {
-            logger.LogWarning("No WALK response received.");
-            await ipcClient.DisconnectAsync();
-            return;
+            walkRequest.Path.Add(path);
+        }
+        var walkResponse1 = await ipcClient.SendAndWaitOne(logger, new TP3Message()
+        {
+            Tag = tag,
+            WalkRequest = walkRequest
+        }).ConfigureAwait(false);
+
+        var openResponse = await ipcClient.SendAndWaitOne(logger, new TP3Message()
+        {
+            Tag = tag,
+            OpenRequest = new TP3OpenRequest()
+        }).ConfigureAwait(false);
+        openResponse.ThrowIfError();
+
+        foreach (var item in ipcClient.TReadOnADirectory(tag, logger))
+        {
+            Console.WriteLine($"* {item.Name} (Type: {item.Info.NodeType})");
         }
 
-        var qid = walkResponse.Infos.FirstOrDefault()?.Id;
-        var offset = 0L;
-        const int maxBytes = 16 * 1024;
 
-        logger.LogInformation(" {Qid}-> Consuming responses from IPC server...", qid);
-        while (true)
-        {
-            var readCommand = MessageHelper.ParseMessage($"ReadRequest {qid} {offset} {maxBytes}");
-            await ipcClient.SendMessageAsync(readCommand);
-
-            var readMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
-            if (readMessage is null)
-            {
-                break;
-            }
-
-            logger.LogDebug(" {Qid}-> Received response: {ResponseCommand}", qid, readMessage.AttachRequest);
-            if (readMessage.ReadResponse is not TP3ReadResponse response)
-            {
-                break;
-            }
-
-            var payload = response.Data is { Length: > 0 }
-                ? System.Text.Encoding.UTF8.GetString(response.Data.ToByteArray())
-                : string.Empty;
-
-            if (string.Equals(payload, "EOF", StringComparison.Ordinal))
-            {
-                logger.LogInformation("Received EOF for list qid={Qid}.", qid);
-                break;
-            }
-
-            if (!string.IsNullOrWhiteSpace(payload))
-            {
-                Console.WriteLine(payload);
-            }
-
-            offset += response.Data.Length;
-        }
 
         await ipcClient.DisconnectAsync().ConfigureAwait(false);
     }
+
+    private static async Task<TP3Message> ListFolder(ILogger logger, IpcClient ipcClient, string tag)
+    {
+        var listResponse = await ipcClient.SendAndWaitOne(logger, new TP3Message()
+        {
+            Tag = tag,
+            ReadRequest = new TP3ReadRequest()
+            {
+            }
+        }).ConfigureAwait(false);
+        listResponse.ThrowIfError();
+        return listResponse;
+    }
+
+    private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this IpcClient ipcClient, string tag, ILogger logger)
+    {
+        var offset = 0UL;
+        var maxbytes = 10000U;
+        while (true)
+        {
+            var readRequest = new TP3Message()
+            {
+                Tag = tag,
+                ReadRequest = new TP3ReadRequest()
+                {
+                    Offset = offset,
+                    MaxBytes = maxbytes
+                }
+            };
+            
+            var messsgae = ipcClient.SendAndWaitOne(logger, readRequest).Result;
+            messsgae.ThrowIfError();
+
+            yield return messsgae.ReadResponse;
+            var count = messsgae.ReadResponse.Data.Count();
+
+            if (count == 0 || count < maxbytes)
+            {
+                break;
+            }
+            offset += (ulong)count;
+        }
+        yield break;
+    }
+
+
+    private static IEnumerable<TP3StatPayload> TReadOnADirectory(this IpcClient pipe, string tag, ILogger logger)
+    {
+        IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(tag, logger);
+        TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
+
+        // // diagnostic: read all data and deserialize to TP3StatPayload
+        // StreamReader reader = new StreamReader(stream);
+        // var ms = new MemoryStream();
+        // stream.CopyTo(ms);
+        // ms.Position = 0;
+
+        // // what do we hwve there...
+        // string json = new StreamReader(ms).ReadToEnd();
+        // ms.Position = 0;
+
+        var stats = TP3StatPayloadExtensions.Deserilize(stream);
+        return stats;
+    }
+
 }

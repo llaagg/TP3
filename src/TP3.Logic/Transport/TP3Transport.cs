@@ -88,7 +88,7 @@ public class TP3Transport : ITP3Transport
         if(pointer.Data == null && pointer.Node.NodeType == NodeType.Directory)
         {
             // for directory we can create a stream on the fly
-            pointer.Data = new DirectoryStreamData(pointer.Node);
+            pointer.Data = new TP3DirectoryStreamData(pointer.Node);
         }
 
         if(pointer.Data == null)
@@ -110,6 +110,11 @@ public class TP3Transport : ITP3Transport
         }
 
         return pointer;
+    }
+
+    public Task Route(INetworkPipe session, TP3Message message)
+    {
+        return this.router!.Route(session, message);
     }
 }
 

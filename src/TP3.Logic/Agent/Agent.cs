@@ -68,6 +68,18 @@ public class Agent : IAgent
             return;
         }
 
+        try{
+            await MainLoop(incomingTransport, request).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error handling TP3 message: {Command}", request.ToString());
+            await router.Respond(this, CreateErrorMessage(request.Tag, ex.Message, ex.ToString()), incomingTransport);
+        }
+    }
+
+    private async Task MainLoop(INetworkPipe incomingTransport, TP3Message request)
+    {
         switch (request.PayloadCase)
         {
             case TP3Message.PayloadOneofCase.WalkRequest:
@@ -224,15 +236,16 @@ public class Agent : IAgent
         return message;
     }
 
-    private static TP3Message CreateErrorMessage(string tag, string error)
+    private static TP3Message CreateErrorMessage(string tag, string error, params string []args)
     {
         return new TP3Message
         {
             Tag = tag,
-            ErrorResponse = new TP3ErrorResponse
+            Error = new TP3Error
             {
-                ErrorMessage = error,
-            },
+                Message = error,
+                Args = { args }
+            }
         };
     }
 
