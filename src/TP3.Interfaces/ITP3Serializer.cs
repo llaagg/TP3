@@ -1,6 +1,6 @@
 using TP3.Messages;
 
-namespace TP3.Agent.Logic.Protocol;
+namespace TP3.Interfaces;
 
 public interface ITP3Serializer
 {

@@ -1,5 +1,8 @@
 namespace TP3.Messages;
 
+/// <summary>
+/// Merge multiple messages and build stream of data
+/// </summary>
 public class TP3ReadResponseDataStream : Stream
 {
     private readonly IEnumerator<TP3ReadResponse> _responses;

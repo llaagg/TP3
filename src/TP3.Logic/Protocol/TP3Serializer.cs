@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TP3.Interfaces;
 using TP3.Messages;
 
 namespace TP3.Agent.Logic.Protocol;

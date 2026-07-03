@@ -83,7 +83,7 @@ public class Agent : IAgent
             }
             else
             {
-                await SendToNetwork(node, tP3ReadRequest, incomingTransport);
+                await ReadDataAndSend(tP3ReadRequest, incomingTransport);
             }         
             
             return;
@@ -107,7 +107,7 @@ public class Agent : IAgent
         }
     }
 
-    private async Task<TP3OpenResponse> OpenStream(INetworkPipe incomingTransport, TP3OpenRequest tP3OpenRequest)
+    public async Task<TP3OpenResponse> OpenStream(INetworkPipe incomingTransport, TP3OpenRequest tP3OpenRequest)
     {
         // let's find the node in this connection
         if(string.IsNullOrEmpty(tP3OpenRequest.Tag))
@@ -119,11 +119,10 @@ public class Agent : IAgent
         
         var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tP3OpenRequest.Tag);
         
-        return new TP3OpenResponse(tP3OpenRequest.Tag, new NodeInfo(node), data.Iounit);
-        
+        return new TP3OpenResponse(tP3OpenRequest.Tag, new NodeInfo(node), data.Iounit);        
     }
 
-    private async Task SendToNetwork(INode nodeObj, TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)
+    public async Task ReadDataAndSend(TP3ReadRequest tP3ReadRequest, INetworkPipe incomingTransport)
     {
         TP3ReadResponse response = new TP3ReadResponse
         {
@@ -132,8 +131,8 @@ public class Agent : IAgent
 
         var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tP3ReadRequest.Tag);
         var bytes = await data.Read(tP3ReadRequest.Offset, tP3ReadRequest.MaxBytes);
-        response.Data = bytes;       
-
+        response.Data = bytes;
+        
         await router.Respond(this, response, incomingTransport);
     }
 

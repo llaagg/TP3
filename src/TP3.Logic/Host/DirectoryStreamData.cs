@@ -39,6 +39,11 @@ public class DirectoryStreamData : ITP3DataStream
 
     public async Task<byte[]> Read(ulong offset, ulong maxCount)
     {
+        if(enumerator == null)
+        {
+            throw new InvalidOperationException("Stream is not open. Call Open() before reading.");
+        }
+
         if(maxCount == 0)
         {
             maxCount = defaultMaxCount; 
