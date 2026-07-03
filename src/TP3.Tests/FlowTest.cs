@@ -15,7 +15,7 @@ public class FlowTest
     public async Task AgentHost_StartsAndStopsSuccessfully()
     {
         // build some fake tree strucutre like in files sytsme
-        INode nodes = MockFileSystem();
+        INode nodes = TP3Helpers.MockFileSystem();
 
         var fakeservice = A.Fake<IService>();
         A.CallTo(() => fakeservice.State).Returns(nodes);
@@ -187,7 +187,25 @@ public class FlowTest
         yield break;
     }
 
-    private static INode MockFileSystem()
+    
+}
+
+public static class TP3Helpers
+{
+    public static INode SetupNode(string name, NodeType nodeType = NodeType.Directory, List<INode>? children = null)
+    {
+        var node = A.Fake<INode>();
+        A.CallTo(() => node.Name).Returns(name);
+        A.CallTo(() => node.NodeType).Returns(nodeType);
+        if (children != null)
+        {
+            A.CallTo(() => node.Children).Returns(children);
+        }
+        return node;
+    }
+
+    
+    public static INode MockFileSystem()
     {
         var root = SetupNode("root", NodeType.Directory, new List<INode>()
         {
@@ -214,15 +232,4 @@ public class FlowTest
         return root;
     }
 
-    private static INode SetupNode(string name, NodeType nodeType = NodeType.Directory, List<INode>? children = null)
-    {
-        var node = A.Fake<INode>();
-        A.CallTo(() => node.Name).Returns(name);
-        A.CallTo(() => node.NodeType).Returns(nodeType);
-        if (children != null)
-        {
-            A.CallTo(() => node.Children).Returns(children);
-        }
-        return node;
-    }
 }

@@ -4,6 +4,9 @@ using TP3.Protocol;
 
 namespace TP3.Agent.Logic.Transport;
 
+/// <summary>
+/// Lazily converts an <see cref="INode"/> directory's children into read bytes for TP3 transport.
+/// </summary>
 public class DirectoryStreamData : ITP3DataStream
 {
     private readonly INode node;

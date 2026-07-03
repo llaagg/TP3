@@ -1,6 +1,6 @@
 namespace TP3.Messages;
 
-public class ReadResponseDataStream : Stream
+public class TP3ReadResponseDataStream : Stream
 {
     private readonly IEnumerator<TP3ReadResponse> _responses;
     private ReadOnlyMemory<byte> _currentChunk;
@@ -9,7 +9,7 @@ public class ReadResponseDataStream : Stream
 
     public bool IsEmpty { get; }
 
-    public ReadResponseDataStream(IEnumerable<TP3ReadResponse> responses)
+    public TP3ReadResponseDataStream(IEnumerable<TP3ReadResponse> responses)
     {
         _responses = responses.GetEnumerator();
         IsEmpty = !MoveToNextChunk();
