@@ -2,22 +2,18 @@ namespace TP3.Messages;
 
 public sealed class TP3WalkRequest : TP3Message
 {
-    public TP3WalkRequest(List<string>? path = null)
+    public TP3WalkRequest(
+        string tag,
+        string newTag = null!,
+        List<string>? path = null)
         : base(TP3Command.WALK)
     {
         Path = path ?? new List<string>();
+        Tag = tag;
+        NewTag = newTag;
     }
 
-    public List<string> Path { get; init; } = new List<string>();
-}
-
-public class TP3Error : TP3Message
-{
-    public TP3Error(string error)
-        : base(TP3Command.ERROR)
-    {
-        Error = error;
-    }
-
-    public string Error { get; init; }
+    public List<string> Path { get; set; } = new List<string>();
+    public string Tag { get; set; } = string.Empty;
+    public string? NewTag { get; set; } = null!;
 }

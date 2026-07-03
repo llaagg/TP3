@@ -90,4 +90,11 @@ public class DirectoryStreamData : ITP3DataStream
 
         return result.ToArray();
     }
+
+    public void Close()
+    {
+        this.enumerator?.Dispose();
+        this.enumerator = null;
+        _position = 0;
+    }
 }

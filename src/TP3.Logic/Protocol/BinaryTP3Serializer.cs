@@ -61,9 +61,9 @@ internal sealed class BinaryTP3Serializer : ITP3Serializer
         var isResponse = kind == 1;
         return command switch
         {
-            TP3Command.WALK => isResponse ? ReadWalkResponse(args, tag, reader) : new TP3WalkRequest
+            TP3Command.WALK => isResponse ? ReadWalkResponse(args, tag, reader) : new TP3WalkRequest(NormalizeOptionalString(tag))
             {
-                Tag = NormalizeOptionalString(tag)
+                Path = args,
             },
             TP3Command.READ => isResponse ? ReadReadResponse(args, tag, reader) : new TP3ReadRequest
             {

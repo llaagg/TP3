@@ -65,33 +65,38 @@ namespace TP3.Tests.Intergration
             //     → Rattach(qid_root)
 
             // 2. Client attaches to the server
-            //    Tattach(fid=root)
-            //    -> Rattach(qid_root)
+            //   
+            //    -> 
             // when message is incoming from network trasnport, router is asked to handle it.
             // we can use that to prtend we are some user and send a message to the agent host, and see if it is routed correctly.
-            await sut.router.Route(pipe, new TP3AttachRequest(tag: tag));
-            var lastAttachResponse = lastMessageSent as TP3AttachResponse;
+            await sut.router.Route(pipe, new TP3AttachRequest(tag: tag));                         /// Tattach (tag)          
+            Assert.IsType<TP3AttachResponse>(lastMessageSent);
+            var lastAttachResponse = lastMessageSent as TP3AttachResponse;                        ///                   Rattach           
             Assert.NotNull(lastAttachResponse);
-            Assert.Equal(tag, lastAttachResponse!.Tag);
+            Assert.Equal(tag, lastAttachResponse!.Tag);                                           ///                   tag
             Assert.NotNull(lastAttachResponse.Info);
-            Assert.NotNull(lastAttachResponse.Info.Id);
-#warning TODO: what if tag it's taken?
-
-            // 2. lets walk to root
-            await sut.router.Route(pipe, new TP3WalkRequest()
-            {
-                Tag = tag,
-                Path = new List<string> { }
-            });
-            var lastWalkResponse = lastMessageSent as TP3WalkResponse;
-            Assert.NotNull(lastWalkResponse);
-            Assert.Equal(tag, lastWalkResponse!.Tag);
-            // after the walk there should be a pointer setup for this user
+            Assert.NotNull(lastAttachResponse.Info.Id);                                           ///                   quid
             var pointer = transport.NetwokSessions.GetPointer(pipe, tag);
             Assert.NotNull(pointer);
+            Assert.NotNull(pointer!.Node);
             Assert.Null(pointer!.Data);
 
-            // 3. Client opens the object
+
+#warning TODO: what if tag it's taken?
+
+            // // 2. lets walk to root
+            // await sut.router.Route(pipe, new TP3WalkRequest(tag));
+            // Assert.IsType<TP3WalkResponse>(lastMessageSent);
+            // var lastWalkResponse = lastMessageSent as TP3WalkResponse;
+            // Assert.Single(lastWalkResponse!.Infos);
+            // Assert.Equal(tag, lastWalkResponse!.Tag);
+            // // after the walk there should be a pointer setup for this user
+            // var pointer = transport.NetwokSessions.GetPointer(pipe, tag);
+            // Assert.NotNull(pointer);
+            // Assert.NotNull(pointer!.Node);
+            // Assert.Null(pointer!.Data);
+
+            // 3. opens the object
             //    Topen(fid, mode)
             //  -> Ropen(qid, iounit)
             await sut.router.Route(pipe, new TP3OpenRequest(tag: tag));
@@ -102,61 +107,102 @@ namespace TP3.Tests.Intergration
             var nodeType = lastOpenResponse!.Info.NodeType;
             Assert.Equal(NodeType.Directory, nodeType);
 
-            // 4. Client lists folder (trunk)
+            // 4.  lists folder (trunk)
+            List<TP3StatPayload> stats = TReadOnADirectory(pipe, sut, tag);
+            Assert.NotEmpty(stats);
+            Assert.Equal(NodeType.Directory, stats[0].Info.NodeType);
 
-            //var data = TP3StatPayload.(() => GetData(sut, pipe, tag));
-            // await sut.router.Route(pipe, new TP3ReadRequest(tag: tag, offset: offset, maxBytes: maxbytes));
-            // var lastReadResponse = lastMessageSent as TP3ReadResponse;
-            // Assert.NotNull(lastReadResponse);
-            // Assert.Equal(tag, lastReadResponse!.Tag);
-            // // we know it is a directory, so the data should be a JSON array of Stat objects
-            // Assert.NotNull(lastReadResponse.Data);
-            // var data = lastReadResponse.Data;
-            // var count = data.Length;
-            // offset += (ulong)count;
-            // var stats = 
-            //     TP3StatPayload.DataAsFolders(new []{lastReadResponse}, maxbytes == count).ToList();
-            // if(count == 0 || count < maxbytes)
-            // {
-            //     break;
-            // }
+            // 5. we close the file
+            await sut.router.Route(pipe, new TP3ClunkRequest(tag));
+            Assert.IsType<TP3ClunkResponse>(lastMessageSent);
+            var lastClunkResponse = lastMessageSent as TP3ClunkResponse;
+            Assert.NotNull(lastClunkResponse);
 
-            // 5. Client navigates to a path
+            // 6. Client navigates to a path
             //    Twalk(fid=root, newfid=fileFid, ["usr", "bin"])
             //    -> Rwalk([qid_usr, qid_bin])
-            await sut.router.Route(pipe, new TP3WalkRequest()
+            await sut.router.Route(pipe, new TP3WalkRequest(tag)
             {
-                Tag = tag,
-                Path = new List<string> { }
+                Path = new List<string> 
+                { 
+                    stats[0].Name // suspecting ServiceName -> Filesystem or similiar
+                }
             });
+            Assert.IsType<TP3WalkResponse>(lastMessageSent);
+            var lastWalkResponse2 = lastMessageSent as TP3WalkResponse;
+            Assert.NotNull(lastWalkResponse2);
 
-            // matches tag nad has quid
-            Assert.Same(tag, (lastMessageSent as TP3WalkResponse)!.Tag);
-            Assert.NotEmpty((lastMessageSent as TP3WalkResponse)!.Infos);
+            // 7 we did walk let's open read
+            await sut.router.Route(pipe, new TP3OpenRequest(tag: tag));
+            var lastOpenResponse2 = lastMessageSent as TP3OpenResponse;
+            Assert.Equal(NodeType.Directory, nodeType);
 
-            var quids = (lastMessageSent as TP3WalkResponse)!.Infos;
+            // 7 list current folder
+            List<TP3StatPayload> stats2 = TReadOnADirectory(pipe, sut, tag);
+            Assert.NotEmpty(stats2);
+            Assert.Equal(NodeType.Directory, stats2[0].Info.NodeType);
+            var firstChildName = stats2[0].Name;     
+            Assert.Equal("state", firstChildName, ignoreCase: true); // we have state as in all services
 
-            // 3. Client opens the object
-            //    Topen(fileFid, OREAD)
-            //    -> Ropen(qid, iounit)
+            // 8. let's go close
+            await sut.router.Route(pipe, new TP3ClunkRequest(tag));
+            Assert.IsType<TP3ClunkResponse>(lastMessageSent);
+                        
+            // 8 let's walk
+            await sut.router.Route(pipe, new TP3WalkRequest(tag)
+            {
+                Path = new List<string>
+                {
+                    firstChildName
+                }
+            });
+            Assert.IsType<TP3WalkResponse>(lastMessageSent);
+            var lastWalkResponse3 = lastMessageSent as TP3WalkResponse;
+            Assert.NotNull(lastWalkResponse3);
 
-            // 4. If it is a DIRECTORY
-            //    loop:
-            //        Tread(fileFid, offset, count)
-            //        -> Rread([Stat][Stat][Stat]...)
-            //        offset += bytesReturned
-            //    until Rread returns 0 bytes (EOF)
+            // 9 let's open
+            await sut.router.Route(pipe, new TP3OpenRequest(tag: tag));
+            var lastOpenResponse3 = lastMessageSent as TP3OpenResponse;
+            Assert.Equal(NodeType.Directory, nodeType);
 
-            // 5. If it is a FILE
-            //    loop:
-            //        Tread(fileFid, offset, count)
-            //        -> Rread(file bytes)
-            //        offset += bytesReturned
-            //    until Rread returns 0 bytes (EOF)
+            // 10 list current folder
+            List<TP3StatPayload> stats3 = TReadOnADirectory(pipe, sut, tag);
+            Assert.NotEmpty(stats3);
+            Assert.Equal(NodeType.Directory, stats3[0].Info.NodeType);  
 
-            // 6. Release the handle
-            //    Tclunk(fileFid)
-            //    -> Rclunk
+            // 11. let's go close
+            await sut.router.Route(pipe, new TP3ClunkRequest(tag));
+            Assert.IsType<TP3ClunkResponse>(lastMessageSent);
+
+            // 12. let's walk to Reamde.md
+            await sut.router.Route(pipe, new TP3WalkRequest(tag)
+            {
+                Path = new List<string>
+                {
+                    "README.md"
+                }
+            });
+            Assert.IsType<TP3WalkResponse>(lastMessageSent);
+            var lastWalkResponse4 = lastMessageSent as TP3WalkResponse;
+            Assert.NotNull(lastWalkResponse4);
+            Assert.Single(lastWalkResponse4!.Infos!);
+            Assert.Equal(NodeType.File, lastWalkResponse4.Infos![0].NodeType);
+
+            // 13. let open the file
+            await sut.router.Route(pipe, new TP3OpenRequest(tag: tag));
+            Assert.IsType<TP3OpenResponse>(lastMessageSent);
+            var lastOpenResponse4 = lastMessageSent as TP3OpenResponse;
+            Assert.Equal(NodeType.File, lastOpenResponse4!.Info.NodeType);
+            
+
+            // 14. let's read the file
+            await sut.router.Route(pipe, new TP3ReadRequest(tag: tag, offset: 0, maxBytes: 1000));
+            Assert.IsType<TP3ReadResponse>(lastMessageSent);
+            var lastReadResponse = lastMessageSent as TP3ReadResponse;
+            Assert.NotNull(lastReadResponse);
+            var data = lastReadResponse!.Data;
+            Assert.NotNull(data);
+            Assert.NotEmpty(data);
 
             // | Operation      | Input          | Output         |
             // | -------------- | -------------- | -------------- |
@@ -168,6 +214,25 @@ namespace TP3.Tests.Intergration
             // | Clunk          | `fid`          | acknowledgment |
 
 
+        }
+
+        private List<TP3StatPayload> TReadOnADirectory(INetworkPipe pipe, AgentHost sut, string tag)
+        {
+            IEnumerable<TP3ReadResponse> data = GetData(sut, pipe, tag);
+            TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
+
+            // diagnostic: read all data and deserialize to TP3StatPayload
+            StreamReader reader = new StreamReader(stream);
+            var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            ms.Position = 0;           
+
+            // what do we hwve there...
+            string json = new StreamReader(ms).ReadToEnd();
+            ms.Position = 0;
+
+            var stats = TP3StatPayloadExtensions.Deserilize(ms).ToList();
+            return stats;
         }
 
         private IEnumerable<TP3ReadResponse> GetData(AgentHost sut, INetworkPipe pipe, string tag)

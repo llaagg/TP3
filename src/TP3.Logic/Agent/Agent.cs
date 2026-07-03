@@ -21,7 +21,7 @@ public class Agent : IAgent
     {
         this.router = router;
         this.logger = logger;
-        this.walker = new PathWalker(this.T);
+        this.walker = new PathWalker();
 
         logger?.LogInformation("Initializing agent logic.");
     }
@@ -68,7 +68,17 @@ public class Agent : IAgent
         }
         else if (request.Command == TP3Command.WALK && request is TP3WalkRequest tP3WalkRequest)
         {
-            var response = await walker.WalkAsync(tP3WalkRequest).ConfigureAwait(false);
+            var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tP3WalkRequest.Tag);
+            
+            var nodes = await walker.WalkAsync(tP3WalkRequest, pointer.Node).ConfigureAwait(false);
+
+            pointer.Node = nodes!.LastOrDefault()!;
+
+            var response = new TP3WalkResponse
+            {
+                Tag = tP3WalkRequest.Tag,
+                Infos = nodes.Select(n => new NodeInfo(n)).ToList()
+            };
 
             await router.Respond(this, response, incomingTransport);
             return;
@@ -100,11 +110,40 @@ public class Agent : IAgent
             var response = await OpenStream(incomingTransport, tP3OpenRequest);
             await router.Respond(this, response, incomingTransport);
             return;
+        }else if (request.Command == TP3Command.CLUNK && request is TP3ClunkRequest tP3ClunkRequest)
+        {
+            TP3ClunkResponse response = Clunk(incomingTransport, tP3ClunkRequest);
+
+            await router.Respond(this, response, incomingTransport);
+            return;
         }
         else
         {
             await router.Respond(this, new TP3ErrorResponse($"Unhandled TP3 message: {request.Command}"), incomingTransport);
         }
+    }
+
+    private TP3ClunkResponse Clunk(INetworkPipe incomingTransport, TP3ClunkRequest tP3ClunkRequest)
+    {
+        var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tP3ClunkRequest.Tag);
+        if (pointer != null)
+        {
+            try
+            {
+                pointer.Data?.Close();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "Error closing data stream for tag: {Tag}", tP3ClunkRequest.Tag);
+            }
+            finally
+            {
+                pointer.Data = null;
+            }
+        }
+
+        var response = new TP3ClunkResponse(tP3ClunkRequest.Tag);
+        return response;
     }
 
     public async Task<TP3OpenResponse> OpenStream(INetworkPipe incomingTransport, TP3OpenRequest tP3OpenRequest)
@@ -116,7 +155,6 @@ public class Agent : IAgent
         }
 
         var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tP3OpenRequest.Tag);
-        
         var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tP3OpenRequest.Tag);
         
         return new TP3OpenResponse(tP3OpenRequest.Tag, new NodeInfo(node), data.Iounit);        
@@ -129,8 +167,21 @@ public class Agent : IAgent
             Tag = tP3ReadRequest.Tag,
         };
 
-        var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tP3ReadRequest.Tag);
-        var bytes = await data.Read(tP3ReadRequest.Offset, tP3ReadRequest.MaxBytes);
+        var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tP3ReadRequest.Tag);
+        if(pointer == null)
+        {
+            // not attched?
+            await router.Respond(this, new TP3ErrorResponse($"not_attached"), incomingTransport);
+            return;
+        }
+        if(pointer.Data == null)
+        {
+            // not opened?
+            await router.Respond(this, new TP3ErrorResponse($"not_opened"), incomingTransport);
+            return;
+        }
+        
+        var bytes = await pointer.Data.Read(tP3ReadRequest.Offset, tP3ReadRequest.MaxBytes);
         response.Data = bytes;
         
         await router.Respond(this, response, incomingTransport);

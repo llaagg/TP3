@@ -50,10 +50,7 @@ public class MessageHelper
         var pathSegments = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
         if (command == TP3Command.WALK)
         {
-            return new TP3WalkRequest
-            {
-                Tag = tag
-            };
+            return new TP3WalkRequest(tag);
         }
 
         throw new ArgumentException($"Unsupported command: {command}. Only WALK and READ are supported.", nameof(message));

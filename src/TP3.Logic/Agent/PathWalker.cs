@@ -10,73 +10,27 @@ public sealed class PathWalker
 {
     private readonly Dictionary<string, RegisteredQid> nodesByQid = new(StringComparer.OrdinalIgnoreCase);
     private readonly object sync = new();
-    private readonly INode trunk;
 
-    public PathWalker(INode trunk)
+    public PathWalker()
     {
-        this.trunk = trunk;
     }
 
-    public async Task<TP3WalkResponse> WalkAsync(TP3WalkRequest request)
+    public async Task<List<INode>> WalkAsync(TP3WalkRequest request, INode startingNode)
     {
-        var nodes = ResolveNode(trunk, request.Path);
+        var nodes = ResolveNode(startingNode, request.Path);
         var registered = EnsureRegisteredNodes(nodes).ToList();
 
-        return new TP3WalkResponse
-        {
-            Tag = request.Tag,
-            Infos = registered
-        };
+        return nodes.ToList();
     }
 
-    public Task<TP3ReadResponse> ReadAsync(INetworkPipe incomingTransport, TP3ReadRequest request)
-    {
-        var node = incomingTransport.TP3Transport.GetNode(incomingTransport, request.Tag);
-        
-        
-
-
-
-        // if (string.IsNullOrWhiteSpace(request.Qid))
-        // {
-        //     return Task.FromResult(new TP3ReadResponse
-        //     {
-        //         Tag = request.Tag,
-        //         Error = "QidRequired"
-        //     });
-        // }
-
-        // RegisteredQid? registered;
-        // lock (sync)
-        // {
-        //     nodesByQid.TryGetValue(request.Qid!, out registered);
-        // }
-
-        // if (registered is null)
-        // {
-        //     return Task.FromResult(new TP3ReadResponse
-        //     {
-        //         Tag = request.Tag,
-        //         Qid = request.Qid,
-        //         Error = "NotFound"
-        //     });
-        // }
-
-
-
-        return null;
-    }
-
-    private IEnumerable<INode> ResolveNode(INode trunk, IList<string> requestPath)
+    private IEnumerable<INode> ResolveNode(INode startingNode, IList<string> requestPath)
     {
         var segments = requestPath
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .ToList();
 
-        INode? current = trunk;
-        // trunk because why not
-        yield return current;
-
+        INode? current = startingNode;
+        
         foreach (var segment in segments)
         {
             if (current.Children is null)

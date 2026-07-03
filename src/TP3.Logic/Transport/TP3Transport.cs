@@ -100,4 +100,16 @@ public class TP3Transport : ITP3Transport
 
         return pointer.Data!;
     }
+
+    public IPointer GetPointer(INetworkPipe incomingTransport, string tag)
+    {
+        var pointer = this.NetwokSessions.GetPointer(incomingTransport, tag);
+        if (pointer == null)
+        {
+            throw new Exception($"No pointer found for tag: {tag}");
+        }
+
+        return pointer;
+    }
 }
+

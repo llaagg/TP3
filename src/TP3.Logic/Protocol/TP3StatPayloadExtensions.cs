@@ -19,7 +19,7 @@ public static class TP3StatPayloadExtensions
 
     public static IEnumerable<TP3StatPayload> Deserilize(Stream data)
     {
-        return new TP3StatPayloadReader(data).ReadAll();
+        return new TP3StatPayloadStreamReader(data).ReadAll();
     }
 
     public static TP3StatPayload Deserilize(IEnumerable<byte> data)

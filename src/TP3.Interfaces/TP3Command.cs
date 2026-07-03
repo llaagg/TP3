@@ -9,4 +9,5 @@ public enum TP3Command
     ATTACH,
     ERROR,
     OPEN,
+    CLUNK,
 }

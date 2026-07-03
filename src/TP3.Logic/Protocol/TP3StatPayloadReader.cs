@@ -2,11 +2,11 @@ using System.Text.Json;
 
 namespace TP3.Protocol;
 
-public sealed class TP3StatPayloadReader
+public sealed class TP3StatPayloadStreamReader
 {
     private readonly byte[] buffer;
 
-    public TP3StatPayloadReader(Stream data)
+    public TP3StatPayloadStreamReader(Stream data)
     {
         using var memory = new MemoryStream();
         data.CopyTo(memory);
@@ -15,37 +15,78 @@ public sealed class TP3StatPayloadReader
 
     public IEnumerable<TP3StatPayload> ReadAll()
     {
-        var reader = new Utf8JsonReader(this.buffer, isFinalBlock: true, state: default);
         var values = new List<TP3StatPayload>();
-        var objectStart = -1;
 
-        while (reader.Read())
+        foreach (var payload in EnumerateRootObjects(this.buffer))
         {
-            if (reader.TokenType != JsonTokenType.StartObject)
+            var stat = JsonSerializer.Deserialize<TP3StatPayload>(payload, TP3StatPayloadExtensions.JsonOptions);
+            if (stat != null)
             {
-                if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == 0 && objectStart >= 0)
-                {
-                    var length = (int)reader.BytesConsumed - objectStart;
-                    var payload = this.buffer.AsSpan(objectStart, length);
-                    var stat = JsonSerializer.Deserialize<TP3StatPayload>(payload, TP3StatPayloadExtensions.JsonOptions);
-                    if (stat != null)
-                    {
-                        values.Add(stat);
-                    }
-
-                    objectStart = -1;
-                }
-
-                continue;
-            }
-
-            if (reader.CurrentDepth == 0)
-            {
-                objectStart = (int)reader.TokenStartIndex;
+                values.Add(stat);
             }
         }
 
         return values;
+    }
+
+    private static IEnumerable<byte[]> EnumerateRootObjects(byte[] buffer)
+    {
+        var depth = 0;
+        var inString = false;
+        var escapeNext = false;
+        var objectStart = -1;
+
+        for (var index = 0; index < buffer.Length; index++)
+        {
+            var current = (char)buffer[index];
+
+            if (escapeNext)
+            {
+                escapeNext = false;
+                continue;
+            }
+
+            if (current == '\\' && inString)
+            {
+                escapeNext = true;
+                continue;
+            }
+
+            if (current == '"')
+            {
+                inString = !inString;
+                continue;
+            }
+
+            if (inString)
+            {
+                continue;
+            }
+
+            if (current == '{')
+            {
+                if (depth == 0)
+                {
+                    objectStart = index;
+                }
+
+                depth++;
+                continue;
+            }
+
+            if (current == '}')
+            {
+                depth--;
+                if (depth == 0 && objectStart >= 0)
+                {
+                    var length = index - objectStart + 1;
+                    var slice = new byte[length];
+                    Buffer.BlockCopy(buffer, objectStart, slice, 0, length);
+                    yield return slice;
+                    objectStart = -1;
+                }
+            }
+        }
     }
 }
 
