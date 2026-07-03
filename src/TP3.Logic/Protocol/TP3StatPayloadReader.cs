@@ -17,18 +17,31 @@ public sealed class TP3StatPayloadReader
     {
         var reader = new Utf8JsonReader(this.buffer, isFinalBlock: true, state: default);
         var values = new List<TP3StatPayload>();
+        var objectStart = -1;
 
         while (reader.Read())
         {
             if (reader.TokenType != JsonTokenType.StartObject)
             {
+                if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == 0 && objectStart >= 0)
+                {
+                    var length = (int)reader.BytesConsumed - objectStart;
+                    var payload = this.buffer.AsSpan(objectStart, length);
+                    var stat = JsonSerializer.Deserialize<TP3StatPayload>(payload, TP3StatPayloadExtensions.JsonOptions);
+                    if (stat != null)
+                    {
+                        values.Add(stat);
+                    }
+
+                    objectStart = -1;
+                }
+
                 continue;
             }
 
-            var stat = JsonSerializer.Deserialize<TP3StatPayload>(ref reader, TP3StatPayloadExtensions.JsonOptions);
-            if (stat != null)
+            if (reader.CurrentDepth == 0)
             {
-                values.Add(stat);
+                objectStart = (int)reader.TokenStartIndex;
             }
         }
 
