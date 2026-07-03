@@ -64,20 +64,6 @@ namespace TP3.Tests.Protocol
 
             var statPayload = TP3StatPayloadExtensions.Deserilize(dataStream).ToList();
             Assert.Equal(rootNode.Children!.Count(), statPayload.Count());
-
-
-            // in tp3trasnport there will be pointer
-            // and user can call read and he will recvie data
-
-            // await directoryStreamData.Open(); // creates a stream that can be serilized and sent
-
-            // var actualBytes = await directoryStreamData.Read(0, 0);
-            // var actual = Encoding.UTF8.GetString(actualBytes);
-
-            // var expected = string.Concat(rootNode.Children!.Select(child =>
-            //     Encoding.UTF8.GetString(new TP3StatPayload(child).Serialize().ToArray())));
-
-            Assert.Fail("Not implemented yet");
         }
 
 
