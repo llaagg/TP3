@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package tp3;
+
+option csharp_namespace = "TP3.Messages";
+
+// TP3 command types
+enum TP3Command {
+    WALK = 0;
+    READ = 1;
+    WRITE = 2;
+    ATTACH = 3;
+    ERROR = 4;
+    OPEN = 5;
+    CLUNK = 6;
+}
+
+// Node types exposed in NodeInfo
+enum NodeType {
+    Directory = 0;
+    File = 1;
+}
+
+message NodeInfo {
+    string id = 1;
+    NodeType nodeType = 2;
+}
+
+message TP3Message {
+    TP3Command command = 1;
+    string tag = 2;
+
+    oneof payload {
+        TP3WalkRequest walkRequest = 10;
+        TP3WalkResponse walkResponse = 11;
+        TP3ReadRequest readRequest = 12;
+        TP3ReadResponse readResponse = 13;
+        TP3AttachRequest attachRequest = 14;
+        TP3AttachResponse attachResponse = 15;
+        TP3OpenRequest openRequest = 16;
+        TP3OpenResponse openResponse = 17;
+        TP3ClunkRequest clunkRequest = 18;
+        TP3ClunkResponse clunkResponse = 19;
+        TP3Error error = 20;
+        TP3ErrorResponse errorResponse = 21;
+        TP3GenericMessage genericMessage = 22;
+    }
+}
+
+message TP3WalkRequest {
+    repeated string path = 1;
+    string newTag = 2;
+}
+
+message TP3WalkResponse {
+    repeated NodeInfo infos = 1;
+}
+
+message TP3ReadRequest {
+    uint64 offset = 1;
+    uint32 maxBytes = 2;
+}
+
+message TP3ReadResponse {
+    bytes data = 1;
+}
+
+message TP3AttachRequest {
+}
+
+message TP3AttachResponse {
+    NodeInfo info = 1;
+}
+
+message TP3OpenRequest {
+}
+
+message TP3OpenResponse {
+    NodeInfo info = 1;
+    uint32 iounit = 2;
+}
+
+message TP3ClunkRequest {
+}
+
+message TP3ClunkResponse {
+}
+
+message TP3Error {
+    string error = 1;
+}
+
+message TP3ErrorResponse {
+    string errorMessage = 1;
+}
+
+message TP3GenericMessage {
+}
