@@ -9,6 +9,7 @@ public class TP3Transport : ITP3Transport
     private IRouter? router = null!;
     private readonly INetworkTransport networkTransport;
 
+    #warning That should be in agenthost
     public UserSessions NetwokSessions { get; private set; }
 
     /// <summary>

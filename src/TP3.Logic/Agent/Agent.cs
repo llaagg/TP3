@@ -60,6 +60,7 @@ public class Agent : IAgent
             TP3Message request)
     {
         logger?.LogDebug("Agent handling TP3 message: {Command}", request.Command);
+        
         if (request == null)
         {
             logger?.LogWarning("Received null TP3 message.");
@@ -76,14 +77,14 @@ public class Agent : IAgent
         {
             var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tP3ReadRequest.Tag);
 
-            if(node != null)
+            if(node == null)
             {
-                await SendToNetwork(node, tP3ReadRequest, incomingTransport);
+                await router.Respond(this, new TP3ErrorResponse ($"Node not found."), incomingTransport);
             }
             else
             {
-                logger?.LogError("No node found for tag: {Tag} in session: {AgentID}", tP3ReadRequest.Tag, incomingTransport.AgentID);
-            }
+                await SendToNetwork(node, tP3ReadRequest, incomingTransport);
+            }         
             
             return;
         }
@@ -100,8 +101,10 @@ public class Agent : IAgent
             await router.Respond(this, response, incomingTransport);
             return;
         }
-
-        throw new NotImplementedException($"Unhandled TP3 message: {request.Command}");
+        else
+        {
+            await router.Respond(this, new TP3ErrorResponse($"Unhandled TP3 message: {request.Command}"), incomingTransport);
+        }
     }
 
     private async Task<TP3OpenResponse> OpenStream(INetworkPipe incomingTransport, TP3OpenRequest tP3OpenRequest)
@@ -144,16 +147,12 @@ public class Agent : IAgent
         // check auth
         #warning TODO: auth
 
-        // find root node
-        var rootNode = this.T;
-
         // register Tag
-        incomingNetworkSession.TP3Transport.AttachTag(tP3AttachRequest.Tag, rootNode, incomingNetworkSession);
+        incomingNetworkSession.TP3Transport.AttachTag(tP3AttachRequest.Tag, this.T, incomingNetworkSession);
 
         // get quid
-        result.Info = new NodeInfo(rootNode); 
-
-
+        result.Info = new NodeInfo(this.T); 
+        
         return result;
     }
 }

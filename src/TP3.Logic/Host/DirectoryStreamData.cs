@@ -1,5 +1,6 @@
 using TP3.Interfaces;
 using TP3.Messages;
+using TP3.Protocol;
 
 namespace TP3.Agent.Logic.Transport;
 
@@ -67,7 +68,7 @@ public class DirectoryStreamData : ITP3DataStream
             if (enumerator!.MoveNext())
             {
                 var child = enumerator.Current;
-                var stat = new TP3Stat(child);
+                var stat = new TP3StatPayload(child);
                 var bytes = stat.Serialize();
                 result.AddRange(bytes);
                 _position++;

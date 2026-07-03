@@ -7,9 +7,12 @@ public class ReadResponseDataStream : Stream
     private int _currentChunkOffset;
     private bool _isDisposed;
 
+    public bool IsEmpty { get; }
+
     public ReadResponseDataStream(IEnumerable<TP3ReadResponse> responses)
     {
         _responses = responses.GetEnumerator();
+        IsEmpty = !MoveToNextChunk();
     }
 
     public override bool CanRead => !_isDisposed;

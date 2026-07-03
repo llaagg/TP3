@@ -53,27 +53,26 @@ public class AgentHost : IDisposable
             {
                 await t.Init(router);
             }
-
+            
+             foreach (var service in services)
+            {
+                logger?.LogInformation("Initializing service: {ServiceName}", service.GetType().Name);
+                try
+                {
+                    await Me.AddService(service);
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "Failed to initialize service: {ServiceName}", service.GetType().Name);
+                }
+            }
         }
     }
 
     public async Task Start()
     {
         logger?.LogInformation("Starting agent host.");
-
-        foreach (var service in services)
-        {
-            logger?.LogInformation("Initializing service: {ServiceName}", service.GetType().Name);
-            try
-            {
-                await Me.AddService(service);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "Failed to initialize service: {ServiceName}", service.GetType().Name);
-            }
-        }
-
+       
         if (transports == null || transports.Length == 0)
         {
             logger?.LogWarning("No transports configured for AgentHost.");

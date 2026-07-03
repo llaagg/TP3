@@ -4,10 +4,12 @@ using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
 using TP3.Interfaces;
 using TP3.Messages;
+using TP3.Protocol;
 
 public class FlowTest
 {
-    
+    public static TP3Message lastMessageSent = null!;
+
 
     [Fact]
     public async Task AgentHost_StartsAndStopsSuccessfully()
@@ -18,7 +20,6 @@ public class FlowTest
         var fakeservice = A.Fake<IService>();
         A.CallTo(() => fakeservice.State).Returns(nodes);
 
-
         var fakeNetwrokTransport = A.Fake<INetworkTransport>();
 
         var transport = new TP3Transport(A.Fake<ILogger>(), fakeNetwrokTransport);
@@ -27,16 +28,15 @@ public class FlowTest
         A.CallTo(() => pipe.AgentID).Returns("agent1");
         A.CallTo(() => pipe.TP3Transport).Returns(transport);
 
-        TP3Message lastMessageSent = null!;
+       
         A.CallTo(() => fakeNetwrokTransport.Send(pipe, A<TP3Message>.Ignored))
-            .Invokes((a) => 
+            .Invokes((a) =>
             {
                 lastMessageSent = a.GetArgument<TP3Message>(1) ?? null!;
                 Trace.TraceInformation("Fake network transport send called with {0}", lastMessageSent);
-            })   
+            })
             .Returns(Task.CompletedTask);
-        // A.CallTo(() => fakeNetwrokTransport.Send(pipe, A<TP3AttachResponse>.Ignored))
-        //     .Returns(Task.CompletedTask);
+
 
         var sut = new AgentHost(A.Fake<ILogger>(),
             new List<IService> { fakeservice }.ToArray(),
@@ -70,7 +70,7 @@ public class FlowTest
         Assert.Equal(tag, lastAttachResponse!.Tag);
         Assert.NotNull(lastAttachResponse.Info);
         Assert.NotNull(lastAttachResponse.Info.Id);
-        #warning TODO: what if it's taken?
+#warning TODO: what if tag it's taken?
 
         // 2. lets walk to root
         await sut.router.Route(pipe, new TP3WalkRequest()
@@ -98,15 +98,23 @@ public class FlowTest
         Assert.Equal(NodeType.Directory, nodeType);
 
         // 4. Client lists folder (trunk)
-        await sut.router.Route(pipe, new TP3ReadRequest(tag: tag));
-        var lastReadResponse = lastMessageSent as TP3ReadResponse;
-        Assert.NotNull(lastReadResponse);
-        Assert.Equal(tag, lastReadResponse!.Tag);
-        // we know it is a directory, so the data should be a JSON array of Stat objects
-        Assert.NotNull(lastReadResponse.Data);
-        var data = lastReadResponse.Data;
-        var stats = 
-            TP3Stat.DataAsFolders(new []{lastReadResponse}).ToList();
+        
+        //var data = TP3StatPayload.(() => GetData(sut, pipe, tag));
+        // await sut.router.Route(pipe, new TP3ReadRequest(tag: tag, offset: offset, maxBytes: maxbytes));
+        // var lastReadResponse = lastMessageSent as TP3ReadResponse;
+        // Assert.NotNull(lastReadResponse);
+        // Assert.Equal(tag, lastReadResponse!.Tag);
+        // // we know it is a directory, so the data should be a JSON array of Stat objects
+        // Assert.NotNull(lastReadResponse.Data);
+        // var data = lastReadResponse.Data;
+        // var count = data.Length;
+        // offset += (ulong)count;
+        // var stats = 
+        //     TP3StatPayload.DataAsFolders(new []{lastReadResponse}, maxbytes == count).ToList();
+        // if(count == 0 || count < maxbytes)
+        // {
+        //     break;
+        // }
 
         // 5. Client navigates to a path
         //    Twalk(fid=root, newfid=fileFid, ["usr", "bin"])
@@ -116,7 +124,7 @@ public class FlowTest
             Tag = tag,
             Path = new List<string> { }
         });
-        
+
         // matches tag nad has quid
         Assert.Same(tag, (lastMessageSent as TP3WalkResponse)!.Tag);
         Assert.NotEmpty((lastMessageSent as TP3WalkResponse)!.Infos);
@@ -157,16 +165,64 @@ public class FlowTest
 
     }
 
+    private IEnumerable<TP3ReadResponse> GetData(AgentHost sut, INetworkPipe pipe, string tag)
+    {
+        var offset = 0UL;
+        var maxbytes = 10000U;
+        while (true)
+        {
+            var readRequest = new TP3ReadRequest(tag: tag, offset: offset, maxBytes: maxbytes);
+            sut.router.Route(pipe, readRequest).Wait();
+            var lastReadResponse = lastMessageSent as TP3ReadResponse;
+            var count = lastReadResponse?.Data?.Length ?? 0;
+            yield return lastReadResponse;
+
+
+            if (count == 0 || count < maxbytes)
+            {
+                break;
+            }
+            offset += (ulong)count;
+        }
+        yield break;
+    }
+
     private static INode MockFileSystem()
     {
-        var nodes = A.Fake<INode>();
-        A.CallTo(() => nodes.Name).Returns("root");
-        A.CallTo(() => nodes.NodeType).Returns(NodeType.Directory);
-        A.CallTo(() => nodes.Children).Returns(new List<INode>
+        var root = SetupNode("root", NodeType.Directory, new List<INode>()
         {
-            A.Fake<INode>(),
-            A.Fake<INode>()
+            SetupNode("FILESYSTEM", NodeType.Directory, new List<INode>()
+            {
+                SetupNode("bin", NodeType.Directory, new List<INode>()
+                {
+                    SetupNode("ls", NodeType.File),
+                    SetupNode("cat", NodeType.File),
+                }),
+                SetupNode("usr", NodeType.Directory, new List<INode>()
+                {
+                    SetupNode("local", NodeType.Directory, new List<INode>()
+                    {
+                        SetupNode("bin", NodeType.Directory, new List<INode>()
+                        {
+                            SetupNode("myapp", NodeType.File),
+                        }),
+                    }),
+                }),
+            }),
+            SetupNode("README.md", NodeType.File),
         });
-        return nodes;
+        return root;
+    }
+
+    private static INode SetupNode(string name, NodeType nodeType = NodeType.Directory, List<INode>? children = null)
+    {
+        var node = A.Fake<INode>();
+        A.CallTo(() => node.Name).Returns(name);
+        A.CallTo(() => node.NodeType).Returns(nodeType);
+        if (children != null)
+        {
+            A.CallTo(() => node.Children).Returns(children);
+        }
+        return node;
     }
 }
