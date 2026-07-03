@@ -13,7 +13,7 @@ public static partial class CLI
         var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
 
-        var request = MessageHelper.ParseMessage(path != null ? $"walk {path}" : "walk");
+        var request = MessageHelper.ParseMessage(path != null ? $"WalkRequest {path}" : "WalkRequest");
         await ipcClient.SendMessageAsync(request);
 
         var walkMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
@@ -32,7 +32,7 @@ public static partial class CLI
         logger.LogInformation(" {Qid}-> Consuming responses from IPC server...", qid);
         while (true)
         {
-            var readCommand = MessageHelper.ParseMessage($"read {qid} {offset} {maxBytes}");
+            var readCommand = MessageHelper.ParseMessage($"ReadRequest {qid} {offset} {maxBytes}");
             await ipcClient.SendMessageAsync(readCommand);
 
             var readMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);

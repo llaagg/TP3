@@ -14,7 +14,8 @@ public class MessageHelper
         
         if (!Enum.TryParse(parts[0], ignoreCase: true, out TP3.Messages.TP3Message.PayloadOneofCase command))
         {
-            throw new ArgumentException($"Invalid command: {parts[0]}", nameof(message));
+            var availableCommands = string.Join(", ", Enum.GetNames(typeof(TP3.Messages.TP3Message.PayloadOneofCase)));
+            throw new ArgumentException($"Invalid command: {parts[0]} availble {availableCommands}", nameof(message));
         }
 
         var tag = Guid.NewGuid().ToString("N");

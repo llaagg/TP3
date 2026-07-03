@@ -18,7 +18,7 @@ public static partial class CLI
             logger.LogInformation("Sending message to IPC server: {Message}", path);
         }
 
-        var request = MessageHelper.ParseMessage(path != null ? $"walk {path}" : "walk");
+        var request = MessageHelper.ParseMessage(path != null ? $"WalkRequest {path}" : "WalkRequest");
         await ipcClient.SendMessageAsync(request);
 
         // let's wait a bit to allow the server to process the walk command and send responses

@@ -13,7 +13,7 @@ public static partial class CLI
         var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
 
-        var request = MessageHelper.ParseMessage($"read {message}");
+        var request = MessageHelper.ParseMessage($"ReadRequest {message}");
         await ipcClient.SendMessageAsync(request);
         
         if (consumeResponses)
