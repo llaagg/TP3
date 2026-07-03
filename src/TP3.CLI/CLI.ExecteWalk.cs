@@ -29,7 +29,7 @@ public static partial class CLI
             await foreach (var response in ipcClient.ListenAsync())
             {
                 logger.LogInformation("Received response: {Response}", response);
-                if (response is TP3ReadResponse readResponse )
+                if (response.PayloadCase == TP3Message.PayloadOneofCase.ReadResponse)
                 {
                     logger.LogInformation("Received final chunk. Stopping response consumption.");
                     break;

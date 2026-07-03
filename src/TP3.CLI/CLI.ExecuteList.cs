@@ -18,7 +18,7 @@ public static partial class CLI
 
         var walkMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
         
-        if (walkMessage is not TP3WalkResponse walkResponse)
+        if (walkMessage?.WalkResponse is not TP3WalkResponse walkResponse)
         {
             logger.LogWarning("No WALK response received.");
             await ipcClient.DisconnectAsync();
@@ -36,14 +36,19 @@ public static partial class CLI
             await ipcClient.SendMessageAsync(readCommand);
 
             var readMessage = await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
+            if (readMessage is null)
+            {
+                break;
+            }
+
             logger.LogDebug(" {Qid}-> Received response: {ResponseCommand}", qid, readMessage.Command);
-            if (readMessage is not TP3ReadResponse response)
+            if (readMessage.ReadResponse is not TP3ReadResponse response)
             {
                 break;
             }
 
             var payload = response.Data is { Length: > 0 }
-                ? System.Text.Encoding.UTF8.GetString(response.Data)
+                ? System.Text.Encoding.UTF8.GetString(response.Data.ToByteArray())
                 : string.Empty;
 
             if (string.Equals(payload, "EOF", StringComparison.Ordinal))

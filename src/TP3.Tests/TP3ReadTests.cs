@@ -1,4 +1,5 @@
 using System.Text;
+using Google.Protobuf;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
@@ -15,9 +16,9 @@ namespace TP3.Tests.Protocol
             // Arrange
             var listOfResponses = new List<TP3ReadResponse>
         {
-            new TP3ReadResponse { Data = new byte[] { (byte)'1', (byte)'2', (byte)'3' } },
-            new TP3ReadResponse { Data = new byte[] { (byte)'4', (byte)'5', (byte)'6' } },
-            new TP3ReadResponse { Data = new byte[] { (byte)'7', (byte)'8', (byte)'9' } }
+            new TP3ReadResponse { Data = ByteString.CopyFrom(new byte[] { (byte)'1', (byte)'2', (byte)'3' }) },
+            new TP3ReadResponse { Data = ByteString.CopyFrom(new byte[] { (byte)'4', (byte)'5', (byte)'6' }) },
+            new TP3ReadResponse { Data = ByteString.CopyFrom(new byte[] { (byte)'7', (byte)'8', (byte)'9' }) }
         };
 
             // Act

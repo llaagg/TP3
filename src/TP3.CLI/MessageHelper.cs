@@ -18,7 +18,7 @@ public class MessageHelper
 
         var tag = Guid.NewGuid().ToString("N");
 
-        if (command == TP3Command.READ)
+        if (command == TP3Command.Read)
         {
             if (parts.Length < 2)
             {
@@ -39,18 +39,30 @@ public class MessageHelper
                 throw new ArgumentException($"Invalid READ maxBytes: {parts[3]}", nameof(message));
             }
 
-            return new TP3ReadRequest
+            return new TP3Message
             {
+                Command = TP3Command.Read,
                 Tag = tag,
-                Offset = (ulong)offset,
-                MaxBytes = (uint)maxBytes,
+                ReadRequest = new TP3ReadRequest
+                {
+                    Offset = (ulong)offset,
+                    MaxBytes = (uint)maxBytes,
+                },
             };
         }
 
         var pathSegments = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
-        if (command == TP3Command.WALK)
+        if (command == TP3Command.Walk)
         {
-            return new TP3WalkRequest(tag);
+            var walkRequest = new TP3WalkRequest();
+            walkRequest.Path.Add(pathSegments);
+
+            return new TP3Message
+            {
+                Command = TP3Command.Walk,
+                Tag = tag,
+                WalkRequest = walkRequest,
+            };
         }
 
         throw new ArgumentException($"Unsupported command: {command}. Only WALK and READ are supported.", nameof(message));
