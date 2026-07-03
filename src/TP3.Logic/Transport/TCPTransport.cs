@@ -31,7 +31,7 @@ public sealed class TCPTransport
 
     public Task Send(TP3Message message)
     {
-        logger?.LogDebug("TCP transport send skipped (disabled). Command={Command}", message.Command);
+        logger?.LogDebug("TCP transport send skipped (disabled). Command={Command}", message.AttachRequest);
         return Task.CompletedTask;
     }
 

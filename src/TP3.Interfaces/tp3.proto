@@ -4,17 +4,6 @@ package tp3;
 
 option csharp_namespace = "TP3.Messages";
 
-// TP3 command types
-enum TP3Command {
-    WALK = 0;
-    READ = 1;
-    WRITE = 2;
-    ATTACH = 3;
-    ERROR = 4;
-    OPEN = 5;
-    CLUNK = 6;
-}
-
 // Node types exposed in NodeInfo
 enum NodeType {
     Directory = 0;
@@ -27,7 +16,6 @@ message NodeInfo {
 }
 
 message TP3Message {
-    TP3Command command = 1;
     string tag = 2;
 
     oneof payload {

@@ -11,14 +11,15 @@ public class MessageHelper
             throw new ArgumentException("Message cannot be empty.", nameof(message));
         }
         
-        if (!Enum.TryParse(parts[0], ignoreCase: true, out TP3Command command))
+        
+        if (!Enum.TryParse(parts[0], ignoreCase: true, out TP3.Messages.TP3Message.PayloadOneofCase command))
         {
             throw new ArgumentException($"Invalid command: {parts[0]}", nameof(message));
         }
 
         var tag = Guid.NewGuid().ToString("N");
 
-        if (command == TP3Command.Read)
+        if (command == TP3.Messages.TP3Message.PayloadOneofCase.ReadRequest)
         {
             if (parts.Length < 2)
             {
@@ -41,7 +42,6 @@ public class MessageHelper
 
             return new TP3Message
             {
-                Command = TP3Command.Read,
                 Tag = tag,
                 ReadRequest = new TP3ReadRequest
                 {
@@ -52,14 +52,13 @@ public class MessageHelper
         }
 
         var pathSegments = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
-        if (command == TP3Command.Walk)
+        if (command == TP3.Messages.TP3Message.PayloadOneofCase.WalkRequest)
         {
             var walkRequest = new TP3WalkRequest();
             walkRequest.Path.Add(pathSegments);
 
             return new TP3Message
             {
-                Command = TP3Command.Walk,
                 Tag = tag,
                 WalkRequest = walkRequest,
             };

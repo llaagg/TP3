@@ -1,4 +1,5 @@
 using System.Text;
+using Google.Protobuf;
 using TP3.Messages;
 using TP3.Service.FileSystem;
 
@@ -12,8 +13,8 @@ public static class ReaderChunkerEngine
         TP3ReadRequest request,
         INode node)
     {
-        var offset = request.Offset < 0 ? 0 : request.Offset;
-        var maxBytes = request.MaxBytes > 0 ? request.MaxBytes : DefaultMaxBytes;
+        var offset = request.Offset;
+        var maxBytes = request.MaxBytes > 0 ? request.MaxBytes : (uint)DefaultMaxBytes;
 
         Reader reader = node.NodeType switch
         {
@@ -22,7 +23,7 @@ public static class ReaderChunkerEngine
             _ => throw new InvalidOperationException($"Unknown node type: {node.NodeType}.")
         };
 
-        var result = await reader.ReadAsync((ulong)offset, (uint)maxBytes).ConfigureAwait(false);
+        var result = await reader.ReadAsync(offset, maxBytes).ConfigureAwait(false);
 
         var data = result.IsEof
             ? Encoding.UTF8.GetBytes("EOF")
@@ -30,8 +31,7 @@ public static class ReaderChunkerEngine
 
         return new TP3ReadResponse
         {
-            Tag = request.Tag,
-            Data = data
+            Data = ByteString.CopyFrom(data)
         };
     }
 }

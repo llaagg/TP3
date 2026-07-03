@@ -26,7 +26,7 @@ public sealed class Router : IRouter
 
     public async Task Route(INetworkPipe sourceTransport, TP3Message message)
     {
-        logger?.LogDebug("Routing TP3 message: {Command}", message.Command);
+        logger?.LogDebug("Routing TP3 message: {Command}", message.AttachRequest);
 
 #warning TODO: namespace filtering
 #warning TODO: tcp forward, currelnty we only send to our local agent, but we should forward to other agents if the target is not local

@@ -37,8 +37,12 @@ namespace TP3.Tests.Protocol
                 .Returns(Task.CompletedTask);
 
             var fakeTp3Trasnport = A.Fake<ITP3Transport>();
+            var fakePointer = A.Fake<IPointer>();
+            A.CallTo(() => fakePointer.Data).Returns(directoryStreamData);
             A.CallTo(() => fakeTp3Trasnport.GetData(A<INetworkPipe>.Ignored, A<string>.Ignored))
                 .Returns(Task.FromResult<ITP3DataStream>(directoryStreamData));
+            A.CallTo(() => fakeTp3Trasnport.GetPointer(A<INetworkPipe>.Ignored, A<string>.Ignored))
+                .Returns(fakePointer);
 
             var fakeNetworkPie = A.Fake<INetworkPipe>();
             A.CallTo(() => fakeNetworkPie.TP3Transport).Returns(fakeTp3Trasnport);
@@ -49,12 +53,16 @@ namespace TP3.Tests.Protocol
             string tag = "root-tag";
 
             // ACT
-            await agent.ReadDataAndSend(new TP3ReadRequest(tag), fakeNetworkPie);
+            await agent.ReadDataAndSend(new TP3ReadRequest
+            {
+                Offset = 0,
+                MaxBytes = 16 * 1024,
+            }, tag, fakeNetworkPie);
 
             // ASSERT
             Assert.NotNull(lastMessageSent);
-            Assert.IsType<TP3ReadResponse>(lastMessageSent);
-            var readResponse = (TP3ReadResponse)lastMessageSent;
+            var readResponse = lastMessageSent.ReadResponse;
+            Assert.NotNull(readResponse);
             Assert.NotEmpty(readResponse.Data!);
 
             var dataStream = new TP3ReadResponseDataStream(new List<TP3ReadResponse> { readResponse });

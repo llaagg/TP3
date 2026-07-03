@@ -41,7 +41,7 @@ public static partial class CLI
                 break;
             }
 
-            logger.LogDebug(" {Qid}-> Received response: {ResponseCommand}", qid, readMessage.Command);
+            logger.LogDebug(" {Qid}-> Received response: {ResponseCommand}", qid, readMessage.AttachRequest);
             if (readMessage.ReadResponse is not TP3ReadResponse response)
             {
                 break;

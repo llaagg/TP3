@@ -101,12 +101,12 @@ public class TP3ReadResponseDataStream : Stream
         while (_responses.MoveNext())
         {
             var bytes = _responses.Current.Data;
-            if (bytes is null || bytes.Length == 0)
+            if (bytes is null || bytes.IsEmpty)
             {
                 continue;
             }
 
-            _currentChunk = bytes;
+            _currentChunk = bytes.Memory;
             _currentChunkOffset = 0;
             return true;
         }
