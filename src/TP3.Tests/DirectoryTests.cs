@@ -62,7 +62,8 @@ namespace TP3.Tests.Protocol
             // var sr = new StreamReader(dataStream);
             // var data = await sr.ReadToEndAsync();
 
-            var statPayload = TP3StatPayloadExtensions.Deserilize(dataStream);
+            var statPayload = TP3StatPayloadExtensions.Deserilize(dataStream).ToList();
+            Assert.Equal(rootNode.Children!.Count(), statPayload.Count());
 
 
             // in tp3trasnport there will be pointer
