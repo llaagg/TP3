@@ -1,7 +1,8 @@
-using TP3.Messages;
+using ProtoBuf;
 
 namespace TP3.Messages;
 
+[ProtoContract]
 public sealed class TP3GenericMessage : TP3Message
 {
     public TP3GenericMessage()

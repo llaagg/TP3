@@ -1,5 +1,8 @@
+using ProtoBuf;
+
 namespace TP3.Messages;
 
+[ProtoContract]
 public class TP3ClunkRequest : TP3Message
 {
     public TP3ClunkRequest(string tag)
@@ -9,6 +12,7 @@ public class TP3ClunkRequest : TP3Message
     }
 }
 
+[ProtoContract]
 public class TP3ClunkResponse : TP3Message
 {
     public TP3ClunkResponse(string tag)

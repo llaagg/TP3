@@ -1,5 +1,8 @@
+using ProtoBuf;
+
 namespace TP3.Messages;
 
+[ProtoContract]
 public class TP3AttachResponse : TP3Message
 {
     public TP3AttachResponse()
@@ -10,5 +13,6 @@ public class TP3AttachResponse : TP3Message
     /// <summary>
     /// Return "/" alias trunk, sets client there
     /// </summary>
+    [ProtoMember(1)]
     public NodeInfo Info { get; set; } = new NodeInfo();
 }

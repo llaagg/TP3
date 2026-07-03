@@ -1,5 +1,8 @@
+using ProtoBuf;
+
 namespace TP3.Messages;
 
+[ProtoContract]
 public sealed class TP3WalkRequest : TP3Message
 {
     public TP3WalkRequest(
@@ -13,7 +16,9 @@ public sealed class TP3WalkRequest : TP3Message
         NewTag = newTag;
     }
 
+    [ProtoMember(1)]
     public List<string> Path { get; set; } = new List<string>();
-    public string Tag { get; set; } = string.Empty;
+
+    [ProtoMember(2)]
     public string? NewTag { get; set; } = null!;
 }
