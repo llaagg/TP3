@@ -26,7 +26,7 @@ public class UserSessions : INetworkSessions
 
     string GetConnectionId(INetworkPipe session)
     {
-        return $"{session.TP3Transport.Tag}:{session.AgentID}";
+        return $"{session.TP3Transport.TransportTag}:{session.AgentID}";
     }
     public void AttachTagToPointer(string tag, INode node, INetworkPipe session)
     {

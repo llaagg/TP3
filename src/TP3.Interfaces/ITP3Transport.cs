@@ -7,7 +7,7 @@ public interface ITP3Transport : IDisposable
     /// <summary>
     /// Uniq tag for all transports
     /// </summary>
-    string Tag { get; } 
+    string TransportTag { get; } 
     Task Send(INetworkPipe session, TP3Message message);
     Task Start();
     void Stop();

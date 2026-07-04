@@ -14,12 +14,13 @@ public class TP3Transport : ITP3Transport
     /// <summary>
     /// Identifies transport instance, used to route messages to the correct transport.
     /// </summary>
-    public string Tag { get; } = Guid.NewGuid().ToString("N").Substring(0, 8);
+    public string TransportTag { get; }
 
     public TP3Transport(ILogger logger, INetworkTransport networkTransport)
     {
         this.logger = logger;
         this.networkTransport = networkTransport;
+        this.TransportTag = networkTransport.GetType().Name + "_" + Guid.NewGuid().ToString("N").Substring(0, 8);
     }
 
     public async Task Send(INetworkPipe session, TP3Message message)

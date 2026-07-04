@@ -40,7 +40,7 @@ public class AgentHost : IAgentHost, IDisposable
         if (this.transports != null)
         {
             // check if tags are uniq in tranbsports
-            var tags = transports.Select(t => t.Tag).ToList();
+            var tags = transports.Select(t => t.TransportTag).ToList();
             if (tags.Count != tags.Distinct().Count())
             {
                 throw new Exception("Transport tags are not unique.");

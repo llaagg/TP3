@@ -91,7 +91,7 @@ public sealed class IpcTransport : INetworkTransport
     {
         await using var networkStream = client.GetStream();
     
-        var session = new IpcSession(client, networkStream, this.transport, this, "agentId");
+        var session = new IpcSession(client, networkStream, this.transport, this, nameof(IpcTransport));
 
         this.transport.NewUserNetworkConnection(this, session);
 
