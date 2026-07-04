@@ -8,7 +8,7 @@ namespace TP3.CLI;
 public static partial class CLI
 {
 
-    public static async Task<TP3Message> Attach(this IpcClient ipcClient, ILogger logger)
+    public static async Task<TP3Message> Attach(this TP3Client ipcClient, ILogger logger)
     {
         var attachRequest = new TP3Message()
         {
@@ -20,11 +20,16 @@ public static partial class CLI
         return attachResponse;
     }
 
-    private static async Task<TP3Message> SendAndWaitOne(this IpcClient ipcClient, ILogger logger, TP3Message request)
+    private static async Task<TP3Message?> SendAndWaitOne(this TP3Client ipcClient, ILogger logger, TP3Message request)
     {
         logger.LogInformation("Sending request to IPC server: {Request}", request);
         await ipcClient.SendMessageAsync(request).ConfigureAwait(false);
-        return await ReceiveSingleResponse(ipcClient, logger).ConfigureAwait(false);
+        var response =  await ReceiveSingleResponse(ipcClient, logger);
+        if(response == null)
+        {
+            throw new InvalidOperationException("No response received from IPC server.");
+        }
+        return response;
     }
 
     public static void ThrowIfError(this TP3Message message)
@@ -42,12 +47,12 @@ public static partial class CLI
     private static async Task ExecuteList(int ipcPort, int waitForServer, string[]? path, ILogger logger)
     {
         logger.LogInformation("Connecting to IPC server on port {IpcPort}", ipcPort);
-        var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
+        var ipcClient = new TP3Client(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
         var attachResponse = await ipcClient.Attach(logger).ConfigureAwait(false);
         var tag = attachResponse.Tag;
 
-        logger.LogInformation("Preparing to send list request for path: {Path}", path);
+        logger.LogInformation("Preparing to send list request for path: {Path}", path ?? new string[] { "/" });
         var walkRequest = new TP3WalkRequest();
         if(path != null && path.Length > 0)
         {
@@ -76,7 +81,7 @@ public static partial class CLI
         await ipcClient.DisconnectAsync().ConfigureAwait(false);
     }
 
-    private static async Task<TP3Message> ListFolder(ILogger logger, IpcClient ipcClient, string tag)
+    private static async Task<TP3Message> ListFolder(ILogger logger, TP3Client ipcClient, string tag)
     {
         var listResponse = await ipcClient.SendAndWaitOne(logger, new TP3Message()
         {
@@ -89,7 +94,7 @@ public static partial class CLI
         return listResponse;
     }
 
-    private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this IpcClient ipcClient, string tag, ILogger logger)
+    private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this TP3Client ipcClient, string tag, ILogger logger)
     {
         var offset = 0UL;
         var maxbytes = 10000U;
@@ -121,7 +126,7 @@ public static partial class CLI
     }
 
 
-    private static IEnumerable<TP3StatPayload> TReadOnADirectory(this IpcClient pipe, string tag, ILogger logger)
+    private static IEnumerable<TP3StatPayload> TReadOnADirectory(this TP3Client pipe, string tag, ILogger logger)
     {
         IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(tag, logger);
         TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);

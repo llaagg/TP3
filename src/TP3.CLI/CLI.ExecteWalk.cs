@@ -10,7 +10,7 @@ public static partial class CLI
     {
         logger.LogInformation("Connecting to IPC server on port {IpcPort}", ipcPort);
 
-        var ipcClient = new IpcClient(ipcPort, logger, waitForServer);
+        var ipcClient = new TP3Client(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
 
         if (path != null)

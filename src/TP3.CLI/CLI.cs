@@ -66,7 +66,7 @@ public static partial class CLI
         return rootCommand.InvokeAsync(args);
     }
 
-    private static async Task<TP3.Messages.TP3Message?> ReceiveSingleResponse(IpcClient ipcClient, ILogger logger)
+    private static async Task<TP3.Messages.TP3Message?> ReceiveSingleResponse(TP3Client ipcClient, ILogger logger)
     {
         logger.LogInformation("Listening for a single response from the IPC server...");
         await foreach (var response in ipcClient.ListenAsync())

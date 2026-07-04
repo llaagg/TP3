@@ -7,7 +7,7 @@ using TP3.Messages;
 
 namespace TP3.CLI;
 
-public sealed class IpcClient
+public sealed class TP3Client
 {
     private readonly int ipcPort;
     private readonly ILogger logger;
@@ -15,7 +15,7 @@ public sealed class IpcClient
     private NetworkStream? stream;
     private readonly int waitForServer;
 
-    public IpcClient(int ipcPort, ILogger logger, int waitForServer)
+    public TP3Client(int ipcPort, ILogger logger, int waitForServer)
     {
         this.ipcPort = ipcPort;
         this.logger = logger;
