@@ -15,31 +15,6 @@ public static partial class CLI
         var messageArgument = new Argument<string>("message", "Message to send to IPC server");
         var path = new Argument<string[]?>("path", () => null, "Path to walk in the IPC server");
 
-        // READ
-        var readCommand = new Command("read", "Read a message from the IPC server")
-        {
-            ipcPortOption,
-            consumeResponses,
-            bePatientAndWaitForServer,
-            messageArgument,
-        };
-        readCommand.SetHandler(async (int ipcPort, string message, bool consumeResponses, int waitForServer) =>
-            await ExecuteRead(ipcPort, message, consumeResponses, waitForServer, logger),
-                ipcPortOption, messageArgument, consumeResponses, bePatientAndWaitForServer);
-
-        // WALK
-        var walkCommand = new Command("walk", "Walk a path in the IPC server")
-        {
-            ipcPortOption,
-            bePatientAndWaitForServer,
-            consumeResponses,
-            path
-        };
-        walkCommand.SetHandler(async (int ipcPort, int waitForServer, bool consumeResponses, string[]? path) =>
-            await ExecteWalk(ipcPort, consumeResponses, waitForServer, path, logger),
-                ipcPortOption, bePatientAndWaitForServer, consumeResponses, path);
-
-
         // List folder on the IPC server
         var listCommand = new Command("list", "List the contents of a folder in the IPC server")
         {
@@ -53,8 +28,6 @@ public static partial class CLI
 
         var rootCommand = new RootCommand("TP3 CLI")
         {
-            readCommand,
-            walkCommand,
             listCommand
         };
 

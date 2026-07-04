@@ -8,7 +8,7 @@ namespace TP3.CLI;
 public static partial class CLI
 {
 
-    public static async Task<TP3Message> Attach(this TP3Client ipcClient, ILogger logger)
+    public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ILogger logger)
     {
         var attachRequest = new TP3Message()
         {
@@ -25,14 +25,11 @@ public static partial class CLI
         logger.LogInformation("Sending request to IPC server: {Request}", request);
         await ipcClient.SendMessageAsync(request).ConfigureAwait(false);
         var response =  await ReceiveSingleResponse(ipcClient, logger);
-        if(response == null)
-        {
-            throw new InvalidOperationException("No response received from IPC server.");
-        }
+        
         return response;
     }
 
-    public static void ThrowIfError(this TP3Message message)
+    public static void ThrowIfError(this TP3Message? message)
     {
         if (message is null)
         {
@@ -50,7 +47,8 @@ public static partial class CLI
         var ipcClient = new TP3Client(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
         var attachResponse = await ipcClient.Attach(logger).ConfigureAwait(false);
-        var tag = attachResponse.Tag;
+        attachResponse.ThrowIfError();
+        var tag = attachResponse?.Tag;
 
         logger.LogInformation("Preparing to send list request for path: {Path}", path ?? new string[] { "/" });
         var walkRequest = new TP3WalkRequest();
@@ -63,6 +61,7 @@ public static partial class CLI
             Tag = tag,
             WalkRequest = walkRequest
         }).ConfigureAwait(false);
+        walkResponse1.ThrowIfError();
 
         var openResponse = await ipcClient.SendAndWaitOne(logger, new TP3Message()
         {
@@ -75,8 +74,6 @@ public static partial class CLI
         {
             Console.WriteLine($"* {item.Name} (Type: {item.Info.NodeType})");
         }
-
-
 
         await ipcClient.DisconnectAsync().ConfigureAwait(false);
     }
