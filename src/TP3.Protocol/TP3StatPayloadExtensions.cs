@@ -22,23 +22,35 @@ public static class TP3StatPayloadExtensions
         return new TP3StatPayloadStreamReader(data).ReadAll();
     }
 
-    public static TP3StatPayload Deserilize(IEnumerable<byte> data)
-    {
-        var json = Encoding.UTF8.GetString(data.ToArray());
-        var stat = JsonSerializer.Deserialize<TP3StatPayload>(json, JsonOptions);
-        return stat!;
-    }
-
     public static IEnumerable<byte> Serialize(this TP3StatPayload stat)
     {
         // serilize as json and enums as asrings
-        var json = JsonSerializer.Serialize(stat, new JsonSerializerOptions(JsonOptions)
-        {
-            WriteIndented = true
-        });
+        var json = SerializeToJson(stat);
         return Encoding.UTF8.GetBytes(json);
     }
 
 
+    public static string SerializeToJson(this TP3StatPayload stat)
+    {
+        // Zamiast: JsonSerializer.Serialize(stat)
+        return JsonSerializer.Serialize(stat, TP3JsonContext.Default.TP3StatPayload);
+    }
+    
+    public static TP3StatPayload DeserializeFromJson(string json)
+    {
+        return JsonSerializer.Deserialize<TP3StatPayload>(json, TP3JsonContext.Default.TP3StatPayload) ?? new TP3StatPayload();
+    }
+
+    
+    public static TP3StatPayload DeserializeFromJson(byte[] json)
+    {
+        return JsonSerializer.Deserialize<TP3StatPayload>(json, TP3JsonContext.Default.TP3StatPayload) ?? new TP3StatPayload();
+    }
+}
+
+
+[JsonSerializable(typeof(TP3StatPayload))]
+internal partial class TP3JsonContext : JsonSerializerContext
+{
 }
 

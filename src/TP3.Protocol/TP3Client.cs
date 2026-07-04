@@ -92,7 +92,7 @@ public sealed class TP3Client
                 break;
             }
 
-            logger.LogInformation("Received response from IPC server: {Response}", response);
+            logger.LogInformation("Received response from IPC server: {case }", response.PayloadCase);
             yield return response;
         }
     }

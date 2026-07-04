@@ -72,6 +72,63 @@
         "isDefault": true
       },
       "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish cli",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "${workspaceFolder}/src/TP3.CLI/TP3.CLI.csproj",
+        "-c",
+        "Release",
+        "-o",
+        "${workspaceFolder}/publish/TP3.CLI",
+        "--self-contained",
+        "true",
+        // one file
+        "/p:PublishSingleFile=true",
+        // trim unused assemblies
+        "/p:PublishTrimmed=true",
+        // enable ready to run compilation
+        "/p:PublishReadyToRun=true",
+        // no debug symbols
+        "/p:DebugType=None",
+        // no pdb files
+        "/p:DebugSymbols=false",
+        
+      ],
+      "problemMatcher": [
+        "$msCompile"
+      ]
+    },
+    {
+      "label": "publish server",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "publish",
+        "${workspaceFolder}/src/TP3.Server/TP3.Server.csproj",
+        "-c",
+        "Release",
+        "-o",
+        "${workspaceFolder}/publish/TP3.Server",
+        "--self-contained",
+        "true",
+        // one file
+        "/p:PublishSingleFile=true",
+        // trim unused assemblies
+        "/p:PublishTrimmed=true",
+        // enable ready to run compilation
+        "/p:PublishReadyToRun=true",
+        // no debug symbols
+        "/p:DebugType=None",
+        // no pdb files
+        "/p:DebugSymbols=false"
+      ],
+      "problemMatcher": [
+        "$msCompile"
+      ]
     }
   ]
 }

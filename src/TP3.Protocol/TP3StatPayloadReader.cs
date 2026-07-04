@@ -19,7 +19,8 @@ public sealed class TP3StatPayloadStreamReader
 
         foreach (var payload in EnumerateRootObjects(this.buffer))
         {
-            var stat = JsonSerializer.Deserialize<TP3StatPayload>(payload, TP3StatPayloadExtensions.JsonOptions);
+            var stat = 
+                TP3StatPayloadExtensions.DeserializeFromJson(payload);
             if (stat != null)
             {
                 values.Add(stat);
