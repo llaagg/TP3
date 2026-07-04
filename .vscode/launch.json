@@ -52,15 +52,39 @@
       ],
       "cwd": "${workspaceFolder}/src/TP3.CLI",
       "console": "integratedTerminal",
-      "stopAtEntry": false
+      "stopAtEntry": false,
+    },
+    {
+      "name": "GUI",
+      "type": "coreclr",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/src/TP3.GUI",
+      "preLaunchTask": "build GUI",
+      "program": "${workspaceFolder}/src/TP3.GUI/bin/Debug/net10.0-windows10.0.19041.0/win-x64/TP3.GUI.exe",
     }
   ],
   "compounds": [
     {
-      "name": "Compound",
+      "name": "Server & GUI",
+      "configurations": [ "Server", "GUI"],
+      "stopAll": true,
+      "preLaunchTask": "build solution with GUI",
+      "presentation": {
+        "hidden": false,
+        "group": "Server",
+        "order": 1
+      }
+    },
+    {
+      "name": "Server & List",
       "configurations": [ "Server", "CLI - LIST"],
       "stopAll": true,
-      "preLaunchTask": "build solution"
+      "preLaunchTask": "build solution",
+      "presentation": {
+        "hidden": false,
+        "group": "Server",
+        "order": 1
+      }
     }
   ]
 }

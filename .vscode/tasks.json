@@ -30,6 +30,22 @@
       "problemMatcher": "$msCompile"
     },
     {
+      "label": "build GUI",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/TP3.GUI/TP3.GUI.csproj",
+        "-f",
+        "net10.0-windows10.0.19041.0"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
       "label": "build solution",
       "type": "shell",
       "command": "dotnet",

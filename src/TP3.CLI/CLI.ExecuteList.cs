@@ -70,7 +70,12 @@ public static partial class CLI
         }).ConfigureAwait(false);
         openResponse.ThrowIfError();
 
-        foreach (var item in ipcClient.TReadOnADirectory(tag, logger))
+        if(openResponse?.Tag is null)
+        {
+            throw new InvalidOperationException("Failed to open directory for listing.");
+        }
+
+        foreach (var item in ipcClient.TReadOnADirectory(openResponse.Tag, logger))
         {
             Console.WriteLine($"* {item.Name} (Type: {item.Info.NodeType})");
         }
@@ -97,7 +102,7 @@ public static partial class CLI
             var messsgae = ipcClient.SendAndWaitOne(logger, readRequest).Result;
             messsgae.ThrowIfError();
 
-            yield return messsgae.ReadResponse;
+            yield return messsgae!.ReadResponse;
             var count = messsgae.ReadResponse.Data.Count();
 
             if (count == 0 || count < maxbytes)
