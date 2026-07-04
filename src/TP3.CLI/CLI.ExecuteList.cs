@@ -78,19 +78,6 @@ public static partial class CLI
         await ipcClient.DisconnectAsync().ConfigureAwait(false);
     }
 
-    private static async Task<TP3Message> ListFolder(ILogger logger, TP3Client ipcClient, string tag)
-    {
-        var listResponse = await ipcClient.SendAndWaitOne(logger, new TP3Message()
-        {
-            Tag = tag,
-            ReadRequest = new TP3ReadRequest()
-            {
-            }
-        }).ConfigureAwait(false);
-        listResponse.ThrowIfError();
-        return listResponse;
-    }
-
     private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this TP3Client ipcClient, string tag, ILogger logger)
     {
         var offset = 0UL;
