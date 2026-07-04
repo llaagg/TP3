@@ -1,4 +1,6 @@
-﻿namespace TP3.GUI;
+﻿using TP3.GUI.Common.Controls;
+
+namespace TP3.GUI;
 
 public partial class MainPage : ContentPage
 {
@@ -8,26 +10,9 @@ public partial class MainPage : ContentPage
 
 	public MainPage()
 	{
-		//InitializeComponent();
+		var c = new Connection();
 
-		PanelContent = new VerticalStackLayout
-		{
-			Spacing = 10
-		};
-
-		// 2. Create default panel elements
-		Label panelHeader = new Label
-		{
-			Text = "Custom Panel Control",
-			FontSize = 18,
-			FontAttributes = FontAttributes.Bold,
-			TextColor = Colors.DarkSlateBlue
-		};
-
-		// Add the default header to our content layout
-		PanelContent.Children.Add(panelHeader);
-
-		this.Content = PanelContent;
+		this.Content = c;
 	}
 
 	private void OnCounterClicked(object? sender, EventArgs e)

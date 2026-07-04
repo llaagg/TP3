@@ -14,7 +14,8 @@
         "isDefault": true
       },
       "problemMatcher": "$msCompile"
-    },{
+    },
+    {
       "label": "build TP3.CLI",
       "type": "shell",
       "command": "dotnet",
@@ -38,6 +39,20 @@
       ],
       "group": {
         "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build solution with GUI",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/TP3.WithGUI.slnx"
+      ],
+      "group": {
+        "kind": "test",
         "isDefault": true
       },
       "problemMatcher": "$msCompile"
