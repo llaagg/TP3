@@ -1,10 +1,6 @@
-using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Agent;
-using TP3.Agent.Logic.Protocol;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
-using TP3.Messages;
 
 namespace TP3.Agent.Logic.Host;
 
@@ -18,13 +14,14 @@ namespace TP3.Agent.Logic.Host;
 /// I filter messages with namespaces. 
 ///    TODO: implement namespace filtering
 /// </summary>
-public class AgentHost : IDisposable
+public class AgentHost : IAgentHost, IDisposable
 {
     public readonly IAgent Me;
     private readonly IService[] services;
     private readonly ITP3Transport[]? transports;
     private readonly ILogger? logger;
     public readonly Router router;
+    public INetworkSessions NetworkSessions => new UserSessions();
 
     public AgentHost(ILogger? logger = null, IService[]? services = null, ITP3Transport[]? transports = null)
     {
@@ -51,10 +48,10 @@ public class AgentHost : IDisposable
 
             foreach (var t in transports)
             {
-                await t.Init(router);
+                await t.Init(this, router);
             }
-            
-             foreach (var service in services)
+
+            foreach (var service in services)
             {
                 logger?.LogInformation("Initializing service: {ServiceName}", service.GetType().Name);
                 try
@@ -65,6 +62,9 @@ public class AgentHost : IDisposable
                 {
                     logger?.LogError(ex, "Failed to initialize service: {ServiceName}", service.GetType().Name);
                 }
+
+                // let's add just another one
+                await Me.AddService(new AgentService(this, logger, this.NetworkSessions));
             }
         }
     }
@@ -72,7 +72,7 @@ public class AgentHost : IDisposable
     public async Task Start()
     {
         logger?.LogInformation("Starting agent host.");
-       
+
         if (transports == null || transports.Length == 0)
         {
             logger?.LogWarning("No transports configured for AgentHost.");
@@ -111,5 +111,29 @@ public class AgentHost : IDisposable
                 t.Stop();
             }
         }
+    }
+}
+
+internal class AgentService : IService
+{
+    private AgentHost agentHost;
+    private ILogger? logger;
+    private INetworkSessions networkSessions;
+
+    public AgentService(AgentHost agentHost, ILogger? logger, INetworkSessions networkSessions)
+    {
+        this.agentHost = agentHost;
+        this.logger = logger;
+        this.networkSessions = networkSessions;
+    }
+
+    public INode State => new StateNode(networkSessions);
+
+    public INode Control => null!;
+
+    public INode Events => null!;
+
+    public async Task Init(IAgent me)
+    {
     }
 }

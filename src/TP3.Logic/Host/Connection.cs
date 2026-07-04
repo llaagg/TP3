@@ -9,5 +9,5 @@ public class Connection
     /// <summary>
     /// tags to pointers
     /// </summary>
-    public Dictionary<string, Pointer> Pointers { get; set; } = new Dictionary<string, Pointer>();    
+    public Dictionary<string, IPointer> Pointers { get; set; } = new Dictionary<string, IPointer>();    
 }

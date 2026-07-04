@@ -1,7 +1,5 @@
-﻿using System.Linq;
-using Google.Protobuf;
+﻿using Google.Protobuf;
 using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
 
@@ -68,7 +66,8 @@ public class Agent : IAgent
             return;
         }
 
-        try{
+        try
+        {
             await MainLoop(incomingTransport, request).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -83,65 +82,83 @@ public class Agent : IAgent
         switch (request.PayloadCase)
         {
             case TP3Message.PayloadOneofCase.WalkRequest:
-                {
-                    var tag = request.Tag;
-                    var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tag);
-
-                    var nodes = await walker.WalkAsync(request.WalkRequest, pointer.Node).ConfigureAwait(false);
-
-                    pointer.Node = nodes.LastOrDefault() ?? pointer.Node;
-
-                    var response = new TP3WalkResponse();
-                    response.Infos.Add(nodes.Select(ToNodeInfo));
-
-                    await router.Respond(this, CreateMessage(tag, m => m.WalkResponse = response), incomingTransport);
+                    await Walk(incomingTransport, request).ConfigureAwait(false);
                     break;
-                }
             case TP3Message.PayloadOneofCase.ReadRequest:
-                {
-                    var tag = request.Tag;
-                    var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tag);
-
-                    if (node == null)
-                    {
-                        await router.Respond(this, CreateErrorMessage(tag, "Node not found."), incomingTransport);
-                    }
-                    else
-                    {
-                        await ReadDataAndSend(request.ReadRequest, tag, incomingTransport);
-                    }
+                    await Read(incomingTransport, request).ConfigureAwait(false);
                     break;
-                }
             case TP3Message.PayloadOneofCase.AttachRequest:
-                {
-                    var tag = request.Tag;
-                    var response = await AttachTagToConnectionAndGetRootGiq(incomingTransport, tag, request.AttachRequest);
-
-                    await router.Respond(this, CreateMessage(tag, m => m.AttachResponse = response), incomingTransport);
+                    await Attach(incomingTransport, request);
                     break;
-                }
             case TP3Message.PayloadOneofCase.OpenRequest:
-                {
-                    var tag = request.Tag;
-                    var response = await OpenStream(incomingTransport, tag, request.OpenRequest);
-
-                    await router.Respond(this, CreateMessage(tag, m => m.OpenResponse = response), incomingTransport);
+                    await Open(incomingTransport, request); 
                     break;
-                }
             case TP3Message.PayloadOneofCase.ClunkRequest:
-                {
-                    var tag = request.Tag;
-                    var response = Clunk(incomingTransport, tag, request.ClunkRequest);
-
-                    await router.Respond(this, CreateMessage(tag, m => m.ClunkResponse = response), incomingTransport);
+                    await Clunk(incomingTransport, request);
                     break;
-                }
             default:
-                {
-                    await router.Respond(this, CreateErrorMessage(request.Tag, $"Unhandled TP3 message: {request.AttachRequest}"), incomingTransport);
+                    await Unknown(incomingTransport, request);
                     break;
-                }
         }
+    }
+
+    private async Task Unknown(INetworkPipe incomingTransport, TP3Message request)
+    {
+        await router.Respond(this, CreateErrorMessage(request.Tag, $"Unhandled TP3 message: {request.AttachRequest}"), incomingTransport);
+    }
+
+    private async Task Clunk(INetworkPipe incomingTransport, TP3Message request)
+    {
+        var tag = request.Tag;
+        var response = Clunk(incomingTransport, tag, request.ClunkRequest);
+
+        await router.Respond(this, CreateMessage(tag, m => m.ClunkResponse = response), incomingTransport);
+    }
+
+    private async Task Open(INetworkPipe incomingTransport, TP3Message request)
+    {
+        var tag = request.Tag;
+        var response = await OpenStream(incomingTransport, tag, request.OpenRequest);
+
+        await router.Respond(this, CreateMessage(tag, m => m.OpenResponse = response), incomingTransport);
+    }
+
+    private async Task Attach(INetworkPipe incomingTransport, TP3Message request)
+    {
+        var tag = request.Tag;
+        var response = await AttachTagToConnectionAndGetRootGiq(incomingTransport, tag, request.AttachRequest);
+
+        await router.Respond(this, CreateMessage(tag, m => m.AttachResponse = response), incomingTransport);
+    }
+
+    private async Task Read(INetworkPipe incomingTransport, TP3Message request)
+    {
+        var tag = request.Tag;
+        var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tag);
+
+        if (node == null)
+        {
+            await router.Respond(this, CreateErrorMessage(tag, "Node not found."), incomingTransport);
+        }
+        else
+        {
+            await ReadDataAndSend(request.ReadRequest, tag, incomingTransport);
+        }
+    }
+
+    private async Task Walk(INetworkPipe incomingTransport, TP3Message request)
+    {
+        var tag = request.Tag;
+        var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tag);
+
+        var nodes = await walker.WalkAsync(request.WalkRequest, pointer.Node).ConfigureAwait(false);
+
+        pointer.Node = nodes.LastOrDefault() ?? pointer.Node;
+
+        var response = new TP3WalkResponse();
+        response.Infos.Add(nodes.Select(ToNodeInfo));
+
+        await router.Respond(this, CreateMessage(tag, m => m.WalkResponse = response), incomingTransport);
     }
 
     private TP3ClunkResponse Clunk(INetworkPipe incomingTransport, string tag, TP3ClunkRequest tP3ClunkRequest)
@@ -236,7 +253,7 @@ public class Agent : IAgent
         return message;
     }
 
-    private static TP3Message CreateErrorMessage(string tag, string error, params string []args)
+    private static TP3Message CreateErrorMessage(string tag, string error, params string[] args)
     {
         return new TP3Message
         {
