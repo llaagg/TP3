@@ -68,7 +68,7 @@ public sealed class IpcClient
         return Task.CompletedTask;
     }
 
-    internal async IAsyncEnumerable<TP3Message> ListenAsync()
+    public async IAsyncEnumerable<TP3Message> ListenAsync()
     {
         EnsureConnected();
 

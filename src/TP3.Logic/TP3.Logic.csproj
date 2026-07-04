@@ -5,6 +5,10 @@
     <ProjectReference Include="..\TP3.Interfaces\TP3.Interfaces.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TP3.Protocol\TP3.Protocol.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
