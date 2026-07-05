@@ -98,36 +98,3 @@ class SessionNode : INode
         return new TP3Stream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes($"Session: {connection1.Key}"))); 
     }
 }
-
-
-class StateNode : INode
-{
-    private INetworkSessions userSessions;
-
-    public StateNode(INetworkSessions userSessions)
-    {
-        this.userSessions = userSessions;
-    }
-
-    public NodeType NodeType => NodeType.Directory;
-
-    public string Id => "UserSessionsStateNode";
-
-    public IEnumerable<INode>? Children
-    {
-        get
-        {
-            foreach (var connection in (userSessions as UserSessions).Connections)
-            {
-                yield return new SessionNode(connection);
-            }
-        }
-    }
-
-    public string Name => throw new NotImplementedException();
-
-    public Task<ITP3DataStream?> Get()
-    {
-        return Task.FromResult<ITP3DataStream?>(null);
-    }
-}
