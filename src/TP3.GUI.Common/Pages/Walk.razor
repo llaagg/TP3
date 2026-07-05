@@ -18,9 +18,11 @@
 
     override protected async Task OnInitializedAsync()
     {
-        var path = folder == null ? "/" : folder;
+        // let's open path
+        var tag = await TP3Client.NewSession(folder);
+
         await TP3Client.ListFolder(
-            path,
+            tag,
             async (response) =>
         {
             if (response != null)

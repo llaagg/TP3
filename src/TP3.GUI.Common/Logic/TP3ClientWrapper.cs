@@ -28,17 +28,56 @@ public class TP3ClientWrapper
 
     public async Task Connect()
     {
+        // get hostname and user name
+        var hostname = System.Net.Dns.GetHostName();
+        var username = Environment.UserName;
+
         try
         {
             this.UpdateStatus("Connecting", "Attempting to connect to IPC server...");
             await ipcClient.ConnectAsync();
+            // let's attach and get the root of all
             this.UpdateStatus("Connected", "Successfully connected to IPC server.");
+            await ipcClient.SendAndWaitOne(new TP3Message()
+            {
+                Tag = "tp3-" + username + "@" + hostname,
+                AttachRequest = new TP3AttachRequest()
+            }, logger).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             logger?.LogError(ex, "Failed to connect to IPC server.");
             this.UpdateStatus("Disconnected", $"Failed to connect to IPC server: {ex.Message}");
         }
+    }
+
+    public async Task<string> NewSession(params string[] path)
+    {
+        //random tag fynny sounds using mix of wowels and consonants
+        string tag = GenerateRandomTag(8);
+
+        var walkReqeust = new TP3WalkRequest()
+        {
+            NewTag = tag,
+        };
+
+        walkReqeust.Path.AddRange(path);
+
+        await ipcClient.SendAndWaitOne(new TP3Message()
+        {
+            Tag = tag,
+            WalkRequest = walkReqeust
+        }, logger);
+
+        return tag;
+    }
+
+    private string GenerateRandomTag(int v)
+    {
+        var random = new Random();
+        const string chars = "abcdefghijklmnopqrstuvwxyz";
+        return new string(Enumerable.Repeat(chars, v)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 
     private void UpdateStatus(string state, string message)
