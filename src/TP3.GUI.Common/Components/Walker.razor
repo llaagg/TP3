@@ -6,10 +6,10 @@
         if (item.Info.NodeType == TP3.Messages.NodeType.Directory)
         {
             <li class="list-group-item d-flex align-items-center justify-content-between">
-                <a class="text-decoration-none fw-semibold" href="@GetFolderUrl(item.Name)">
+                <button class="text-decoration-none fw-semibold" @onclick="() => navigate(item)">
                     <span class="me-2">@GetIcon(item)</span>
                     @item.Name
-                </a>
+                </button>
                 <span class="badge text-bg-secondary">folder</span>
             </li>
         }
@@ -30,9 +30,34 @@
     [Parameter] 
     public string? Folder { get; set; }
 
+
+
     private string[] currentPath = Array.Empty<string>();
 
     List<TP3.Protocol.TP3StatPayload> folderContents = new List<TP3.Protocol.TP3StatPayload>();
+
+    async Task navigate(TP3.Protocol.TP3StatPayload item)
+    {
+        currentPath = currentPath.Append(item.Name).ToArray();
+        this.folderContents.Clear();
+        await load(currentPath.ToArray());
+    }
+
+    async Task load(IList<string> path)
+    {
+        var ourRootSesion = await TP3Client.NewSession(path.ToArray());
+
+         await TP3Client.ListFolder(
+            ourRootSesion,
+            async (response) =>
+        {
+            if (response != null)
+            {
+                folderContents.Add(response);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+    }
 
     override protected async Task OnInitializedAsync()
     {
@@ -41,20 +66,8 @@
             : Uri.UnescapeDataString(Folder)
                 .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        // let's open path
-        var tag = await TP3Client.NewSession(currentPath);
-
-        await TP3Client.ListFolder(
-            tag,
-            async (response) =>
-        {
-            if (response != null)
-            {
-                Console.WriteLine($"Received response: {response}");
-                folderContents.Add(response);
-                await InvokeAsync(StateHasChanged);
-            }
-        });
+        await load(this.currentPath);
+       
     }
 
     private string GetFolderUrl(string folderName)
