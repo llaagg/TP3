@@ -67,6 +67,7 @@ namespace TP3.Tests.Intergration
             };
         }
 
+        
 
         [Fact]
         public async Task AgentHost_StartsAndStopsSuccessfully()

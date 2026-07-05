@@ -14,6 +14,25 @@ namespace TP3.Tests.Protocol
     {
 
         [Fact]
+        public async Task When_offestAboveTheLastReturn0()
+        {
+            var rootNode = TP3Helpers.SetupNode("root", NodeType.Directory, new List<INode>
+            {
+                TP3Helpers.SetupNode("file1.txt", NodeType.File),
+                TP3Helpers.SetupNode("file2.txt", NodeType.File),
+                TP3Helpers.SetupNode("file3.txt", NodeType.File)
+            });
+
+            var sut = new TP3DirectoryStreamData(rootNode);
+            await sut.Open();
+
+            // Offset is above the number of available directory entries.
+            var actualBytes = await sut.Read(offset: 999, maxCount: 16 * 1024);
+
+            Assert.Empty(actualBytes);
+        }
+
+        [Fact]
         public async Task Nodes_IntoResponse2()
         {
             // ARRANGE

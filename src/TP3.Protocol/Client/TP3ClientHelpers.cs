@@ -71,7 +71,6 @@ public static class TP3ClientHelpers
                 throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
             }
 
-            yield return message!.ReadResponse;
             var count = message.ReadResponse.Data.Count();
 
             if (count == 0 || count < maxBytes)
@@ -79,6 +78,9 @@ public static class TP3ClientHelpers
                 break;
             }
             offset += (ulong)count;
+
+            yield return message!.ReadResponse;
+
         }
         yield break;
     }

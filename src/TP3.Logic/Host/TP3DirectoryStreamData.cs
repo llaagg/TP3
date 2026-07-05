@@ -35,18 +35,18 @@ public class TP3DirectoryStreamData : ITP3DataStream
     }
 
 
-    ulong defaultMaxCount = 16 * 1024; // default max count
+    private const ulong DefaultMaxCount = 16 * 1024;
 
-    public async Task<byte[]> Read(ulong offset, ulong maxCount)
+    public Task<byte[]> Read(ulong offset, ulong maxCount)
     {
-        if(enumerator == null)
+        if (enumerator == null)
         {
             throw new InvalidOperationException("Stream is not open. Call Open() before reading.");
         }
 
-        if(maxCount == 0)
+        if (maxCount == 0)
         {
-            maxCount = defaultMaxCount; 
+            maxCount = DefaultMaxCount;
         }
 
         // i will try to put here serilizez folders from node children and return them as TP3Stat one after another one,
@@ -58,22 +58,33 @@ public class TP3DirectoryStreamData : ITP3DataStream
         }
 
         var children = node.Children;
-        if(node.Children == null)
+        if (children == null)
         {
-            return new byte[0];
+            return Task.FromResult(Array.Empty<byte>());
         }
 
-        if(offset != _position)
+        if (offset != _position)
         {
-            // reset enumerator and skip to offset
             _position = 0;
-            this.enumerator = children!.GetEnumerator();
+            enumerator = children.GetEnumerator();
+
+            // Seek to requested offset (counted as directory entries).
+            while (_position < offset && enumerator.MoveNext())
+            {
+                _position++;
+            }
+
+            // Offset is above the end of the directory stream.
+            if (_position < offset)
+            {
+                return Task.FromResult(Array.Empty<byte>());
+            }
         }
         
         List<byte> result = new List<byte>();
         while (Convert.ToUInt64(result.Count) < maxCount)
         {
-            if (enumerator!.MoveNext())
+            if (enumerator.MoveNext())
             {
                 var child = enumerator.Current;
                 var stat = new TP3StatPayload(child);
@@ -88,7 +99,7 @@ public class TP3DirectoryStreamData : ITP3DataStream
         }
 
 
-        return result.ToArray();
+        return Task.FromResult(result.ToArray());
     }
 
     public void Close()
