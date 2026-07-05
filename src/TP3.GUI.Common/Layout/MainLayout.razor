@@ -1,4 +1,8 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.Extensions.Logging
+
+@inherits LayoutComponentBase
+
+@inject ILogger logger;
 
 <div class="page">
     <div class="sidebar">
@@ -9,9 +13,35 @@
         <div class="top-row px-4">
             <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
         </div>
-
+        
         <article class="content px-4">
             @Body
         </article>
+
     </main>
+        
+    <hr />
+    <pre>@loglines
+    </pre>
+
 </div>
+
+@code
+{
+    public string loglines {get; set;} = "";
+
+    override protected void OnInitialized()
+    {
+        var m = logger as MauiLogger;
+        if (m != null)
+        {
+            m.OnLogMessage += (logLevel, message) =>
+            {
+                string line = $"[{logLevel.ToString()}] {message}";
+                Console.WriteLine(line);
+                loglines += line + "\n";
+                StateHasChanged();
+            };
+        }
+    }
+}

@@ -15,7 +15,7 @@ public class TP3Client
     private NetworkStream? stream;
     private readonly int waitForServer;
 
-    public TP3Client(int ipcPort = 5000, ILogger? logger=null, int waitForServer=0)
+    public TP3Client(int ipcPort = 5001, ILogger? logger=null, int waitForServer=0)
     {
         this.ipcPort = ipcPort;
         this.logger = logger;

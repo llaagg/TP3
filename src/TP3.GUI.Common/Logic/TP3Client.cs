@@ -1,17 +1,40 @@
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using TP3.Messages;
 
 public class TP3Client
 {
-    public TP3Client()
-    {
-        var t = new TP3.Protocol.Client.TP3Client(1234, new Microsoft.Extensions.Logging.Abstractions.NullLogger<TP3.Protocol.Client.TP3Client>(), 5);
-    }
-}
+    private readonly TP3.Protocol.Client.TP3Client ipcClient;
+    private readonly ILogger? logger;
 
-public static class IoC
-{
-    public static void RegisterServices(this IServiceCollection services)
+    public TP3Client(ILogger? logger = null)
     {
-        services.AddSingleton<TP3Client>();
-    }        
+        this.logger = logger;
+        ipcClient = new TP3.Protocol.Client.TP3Client();
+    }
+
+    public async Task Connect()
+    {
+        await ipcClient.ConnectAsync();
+    }
+
+    public async Task<IEnumerable<TP3.Protocol.TP3StatPayload>> ListenForResponses()
+    {
+        var attachRequest = new TP3Message()
+        {
+            Tag = Guid.NewGuid().ToString("N").Substring(0, 8),
+            AttachRequest = new TP3AttachRequest()
+        };
+        var attachResponse = await this.ipcClient.SendAndWaitOne(attachRequest, logger).ConfigureAwait(false);
+        if(attachResponse is null)
+        {
+            throw new InvalidOperationException("Received null response from IPC server.");
+        }
+        if(attachResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+        {
+            throw new InvalidOperationException($"Error received from IPC server: {attachResponse.Error?.Message}");
+        }
+
+        return null;
+    }
+
 }

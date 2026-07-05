@@ -30,18 +30,18 @@ public static partial class CLI
         {
             walkRequest.Path.Add(path);
         }
-        var walkResponse1 = await ipcClient.SendAndWaitOne(logger, new TP3Message()
+        var walkResponse1 = await ipcClient.SendAndWaitOne(new TP3Message()
         {
             Tag = tag,
             WalkRequest = walkRequest
-        }).ConfigureAwait(false);
+        }, logger).ConfigureAwait(false);
         walkResponse1.ThrowIfError();
 
-        var openResponse = await ipcClient.SendAndWaitOne(logger, new TP3Message()
+        var openResponse = await ipcClient.SendAndWaitOne(new TP3Message()
         {
             Tag = tag,
             OpenRequest = new TP3OpenRequest()
-        }).ConfigureAwait(false);
+        }, logger).ConfigureAwait(false);
         openResponse.ThrowIfError();
 
         if(openResponse?.Tag is null)
@@ -72,19 +72,11 @@ public static partial class CLI
             Tag = Guid.NewGuid().ToString("N").Substring(0, 8),
             AttachRequest = new TP3AttachRequest()
         };
-        var attachResponse = await SendAndWaitOne(ipcClient, logger, attachRequest).ConfigureAwait(false);
+        var attachResponse = await ipcClient.SendAndWaitOne(attachRequest, logger).ConfigureAwait(false);
 
         return attachResponse;
     }
 
-    private static async Task<TP3Message?> SendAndWaitOne(this TP3Client ipcClient, ILogger logger, TP3Message request)
-    {
-        logger.LogInformation("Sending request to IPC server: {Request}", request);
-        await ipcClient.SendMessageAsync(request).ConfigureAwait(false);
-        var response =  await ReceiveSingleResponse(ipcClient, logger);
-        
-        return response;
-    }
 
     public static void ThrowIfError(this TP3Message? message)
     {
@@ -114,7 +106,7 @@ public static partial class CLI
                 }
             };
             
-            var messsgae = ipcClient.SendAndWaitOne(logger, readRequest).Result;
+            var messsgae = ipcClient.SendAndWaitOne(readRequest, logger).Result;
             messsgae.ThrowIfError();
 
             yield return messsgae!.ReadResponse;
