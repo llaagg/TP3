@@ -1,0 +1,17 @@
+@inject TP3ClientWrapper client
+
+<div class="panel panel-warning text-center text-white">
+    @(client.Status)
+</div>
+
+@code
+{
+    override protected void OnInitialized()
+    {
+        // start sign in process
+        client.StatusChanged += (sender, e) =>
+        {
+            StateHasChanged();
+        };
+    }
+}

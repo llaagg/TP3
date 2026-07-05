@@ -1,0 +1,10 @@
+@page "/walk"
+
+@inject TP3ClientWrapper TP3Client
+
+@code {
+    override protected void OnInitialized()
+    {
+        var folders = TP3Client.ListenForResponses();
+    }
+}

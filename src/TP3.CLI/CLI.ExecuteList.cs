@@ -90,55 +90,9 @@ public static partial class CLI
         }
     }
 
-    private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this TP3Client ipcClient, string tag, ILogger logger)
-    {
-        var offset = 0UL;
-        var maxbytes = 10000U;
-        while (true)
-        {
-            var readRequest = new TP3Message()
-            {
-                Tag = tag,
-                ReadRequest = new TP3ReadRequest()
-                {
-                    Offset = offset,
-                    MaxBytes = maxbytes
-                }
-            };
-            
-            var messsgae = ipcClient.SendAndWaitOne(readRequest, logger).Result;
-            messsgae.ThrowIfError();
-
-            yield return messsgae!.ReadResponse;
-            var count = messsgae.ReadResponse.Data.Count();
-
-            if (count == 0 || count < maxbytes)
-            {
-                break;
-            }
-            offset += (ulong)count;
-        }
-        yield break;
-    }
+    
 
 
-    private static IEnumerable<TP3StatPayload> TReadOnADirectory(this TP3Client pipe, string tag, ILogger logger)
-    {
-        IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(tag, logger);
-        TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
-
-        // // diagnostic: read all data and deserialize to TP3StatPayload
-        // StreamReader reader = new StreamReader(stream);
-        // var ms = new MemoryStream();
-        // stream.CopyTo(ms);
-        // ms.Position = 0;
-
-        // // what do we hwve there...
-        // string json = new StreamReader(ms).ReadToEnd();
-        // ms.Position = 0;
-
-        var stats = TP3StatPayloadExtensions.Deserilize(stream);
-        return stats;
-    }
+    
 
 }

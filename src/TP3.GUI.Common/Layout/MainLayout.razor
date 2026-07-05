@@ -1,8 +1,10 @@
 ﻿@using Microsoft.Extensions.Logging
+@using TP3.GUI.Common.Components
 
 @inherits LayoutComponentBase
 
 @inject ILogger logger;
+@inject TP3ClientWrapper client;
 
 <div class="page">
     <div class="sidebar">
@@ -36,6 +38,12 @@
 
     override protected void OnInitialized()
     {
+        // start sign in process
+        client.StatusChanged += (sender, e) =>
+        {
+            StateHasChanged();
+        };
+
         var m = logger as MauiLogger;
         if (m != null)
         {

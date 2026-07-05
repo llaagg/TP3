@@ -1,6 +1,7 @@
 ﻿@page "/"
 
-@inject TP3Client TP3Client
+@inject TP3ClientWrapper TP3Client
+@inject NavigationManager NavigationManager
 
 <pre class="code">
 TP3 - 
@@ -14,10 +15,13 @@ TP3 -
 {
     private async Task OnClick()
     {
+        
+
         try{
             await TP3Client.Connect();
             var responses = await TP3Client.ListenForResponses();
-
+            NavigationManager.NavigateTo("/walk");
+            
         }catch(Exception ex)
         {
             Console.WriteLine($"Error connecting to IPC server: {ex.Message}");
