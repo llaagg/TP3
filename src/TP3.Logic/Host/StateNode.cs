@@ -3,10 +3,8 @@ using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
 
-class StateNode : INode
+public class StateNode : INode
 {
-    private INetworkSessions userSessions;
-
     public StateNode(INetworkSessions userSessions)
     {
         this.connectionsNode = new ConnectionsNode(userSessions);
@@ -34,7 +32,7 @@ class StateNode : INode
     }
 }
 
-internal class ConnectionsNode : INode
+public class ConnectionsNode : INode
 {
     private INetworkSessions userSessions;
 
@@ -53,7 +51,7 @@ internal class ConnectionsNode : INode
 
     private IEnumerable<INode>? GetChildern()
     {
-        var userSessions = this.userSessions as UserSessions;
+        var userSessions = this.userSessions as NetworkSessions;
             foreach (var connection in userSessions!.Connections)
             {
                 var sessionNode = new SessionNode(connection);

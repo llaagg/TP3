@@ -110,7 +110,7 @@ public class Agent : IAgent
     private async Task Clunk(INetworkPipe incomingTransport, TP3Message request)
     {
         var tag = request.Tag;
-        var response = Clunk(incomingTransport, tag, request.ClunkRequest);
+        var response = await Clunk(incomingTransport, tag, request.ClunkRequest);
 
         await router.Respond(this, CreateMessage(tag, m => m.ClunkResponse = response), incomingTransport);
     }
@@ -149,8 +149,17 @@ public class Agent : IAgent
     private async Task Walk(INetworkPipe incomingTransport, TP3Message request)
     {
         var tag = request.Tag;
-        var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tag);
 
+        // if we have new tag, we need to create a new pointer for it, by cloening the current node and attaching it to the new tag
+        if (!string.IsNullOrEmpty(request.WalkRequest.NewTag))
+        {
+            var oldPointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tag);
+            var newTag = request.WalkRequest.NewTag;
+            incomingTransport.TP3Transport.AttachTag(newTag, oldPointer.Node, incomingTransport);
+            tag = newTag;
+        }
+
+        var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tag);
         var nodes = await walker.WalkAsync(request.WalkRequest, pointer.Node).ConfigureAwait(false);
 
         pointer.Node = nodes.LastOrDefault() ?? pointer.Node;
@@ -161,7 +170,7 @@ public class Agent : IAgent
         await router.Respond(this, CreateMessage(tag, m => m.WalkResponse = response), incomingTransport);
     }
 
-    private TP3ClunkResponse Clunk(INetworkPipe incomingTransport, string tag, TP3ClunkRequest tP3ClunkRequest)
+    private async Task<TP3ClunkResponse> Clunk(INetworkPipe incomingTransport, string tag, TP3ClunkRequest tP3ClunkRequest)
     {
         var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tag);
         if (pointer != null)
@@ -179,6 +188,8 @@ public class Agent : IAgent
                 pointer.Data = null;
             }
         }
+
+        await incomingTransport.TP3Transport.ClosePointer(incomingTransport, tag);
 
         var response = new TP3ClunkResponse();
         return response;

@@ -50,9 +50,12 @@ public class TP3ClientWrapper
 
     public event StatusChangedEventHandler? StatusChanged;
 
-    public async Task ListFolder(string path, Func<TP3.Protocol.TP3StatPayload, Task> folderHandler)
+
+    public async Task Open(string? tag = null)
     {
-        var newtag =  Guid.NewGuid().ToString("N").Substring(0, 8);
+        // short gui cut for open and attach
+        
+        string newtag = string.IsNullOrWhiteSpace(tag) ?  Guid.NewGuid().ToString() : tag;
 
         var attachRequest = new TP3Message()
         {
@@ -72,11 +75,15 @@ public class TP3ClientWrapper
         {
             throw new InvalidOperationException($"Unexpected response type: {attachResponse.PayloadCase}");
         }
+    }
 
-
+    public async Task ListFolder(
+            string tag,
+            Func<TP3.Protocol.TP3StatPayload, Task> folderHandler)
+    {
         var openResponse = await ipcClient.SendAndWaitOne(new TP3Message()
         {
-            Tag = newtag,
+            Tag = tag,
             OpenRequest = new TP3OpenRequest()
         }, logger).ConfigureAwait(false);
 

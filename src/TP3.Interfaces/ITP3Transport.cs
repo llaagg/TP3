@@ -18,4 +18,5 @@ public interface ITP3Transport : IDisposable
     Task<ITP3DataStream> GetData(INetworkPipe incomingTransport, string tag);
     IPointer GetPointer(INetworkPipe incomingTransport, string tag);
     Task Route(INetworkPipe session, TP3Message message);
+    Task ClosePointer(INetworkPipe incomingTransport, string tag);
 }

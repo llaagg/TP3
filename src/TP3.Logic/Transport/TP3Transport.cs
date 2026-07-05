@@ -112,6 +112,12 @@ public class TP3Transport : ITP3Transport
         return pointer;
     }
 
+
+    public async Task ClosePointer(INetworkPipe incomingTransport, string tag)
+    {
+        this.agentHost.NetworkSessions.CloseSession(incomingTransport, tag);
+    }
+
     public Task Route(INetworkPipe session, TP3Message message)
     {
         return this.router!.Route(session, message);

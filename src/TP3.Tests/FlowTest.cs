@@ -42,9 +42,10 @@ namespace TP3.Tests.Intergration
             };
         }
 
-        private static TP3Message WalkMessage(string tag, params string[] segments)
+        private static TP3Message WalkMessage(string tag, string newTag, params string[] segments)
         {
             var request = new TP3WalkRequest();
+            request.NewTag = newTag;
             request.Path.Add(segments);
 
             return new TP3Message
@@ -102,7 +103,6 @@ namespace TP3.Tests.Intergration
 
             await sut.Init();
 
-            string tag = "test-tag";
 
 #warning TODO: auth
 
@@ -122,38 +122,27 @@ namespace TP3.Tests.Intergration
             //    -> 
             // when message is incoming from network trasnport, router is asked to handle it.
             // we can use that to prtend we are some user and send a message to the agent host, and see if it is routed correctly.
-            await sut.router.Route(pipe, AttachMessage(tag));                                      /// Tattach (tag)
+            await sut.router.Route(pipe, AttachMessage("tag1"));                                      /// Tattach (tag)
             Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, lastMessageSent.PayloadCase);                                           ///                   Rattach
             var lastAttachResponse = lastMessageSent.AttachResponse;                               ///                   Rattach
             Assert.NotNull(lastAttachResponse);
-            Assert.Equal(tag, lastMessageSent.Tag);                                                ///                   tag
+            Assert.Equal("tag1", lastMessageSent.Tag);                                                ///                   tag
             Assert.NotNull(lastAttachResponse.Info);
             Assert.NotNull(lastAttachResponse.Info.Id);                                           ///                   quid
-            var pointer = sut.NetworkSessions.GetPointer(pipe, tag);
-            //var pointer = transport..NetwokSessions.GetPointer(pipe, tag);
-            //Assert.NotNull(pointer);
-            //Assert.NotNull(pointer!.Node);
-            //Assert.Null(pointer!.Data);
+            var pointer = sut.NetworkSessions.GetPointer(pipe, "tag1");
+            Assert.NotNull(pointer);
+            Assert.NotNull(pointer!.Node);
+            Assert.Null(pointer!.Data);
 
-
-#warning TODO: what if tag it's taken?
-
-            // // 2. lets walk to root
-            // await sut.router.Route(pipe, new TP3WalkRequest(tag));
-            // Assert.IsType<TP3WalkResponse>(lastMessageSent);
-            // var lastWalkResponse = lastMessageSent as TP3WalkResponse;
-            // Assert.Single(lastWalkResponse!.Infos);
-            // Assert.Equal(tag, lastWalkResponse!.Tag);
-            // // after the walk there should be a pointer setup for this user
-            // var pointer = transport.NetwokSessions.GetPointer(pipe, tag);
-            // Assert.NotNull(pointer);
-            // Assert.NotNull(pointer!.Node);
-            // Assert.Null(pointer!.Data);
-
+            // let' do walk with new fid, so we cn rerefenrce root fid later again
+            await sut.router.Route(pipe, WalkMessage("tag1", "tag2"));
+            var lastWalkResponse = lastMessageSent.WalkResponse;
+            Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
+            
             // 3. opens the object
             //    Topen(fid, mode)
             //  -> Ropen(qid, iounit)
-            await sut.router.Route(pipe, OpenMessage(tag));
+            await sut.router.Route(pipe, OpenMessage("tag2"));
             var lastOpenResponse = lastMessageSent.OpenResponse;
             // there will be stream assigned to the pointer
             //Assert.NotNull(pointer!.Data);
@@ -162,70 +151,78 @@ namespace TP3.Tests.Intergration
             Assert.Equal(NodeType.Directory, nodeType);
 
             // 4.  lists folder (trunk)
-            List<TP3StatPayload> stats = TReadOnADirectory(pipe, sut, tag);
+            List<TP3StatPayload> stats = TReadOnADirectory(pipe, sut, "tag2");
             Assert.NotEmpty(stats);
             Assert.Equal(NodeType.Directory, stats[0].Info.NodeType);
 
             // 5. we close the file
-            await sut.router.Route(pipe, ClunkMessage(tag));
+            await sut.router.Route(pipe, ClunkMessage("tag2"));
             var lastClunkResponse = lastMessageSent.ClunkResponse;
             Assert.NotNull(lastClunkResponse);
+
+            List<string> path = new List<string>();
+            path.Add(stats[0].Name); 
 
             // 6. Client navigates to a path
             //    Twalk(fid=root, newfid=fileFid, ["usr", "bin"])
             //    -> Rwalk([qid_usr, qid_bin])
-            await sut.router.Route(pipe, WalkMessage(tag, stats[0].Name));
+            await sut.router.Route(pipe, WalkMessage("tag1", "tag2", path.ToArray()));
             var lastWalkResponse2 = lastMessageSent.WalkResponse;
             Assert.NotNull(lastWalkResponse2);
 
             // 7 we did walk let's open read
-            await sut.router.Route(pipe, OpenMessage(tag));
+            await sut.router.Route(pipe, OpenMessage("tag2"));
             var lastOpenResponse2 = lastMessageSent.OpenResponse;
             Assert.Equal(NodeType.Directory, nodeType);
 
             // 7 list current folder
-            List<TP3StatPayload> stats2 = TReadOnADirectory(pipe, sut, tag);
+            List<TP3StatPayload> stats2 = TReadOnADirectory(pipe, sut, "tag2");
             Assert.NotEmpty(stats2);
             Assert.Equal(NodeType.Directory, stats2[0].Info.NodeType);
             var firstChildName = stats2[0].Name;     
             Assert.Equal("state", firstChildName, ignoreCase: true); // we have state as in all services
+  
 
             // 8. let's go close
-            await sut.router.Route(pipe, ClunkMessage(tag));
+            await sut.router.Route(pipe, ClunkMessage("tag2"));
+
+            path.Add(firstChildName);
                         
             // 8 let's walk
-            await sut.router.Route(pipe, WalkMessage(tag, firstChildName));
+            await sut.router.Route(pipe, WalkMessage("tag1", "tag2", path.ToArray()));
             var lastWalkResponse3 = lastMessageSent.WalkResponse;
             Assert.NotNull(lastWalkResponse3);
 
             // 9 let's open
-            await sut.router.Route(pipe, OpenMessage(tag));
+            await sut.router.Route(pipe, OpenMessage("tag2"));
             var lastOpenResponse3 = lastMessageSent.OpenResponse;
             Assert.Equal(NodeType.Directory, nodeType);
 
             // 10 list current folder
-            List<TP3StatPayload> stats3 = TReadOnADirectory(pipe, sut, tag);
+            List<TP3StatPayload> stats3 = TReadOnADirectory(pipe, sut, "tag2"   );
             Assert.NotEmpty(stats3);
             Assert.Equal(NodeType.Directory, stats3[0].Info.NodeType);  
 
             // 11. let's go close
-            await sut.router.Route(pipe, ClunkMessage(tag));
+            await sut.router.Route(pipe, ClunkMessage("tag2"));
 
             // 12. let's walk to Reamde.md
-            await sut.router.Route(pipe, WalkMessage(tag, "README.md"));
+            await sut.router.Route(pipe, WalkMessage("tag1", "tag2", path[0], path[1], "README.md"));
             var lastWalkResponse4 = lastMessageSent.WalkResponse;
+            Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
             Assert.NotNull(lastWalkResponse4);
-            Assert.Single(lastWalkResponse4!.Infos!);
-            Assert.Equal(NodeType.File, lastWalkResponse4.Infos![0].NodeType);
+            Assert.Equal(3, lastWalkResponse4!.Infos!.Count);
+            Assert.Equal(NodeType.File, lastWalkResponse4.Infos![2].NodeType);
 
             // 13. let open the file
-            await sut.router.Route(pipe, OpenMessage(tag));
+            await sut.router.Route(pipe, OpenMessage("tag2"));
             var lastOpenResponse4 = lastMessageSent.OpenResponse;
+            Assert.Equal(TP3Message.PayloadOneofCase.OpenResponse, lastMessageSent.PayloadCase);
             Assert.Equal(NodeType.File, lastOpenResponse4!.Info.NodeType);
             
 
             // 14. let's read the file
-            await sut.router.Route(pipe, ReadMessage(tag, 0, 1000));
+            await sut.router.Route(pipe, ReadMessage("tag2", 0, 1000));
             var lastReadResponse = lastMessageSent.ReadResponse;
             Assert.NotNull(lastReadResponse);
             var data = lastReadResponse!.Data;

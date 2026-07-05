@@ -22,7 +22,7 @@ public class AgentHost : IAgentHost, IDisposable
     private readonly ILogger? logger;
     public readonly Router router;
 
-    private UserSessions networkSessions = new UserSessions();
+    private NetworkSessions networkSessions = new NetworkSessions();
     public INetworkSessions NetworkSessions => networkSessions;
 
     public AgentHost(ILogger? logger = null, IService[]? services = null, ITP3Transport[]? transports = null)
