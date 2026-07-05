@@ -17,6 +17,7 @@ public class TP3ClientWrapper
 {
     private readonly TP3.Protocol.Client.TP3Client ipcClient;
     private readonly ILogger? logger;
+    private string rootTag;
 
     public string Status { get; private set; } = "Idle";
 
@@ -32,6 +33,8 @@ public class TP3ClientWrapper
         var hostname = System.Net.Dns.GetHostName();
         var username = Environment.UserName;
 
+        this.rootTag = "tp3-" + username + "@" + hostname;
+
         try
         {
             this.UpdateStatus("Connecting", "Attempting to connect to IPC server...");
@@ -40,7 +43,7 @@ public class TP3ClientWrapper
             this.UpdateStatus("Connected", "Successfully connected to IPC server.");
             await ipcClient.SendAndWaitOne(new TP3Message()
             {
-                Tag = "tp3-" + username + "@" + hostname,
+                Tag = this.rootTag,
                 AttachRequest = new TP3AttachRequest()
             }, logger).ConfigureAwait(false);
         }
@@ -65,7 +68,7 @@ public class TP3ClientWrapper
 
         await ipcClient.SendAndWaitOne(new TP3Message()
         {
-            Tag = tag,
+            Tag = this.rootTag,
             WalkRequest = walkReqeust
         }, logger);
 

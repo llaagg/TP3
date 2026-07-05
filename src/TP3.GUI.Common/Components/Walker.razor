@@ -1,0 +1,72 @@
+@inject TP3ClientWrapper TP3Client
+
+<ul class="list-group list-group-flush">
+    @foreach (var item in folderContents)
+    {
+        if (item.Info.NodeType == TP3.Messages.NodeType.Directory)
+        {
+            <li class="list-group-item d-flex align-items-center justify-content-between">
+                <a class="text-decoration-none fw-semibold" href="@GetFolderUrl(item.Name)">
+                    <span class="me-2">@GetIcon(item)</span>
+                    @item.Name
+                </a>
+                <span class="badge text-bg-secondary">folder</span>
+            </li>
+        }
+        else
+        {
+            <li class="list-group-item d-flex align-items-center justify-content-between">
+                <span>
+                    <span class="me-2">@GetIcon(item)</span>
+                    @item.Name
+                </span>
+                <span class="badge text-bg-primary">file</span>
+            </li>
+        }
+    }
+</ul>
+
+@code {
+    [Parameter] 
+    public string? Folder { get; set; }
+
+    private string[] currentPath = Array.Empty<string>();
+
+    List<TP3.Protocol.TP3StatPayload> folderContents = new List<TP3.Protocol.TP3StatPayload>();
+
+    override protected async Task OnInitializedAsync()
+    {
+        currentPath = string.IsNullOrWhiteSpace(Folder)
+            ? Array.Empty<string>()
+            : Uri.UnescapeDataString(Folder)
+                .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // let's open path
+        var tag = await TP3Client.NewSession(currentPath);
+
+        await TP3Client.ListFolder(
+            tag,
+            async (response) =>
+        {
+            if (response != null)
+            {
+                Console.WriteLine($"Received response: {response}");
+                folderContents.Add(response);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
+    }
+
+    private string GetFolderUrl(string folderName)
+    {
+        var pathSegments = currentPath.Append(folderName)
+            .Select(Uri.EscapeDataString);
+
+        return "/walk/" + string.Join('/', pathSegments);
+    }
+
+    private static string GetIcon(TP3.Protocol.TP3StatPayload item)
+    {
+        return item.Info.NodeType == TP3.Messages.NodeType.Directory ? "📁" : "📄";
+    }
+}

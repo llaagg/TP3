@@ -1,36 +1,16 @@
-@page "/walk/{folder}"
+@using TP3.GUI.Common.Components
+
+@page "/walk"
+@page "/walk/{*folder}"
 
 
 @inject TP3ClientWrapper TP3Client
+@inject NavigationManager NavigationManager
 
-<ul>
-    @foreach (var item in folderContents)
-    {
-        <li>@item.Name</li>
-    }
-</ul>
+<Walker Folder="@Folder"></Walker>
 
 @code {
     [Parameter] 
-    public string folder { get; set; }
+    public string? Folder { get; set; }
 
-    List<TP3.Protocol.TP3StatPayload> folderContents = new List<TP3.Protocol.TP3StatPayload>();
-
-    override protected async Task OnInitializedAsync()
-    {
-        // let's open path
-        var tag = await TP3Client.NewSession(folder);
-
-        await TP3Client.ListFolder(
-            tag,
-            async (response) =>
-        {
-            if (response != null)
-            {
-                Console.WriteLine($"Received response: {response}");
-                folderContents.Add(response);
-                await InvokeAsync(StateHasChanged);
-            }
-        });
-    }
 }
