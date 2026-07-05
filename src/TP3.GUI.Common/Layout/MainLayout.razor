@@ -6,27 +6,22 @@
 @inject ILogger logger;
 @inject TP3ClientWrapper client;
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="container-fluid min-vh-100 px-0 bg-dark text-light" data-bs-theme="dark">
+    <div class="row g-0 min-vh-100">
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        <div class="col d-flex flex-column">
+            
+            <main class="flex-grow-1 p-3 p-lg-4 overflow-auto">
+                <div class="container-fluid px-0">
+                    @Body
+                </div>
+            </main>
+
+            <section class="border-top border-secondary-subtle bg-body-tertiary">
+                <div class="px-3 py-2 overflow-auto" style="max-height: 220px;">
+                    <LogBox />
+                </div>
+            </section>
         </div>
-
-        
-        <article class="content px-4">
-            @Body
-        </article>
-
-        <LogBox />
-    </main>
-        
+    </div>
 </div>
-
-@code
-{
-    
-}

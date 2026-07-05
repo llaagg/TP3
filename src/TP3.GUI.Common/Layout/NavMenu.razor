@@ -1,28 +1,28 @@
 ﻿@using Microsoft.AspNetCore.Components.Routing
 @using TP3.GUI.Common.Components
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">TP3.GUI.Maui</a>
-    </div>
+<div class="navbar navbar-dark px-3 py-3 border-bottom border-secondary-subtle">
+    <a class="navbar-brand fw-semibold mb-0" href="">TP3.GUI.Maui</a>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<nav class="nav nav-pills flex-column gap-1 p-3">
+    <NavLink class="nav-link d-flex align-items-center" href="" Match="NavLinkMatch.All">
+        <svg class="bi me-2" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-3.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
+        </svg>
+        Home
+    </NavLink>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="walk">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Walk
-            </NavLink>
-        </div>
-        <hr/>
+    <NavLink class="nav-link d-flex align-items-center" href="walk">
+        <svg class="bi me-2" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm-5 2.5a.5.5 0 0 0-1 0V7H5.5a.5.5 0 0 0 0 1H8v2.5a.5.5 0 0 0 1 0V8h2.5a.5.5 0 0 0 0-1H9z" />
+        </svg>
+        Walk
+    </NavLink>
+
+    <hr class="my-3 border-secondary-subtle" />
+
+    <div class="px-2">
         <ConnectionStatus></ConnectionStatus>
-
-    </nav>
-</div>
+    </div>
+</nav>

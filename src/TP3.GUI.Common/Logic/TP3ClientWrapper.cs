@@ -41,11 +41,20 @@ public class TP3ClientWrapper
             await ipcClient.ConnectAsync();
             // let's attach and get the root of all
             this.UpdateStatus("Connected", "Successfully connected to IPC server.");
-            await ipcClient.SendAndWaitOne(new TP3Message()
+            var attachResult = await ipcClient.SendAndWaitOne(new TP3Message()
             {
                 Tag = this.rootTag,
                 AttachRequest = new TP3AttachRequest()
             }, logger).ConfigureAwait(false);
+
+            if(attachResult is null)
+            {
+                throw new InvalidOperationException("Received null response from IPC server.");
+            }
+            if(attachResult.PayloadCase == TP3Message.PayloadOneofCase.Error)
+            {
+                throw new InvalidOperationException($"Error received from IPC server: {attachResult.Error?.Message}");
+            }
         }
         catch (Exception ex)
         {
