@@ -1,10 +1,34 @@
-@page "/walk"
+@page "/walk/{folder}"
+
 
 @inject TP3ClientWrapper TP3Client
 
+<ul>
+    @foreach (var item in folderContents)
+    {
+        <li>@item.Name</li>
+    }
+</ul>
+
 @code {
+    [Parameter] 
+    public string folder { get; set; }
+
+    List<TP3.Protocol.TP3StatPayload> folderContents = new List<TP3.Protocol.TP3StatPayload>();
+
     override protected async Task OnInitializedAsync()
     {
-        var folders = await TP3Client.ListenForResponses();
+        var path = folder == null ? "/" : folder;
+        await TP3Client.ListFolder(
+            path,
+            async (response) =>
+        {
+            if (response != null)
+            {
+                Console.WriteLine($"Received response: {response}");
+                folderContents.Add(response);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
     }
 }

@@ -15,14 +15,15 @@ TP3 -
 {
     private async Task OnClick()
     {
-        
 
-        try{
+        
+        try
+        {
             await TP3Client.Connect();
-            var responses = await TP3Client.ListenForResponses();
             NavigationManager.NavigateTo("/walk");
-            
-        }catch(Exception ex)
+
+        }
+        catch (Exception ex)
         {
             Console.WriteLine($"Error connecting to IPC server: {ex.Message}");
         }

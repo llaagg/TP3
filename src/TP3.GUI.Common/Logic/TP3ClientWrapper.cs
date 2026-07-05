@@ -50,7 +50,7 @@ public class TP3ClientWrapper
 
     public event StatusChangedEventHandler? StatusChanged;
 
-    public async Task<IEnumerable<TP3.Protocol.TP3StatPayload>> ListenForResponses()
+    public async Task ListFolder(string path, Func<TP3.Protocol.TP3StatPayload, Task> folderHandler)
     {
         var newtag =  Guid.NewGuid().ToString("N").Substring(0, 8);
 
@@ -85,12 +85,14 @@ public class TP3ClientWrapper
             throw new InvalidOperationException("Failed to open directory for listing.");
         }
 
-        foreach (var item in ipcClient.ReadDirectory(openResponse, logger))
-        {
-            logger?.LogInformation("Received item: {Name} - {NodeType}", item.Name, item.Info.NodeType);
-        }
 
-        return null; // Placeholder, you can return the actual list of items if needed
+        await Task.Run(async () =>
+        {
+            foreach (var response in ipcClient.ReadDirectory(openResponse, logger))
+            {
+                await folderHandler(response);
+            }
+        });
     }
 
 
