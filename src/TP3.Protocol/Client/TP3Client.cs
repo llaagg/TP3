@@ -5,17 +5,17 @@ using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Protocol;
 using TP3.Messages;
 
-namespace TP3.CLI;
+namespace TP3.Protocol.Client;
 
-public sealed class TP3Client
+public class TP3Client
 {
     private readonly int ipcPort;
-    private readonly ILogger logger;
+    private readonly ILogger? logger;
     private TcpClient? tcpClient;
     private NetworkStream? stream;
     private readonly int waitForServer;
 
-    public TP3Client(int ipcPort, ILogger logger, int waitForServer)
+    public TP3Client(int ipcPort = 5000, ILogger? logger=null, int waitForServer=0)
     {
         this.ipcPort = ipcPort;
         this.logger = logger;
@@ -24,11 +24,11 @@ public sealed class TP3Client
 
     public async Task ConnectAsync()
     {
-        logger.LogInformation("Connecting to IPC server on port {IpcPort}...", ipcPort);
+        logger?.LogInformation("Connecting to IPC server on port {IpcPort}...", ipcPort);
 
         if (tcpClient?.Connected == true)
         {
-            logger.LogDebug("IPC client is already connected.");
+            logger?.LogDebug("IPC client is already connected.");
             return;
         }
 
@@ -41,7 +41,7 @@ public sealed class TP3Client
         await connectTask.ConfigureAwait(false);
         stream = tcpClient.GetStream();
 
-        logger.LogInformation("Connected to IPC server on port {IpcPort}.", ipcPort);
+        logger?.LogInformation("Connected to IPC server on port {IpcPort}.", ipcPort);
     }
 
     public async Task SendMessageAsync(TP3Message message)
@@ -49,14 +49,14 @@ public sealed class TP3Client
         EnsureConnected();
 
         var packet = TP3Serializer.SerializeBytes(message);
-        logger.LogInformation("{Tag} Sending message to IPC server: {Message}", message.Tag, message);
+        logger?.LogInformation("{Tag} Sending message to IPC server: {Message}", message.Tag, message);
         await stream!.WriteAsync(packet.AsMemory(0, packet.Length)).ConfigureAwait(false);
         
     }
 
     public Task DisconnectAsync()
     {
-        logger.LogInformation("Disconnecting from IPC server on port {IpcPort}...", ipcPort);
+        logger?.LogInformation("Disconnecting from IPC server on port {IpcPort}...", ipcPort);
 
         stream?.Dispose();
         stream = null;
@@ -72,7 +72,7 @@ public sealed class TP3Client
     {
         EnsureConnected();
 
-        logger.LogInformation("Listening for responses from IPC server...");
+        logger?.LogInformation("Listening for responses from IPC server...");
 
         while (tcpClient?.Connected == true)
         {
@@ -83,16 +83,16 @@ public sealed class TP3Client
             }
             catch (EndOfStreamException)
             {
-                logger.LogInformation("IPC server closed the connection.");
+                logger?.LogInformation("IPC server closed the connection.");
                 break;
             }
             catch (IOException ex)
             {
-                logger.LogWarning(ex, "IPC stream closed unexpectedly.");
+                logger?.LogWarning(ex, "IPC stream closed unexpectedly.");
                 break;
             }
 
-            logger.LogInformation("Received response from IPC server: {case }", response.PayloadCase);
+            logger?.LogInformation("Received response from IPC server: {case }", response.PayloadCase);
             yield return response;
         }
     }

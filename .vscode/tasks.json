@@ -35,7 +35,7 @@
       "command": "dotnet",
       "args": [
         "build",
-        "${workspaceFolder}/src/TP3.GUI/TP3.GUI.csproj",
+        "${workspaceFolder}/src/TP3.GUI.Maui/TP3.GUI.Maui.csproj",
         "-f",
         "net10.0-windows10.0.19041.0"
       ],

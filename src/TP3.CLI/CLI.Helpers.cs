@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.Extensions.Logging;
+using TP3.Protocol.Client;
 
 namespace TP3.CLI;
 
