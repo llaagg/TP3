@@ -41,8 +41,14 @@ public static partial class CLI
         }
     }
 
-    private static async Task ExecuteList(int ipcPort, int waitForServer, string[]? path, ILogger logger)
+    private static async Task ExecuteList(int ipcPort, int waitForServer, bool enableEmoted, LogLevel logLevel, string[]? path)
     {
+        var logger = InitilizeLogger(logLevel);
+        if(enableEmoted)
+        {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+        }
+
         logger.LogInformation("Connecting to IPC server on port {IpcPort}", ipcPort);
         var ipcClient = new TP3Client(ipcPort, logger, waitForServer);
         await ipcClient.ConnectAsync();
@@ -77,7 +83,15 @@ public static partial class CLI
 
         foreach (var item in ipcClient.TReadOnADirectory(openResponse.Tag, logger))
         {
-            Console.WriteLine($"* {item.Name} (Type: {item.Info.NodeType})");
+            if(enableEmoted)
+            {
+                var empote = item.Info.NodeType == NodeType.Directory ? "📁" : "📄";
+                Console.WriteLine($"{empote} {item.Name}");
+            }
+            else
+            {
+                Console.WriteLine($"{item.Name}");
+            }
         }
 
         await ipcClient.DisconnectAsync().ConfigureAwait(false);

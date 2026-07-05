@@ -21,7 +21,9 @@ public class AgentHost : IAgentHost, IDisposable
     private readonly ITP3Transport[]? transports;
     private readonly ILogger? logger;
     public readonly Router router;
-    public INetworkSessions NetworkSessions => new UserSessions();
+
+    private UserSessions networkSessions = new UserSessions();
+    public INetworkSessions NetworkSessions => networkSessions;
 
     public AgentHost(ILogger? logger = null, IService[]? services = null, ITP3Transport[]? transports = null)
     {

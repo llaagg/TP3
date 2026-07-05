@@ -101,7 +101,7 @@ namespace TP3.Tests.Intergration
 
             await sut.Init();
 
-            string tag = "root-tag";
+            string tag = "test-tag";
 
 #warning TODO: auth
 
@@ -122,11 +122,13 @@ namespace TP3.Tests.Intergration
             // when message is incoming from network trasnport, router is asked to handle it.
             // we can use that to prtend we are some user and send a message to the agent host, and see if it is routed correctly.
             await sut.router.Route(pipe, AttachMessage(tag));                                      /// Tattach (tag)
+            Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, lastMessageSent.PayloadCase);                                           ///                   Rattach
             var lastAttachResponse = lastMessageSent.AttachResponse;                               ///                   Rattach
             Assert.NotNull(lastAttachResponse);
             Assert.Equal(tag, lastMessageSent.Tag);                                                ///                   tag
             Assert.NotNull(lastAttachResponse.Info);
             Assert.NotNull(lastAttachResponse.Info.Id);                                           ///                   quid
+            var pointer = sut.NetworkSessions.GetPointer(pipe, tag);
             //var pointer = transport..NetwokSessions.GetPointer(pipe, tag);
             //Assert.NotNull(pointer);
             //Assert.NotNull(pointer!.Node);
