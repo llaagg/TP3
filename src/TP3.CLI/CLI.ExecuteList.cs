@@ -96,7 +96,6 @@ public static partial class CLI
         }
     }
 
-
     private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this TP3Client ipcClient, string tag, ILogger logger)
     {
         var offset = 0UL;
