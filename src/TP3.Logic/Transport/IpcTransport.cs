@@ -7,7 +7,7 @@ using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
 
-public sealed class IpcTransport : INetworkTransport
+public class IpcTransport : INetworkTransport
 {
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly SemaphoreSlim writeLock = new(1, 1);
@@ -181,30 +181,5 @@ public sealed class IpcTransport : INetworkTransport
 
         this.Initialized = true;
         return Task.CompletedTask;
-    }
-
-    private sealed class IpcSession : INetworkPipe
-    {
-        public IpcSession(TcpClient client, NetworkStream stream, ITP3Transport transport, INetworkTransport networkTransport, string agentId)
-        {
-            Client = client;
-            Stream = stream;
-            TP3Transport = transport;
-            Transport = networkTransport;
-            AgentID = agentId;
-        }
-
-        public TcpClient Client { get; }
-
-        public NetworkStream Stream { get; }
-
-        public INetworkTransport Transport { get; }
-
-        public ITP3Transport TP3Transport { get; }
-
-        public string AgentID { get; }
-
-        public Dictionary<string, INode> Pointers => throw new NotImplementedException();
-
     }
 }

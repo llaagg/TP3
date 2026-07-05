@@ -63,6 +63,7 @@ public static partial class CLI
 
         await ipcClient.DisconnectAsync().ConfigureAwait(false);
     }
+    
     public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ILogger logger)
     {
         var attachRequest = new TP3Message()
