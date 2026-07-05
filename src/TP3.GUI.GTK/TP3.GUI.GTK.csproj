@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="GirCore.Adw-1" Version="0.6.3" />
+		<PackageReference Include="GirCore.Gtk-4.0" Version="0.6.3" />
+		<PackageReference Include="GirCore.WebKit-6.0" Version="0.6.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebView" Version="10.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.2" />
+    	<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Update="wwwroot/index.html">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\TP3.GUI.Common\TP3.GUI.Common.csproj" />
+	</ItemGroup>
+
+</Project>

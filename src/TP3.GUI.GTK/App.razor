@@ -1,0 +1,13 @@
+@using Microsoft.AspNetCore.Components.Routing
+
+<Router AppAssembly="@typeof(TP3.GUI.GTK.App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(TP3.GUI.Common.MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(TP3.GUI.Common.MainLayout)">
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
