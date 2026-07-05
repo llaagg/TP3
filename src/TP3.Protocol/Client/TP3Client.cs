@@ -34,9 +34,15 @@ public class TP3Client
 
         tcpClient = new TcpClient();
         var connectTask = tcpClient.ConnectAsync(IPAddress.Loopback, ipcPort);
-        if (await Task.WhenAny(connectTask, Task.Delay(waitForServer * 1000)) != connectTask)
+        if(waitForServer > 0)
         {
-            throw new TimeoutException("Timed out waiting for IPC server to be ready.");
+            if (await Task.WhenAny(connectTask, Task.Delay(waitForServer * 1000)) != connectTask)
+            {
+                throw new TimeoutException("Timed out waiting for IPC server to be ready.");
+            }
+        }else
+        {
+            await connectTask.ConfigureAwait(false);
         }
         await connectTask.ConfigureAwait(false);
         stream = tcpClient.GetStream();
@@ -49,7 +55,7 @@ public class TP3Client
         EnsureConnected();
 
         var packet = TP3Serializer.SerializeBytes(message);
-        logger?.LogInformation("{Tag} Sending message to IPC server: {Message}", message.Tag, message);
+        logger?.LogInformation("Sending message to IPC server: {Message}", message);
         await stream!.WriteAsync(packet.AsMemory(0, packet.Length)).ConfigureAwait(false);
         
     }

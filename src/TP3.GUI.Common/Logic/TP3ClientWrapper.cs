@@ -85,7 +85,7 @@ public class TP3ClientWrapper
             throw new InvalidOperationException("Failed to open directory for listing.");
         }
 
-        foreach (var item in ipcClient.ReadDirectory(openResponse.OpenResponse, logger))
+        foreach (var item in ipcClient.ReadDirectory(openResponse, logger))
         {
             logger?.LogInformation("Received item: {Name} - {NodeType}", item.Name, item.Info.NodeType);
         }

@@ -3,8 +3,8 @@
 @inject TP3ClientWrapper TP3Client
 
 @code {
-    override protected void OnInitialized()
+    override protected async Task OnInitializedAsync()
     {
-        var folders = TP3Client.ListenForResponses();
+        var folders = await TP3Client.ListenForResponses();
     }
 }

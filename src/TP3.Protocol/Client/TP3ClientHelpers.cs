@@ -27,9 +27,9 @@ public static class TP3ClientHelpers
         return null;
     }
 
-    public static IEnumerable<TP3StatPayload> ReadDirectory(this TP3Client pipe, TP3OpenResponse openResponse, ILogger? logger = null)
+    public static IEnumerable<TP3StatPayload> ReadDirectory(this TP3Client pipe, TP3Message openResponse, ILogger? logger = null)
     {
-        IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(openResponse.Tag, openResponse.Iounit,  logger);
+        IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(openResponse.Tag, openResponse.OpenResponse.Iounit,  logger);
         TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
 
         // // diagnostic: read all data and deserialize to TP3StatPayload

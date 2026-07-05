@@ -1,0 +1,25 @@
+@inject ILogger logger;
+
+<pre class="w-100">@loglines
+</pre>
+
+
+@code
+{
+    public string loglines {get; set;} = "";
+
+    override protected void OnInitialized()
+    {
+        var m = logger as MauiLogger;
+        if (m != null)
+        {
+            m.OnLogMessage += (logLevel, message) =>
+            {
+                string line = $"[{logLevel.ToString()}] {message}";
+                Console.WriteLine(line);
+                loglines += line + "\n";
+                InvokeAsync(StateHasChanged);
+            };
+        }
+    }
+}

@@ -65,7 +65,6 @@ message TP3OpenRequest {
 message TP3OpenResponse {
     NodeInfo info = 1;
     uint32 iounit = 2;
-    string tag = 3;
 }
 
 message TP3ClunkRequest {

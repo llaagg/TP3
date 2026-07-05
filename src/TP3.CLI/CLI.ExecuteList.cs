@@ -49,7 +49,7 @@ public static partial class CLI
             throw new InvalidOperationException("Failed to open directory for listing.");
         }
 
-        foreach (var item in ipcClient.TReadOnADirectory(openResponse.Tag, logger))
+        foreach (var item in ipcClient.ReadDirectory(openResponse, logger))
         {
             if(enableEmoted)
             {
