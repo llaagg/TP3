@@ -8,39 +8,6 @@ namespace TP3.CLI;
 public static partial class CLI
 {
 
-    public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ILogger logger)
-    {
-        var attachRequest = new TP3Message()
-        {
-            Tag = Guid.NewGuid().ToString("N").Substring(0, 8),
-            AttachRequest = new TP3AttachRequest()
-        };
-        var attachResponse = await SendAndWaitOne(ipcClient, logger, attachRequest).ConfigureAwait(false);
-
-        return attachResponse;
-    }
-
-    private static async Task<TP3Message?> SendAndWaitOne(this TP3Client ipcClient, ILogger logger, TP3Message request)
-    {
-        logger.LogInformation("Sending request to IPC server: {Request}", request);
-        await ipcClient.SendMessageAsync(request).ConfigureAwait(false);
-        var response =  await ReceiveSingleResponse(ipcClient, logger);
-        
-        return response;
-    }
-
-    public static void ThrowIfError(this TP3Message? message)
-    {
-        if (message is null)
-        {
-            throw new InvalidOperationException("Received null response from IPC server.");
-        }
-        if (message.Error is not null)
-        {
-            throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
-        }
-    }
-
     private static async Task ExecuteList(int ipcPort, int waitForServer, bool enableEmoted, LogLevel logLevel, string[]? path)
     {
         var logger = InitilizeLogger(logLevel);
@@ -96,6 +63,39 @@ public static partial class CLI
 
         await ipcClient.DisconnectAsync().ConfigureAwait(false);
     }
+    public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ILogger logger)
+    {
+        var attachRequest = new TP3Message()
+        {
+            Tag = Guid.NewGuid().ToString("N").Substring(0, 8),
+            AttachRequest = new TP3AttachRequest()
+        };
+        var attachResponse = await SendAndWaitOne(ipcClient, logger, attachRequest).ConfigureAwait(false);
+
+        return attachResponse;
+    }
+
+    private static async Task<TP3Message?> SendAndWaitOne(this TP3Client ipcClient, ILogger logger, TP3Message request)
+    {
+        logger.LogInformation("Sending request to IPC server: {Request}", request);
+        await ipcClient.SendMessageAsync(request).ConfigureAwait(false);
+        var response =  await ReceiveSingleResponse(ipcClient, logger);
+        
+        return response;
+    }
+
+    public static void ThrowIfError(this TP3Message? message)
+    {
+        if (message is null)
+        {
+            throw new InvalidOperationException("Received null response from IPC server.");
+        }
+        if (message.Error is not null)
+        {
+            throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
+        }
+    }
+
 
     private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this TP3Client ipcClient, string tag, ILogger logger)
     {

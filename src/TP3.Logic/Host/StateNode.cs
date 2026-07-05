@@ -9,8 +9,10 @@ class StateNode : INode
 
     public StateNode(INetworkSessions userSessions)
     {
-        this.userSessions = userSessions;
+        this.connectionsNode = new ConnectionsNode(userSessions);
     }
+
+    private INode connectionsNode;
 
     public NodeType NodeType => NodeType.Directory;
 
@@ -20,16 +22,44 @@ class StateNode : INode
     {
         get
         {
-            var userSessions = this.userSessions as UserSessions;
+            yield return connectionsNode;
+        }
+    }
+
+    public string Name => "Connections";
+
+    public Task<ITP3DataStream?> Get()
+    {
+        return Task.FromResult<ITP3DataStream?>(null);
+    }
+}
+
+internal class ConnectionsNode : INode
+{
+    private INetworkSessions userSessions;
+
+    public ConnectionsNode(INetworkSessions userSessions)
+    {
+        this.userSessions = userSessions;
+    }
+
+    public string Id =>  "ConnectionsNode";
+
+    public string Name =>  "Connections";
+
+    public NodeType NodeType => NodeType.Directory;
+
+    public IEnumerable<INode>? Children => GetChildern();
+
+    private IEnumerable<INode>? GetChildern()
+    {
+        var userSessions = this.userSessions as UserSessions;
             foreach (var connection in userSessions!.Connections)
             {
                 var sessionNode = new SessionNode(connection);
                 yield return sessionNode;
             }
-        }
     }
-
-    public string Name => "Connections";
 
     public Task<ITP3DataStream?> Get()
     {

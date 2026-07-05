@@ -85,7 +85,7 @@ class SessionNode : INode
         this.connection1 = connection1;
     }
 
-    public NodeType NodeType => NodeType.Directory;
+    public NodeType NodeType => NodeType.File;
 
     public string Id => $"Session_{connection1.Value.Session.AgentID}";
 
