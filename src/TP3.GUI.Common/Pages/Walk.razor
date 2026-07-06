@@ -1,16 +1,13 @@
 @using TP3.GUI.Common.Components
 
 @page "/walk"
-@page "/walk/{*folder}"
 
 
 @inject TP3ClientWrapper TP3Client
 @inject NavigationManager NavigationManager
 
-<Walker Folder="@Folder"></Walker>
+<Walker ></Walker>
 
 @code {
-    [Parameter] 
-    public string? Folder { get; set; }
 
 }

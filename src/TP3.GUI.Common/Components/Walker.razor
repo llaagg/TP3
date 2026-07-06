@@ -6,11 +6,12 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item">
-                <a href="/walk" @onclick="() => navigateToRoot()">Root</a>
+                <button class="link-button" @onclick="() => NavigateToRoot()">Root</button>
             </li>
             @for (int i = 0; i < currentPath.Length; i++)
             {
                 var segment = currentPath[i];
+                var idx = i;
                 if (i == currentPath.Length - 1)
                 {
                     <li class="breadcrumb-item active" aria-current="page">@segment</li>
@@ -18,7 +19,7 @@
                 else
                 {
                     <li class="breadcrumb-item">
-                        <a href="@GetFolderUrl(segment)" @onclick="() => navigateToSegment(i)">@segment</a>
+                        <button class="link-button" @onclick="() => NavigateToSegment(idx)">@segment</button>
                     </li>
                 }
             }
@@ -34,7 +35,7 @@
         if (item.Info.NodeType == TP3.Messages.NodeType.Directory)
         {
             <li class="list-group-item d-flex align-items-center justify-content-between">
-                <button class="btn" @onclick="() => navigate(item)">
+                <button class="btn" @onclick="() => Navigate(item)">
                     <span class="me-2">@GetIcon(item)</span>
                     @item.Name
                 </button>
@@ -44,7 +45,7 @@
         else
         {
             <li class="list-group-item d-flex align-items-center justify-content-between">
-                <button class="btn" @onclick="() => loadFile(item)">
+                <button class="btn" @onclick="() => LoadFile(item)">
                     <span class="me-2">@GetIcon(item)</span>
                     @item.Name
                 </button>
@@ -55,11 +56,10 @@
 </ul>
 
 @code {
-    [Parameter] 
-    public string? Folder { get; set; }
+
 
     // dump file to logger
-    private async Task loadFile(TP3.Protocol.TP3StatPayload item)
+    private async Task LoadFile(TP3.Protocol.TP3StatPayload item)
     {
         List<string> pathList = currentPath.ToList();
         pathList.Add(item.Name);
@@ -80,32 +80,29 @@
     }
 
 
-    private async Task navigateToRoot()
+    private async Task NavigateToRoot()
     {
-        currentPath = Array.Empty<string>();
-        folderContents.Clear();
-        await load(currentPath);
+        await SetPath(new string[0]);
     }
 
-    private async Task navigateToSegment(int index)
+    private async Task NavigateToSegment(int index)
     {
-        currentPath = currentPath.Take(index + 1).ToArray();
-        folderContents.Clear();
-        await load(currentPath);
-    }
+        var navigatoto = currentPath.Take(index+1).ToArray();
+        await SetPath(navigatoto);
+    }               
 
     private string[] currentPath = Array.Empty<string>();
 
     List<TP3.Protocol.TP3StatPayload> folderContents = new List<TP3.Protocol.TP3StatPayload>();
 
-    async Task navigate(TP3.Protocol.TP3StatPayload item)
+    async Task Navigate(TP3.Protocol.TP3StatPayload item)
     {
         currentPath = currentPath.Append(item.Name).ToArray();
         this.folderContents.Clear();
-        await load(currentPath.ToArray());
+        await LoadFolder(currentPath.ToArray());
     }
 
-    async Task load(IList<string> path)
+    async Task LoadFolder(IList<string> path)
     {
         var tag = await TP3Client.NewSession(path.ToArray());
 
@@ -125,13 +122,14 @@
 
     override protected async Task OnInitializedAsync()
     {
-        currentPath = string.IsNullOrWhiteSpace(Folder)
-            ? Array.Empty<string>()
-            : Uri.UnescapeDataString(Folder)
-                .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        await SetPath(Array.Empty<string>());
+    }
 
-        await load(this.currentPath);
-
+    private async Task SetPath(string[] newPath)
+    {
+        currentPath = newPath;
+        folderContents.Clear();
+        await LoadFolder(this.currentPath);
     }
 
     private string GetFolderUrl(string folderName)
