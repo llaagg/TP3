@@ -1,7 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Host;
-using TP3.Agent.Logic.Transport;
-using TP3.Service.FileSystem;
 
 namespace TP3.GUI.Maui;
 
