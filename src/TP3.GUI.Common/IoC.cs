@@ -7,5 +7,10 @@ public static class IoC
     {
         services.AddSingleton<TP3ClientWrapper>();
         services.AddSingleton<ILogger, MauiLogger>();
-    }        
+    }
+
+    public static void DesktopServices(this IServiceCollection services)
+    {
+        services.AddSingleton<ServerManager>();
+    }
 }

@@ -3,6 +3,7 @@
 
 @inject TP3ClientWrapper TP3Client
 @inject NavigationManager NavigationManager
+@inject ServerManager ServerManager
 
 <Framed>
     <pre class="code">
@@ -52,6 +53,6 @@
 
     private void OnStartServer()
     {
-        
+        ServerManager.StartServer();
     }
 }

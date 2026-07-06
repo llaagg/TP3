@@ -14,7 +14,6 @@ public class StatusChangedEventArgs
     }
 }
 
-[UnsupportedOSPlatform("browser")]
 public class TP3ClientWrapper
 {
     private readonly TP3.Protocol.Client.TP3Client ipcClient;
@@ -30,7 +29,7 @@ public class TP3ClientWrapper
         ipcClient = new TP3.Protocol.Client.TP3Client();
         
         // get hostname and user name
-        var hostname = System.Net.Dns.GetHostName();
+        var hostname = Environment.MachineName;
         var username = Environment.UserName;
 
         this.rootTag = "tp3-" + username + "@" + hostname;
