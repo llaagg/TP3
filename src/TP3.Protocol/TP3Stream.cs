@@ -1,9 +1,10 @@
 using TP3.Interfaces;
 
-namespace TP3.Agent.Logic.Transport;
+namespace TP3.Protocol;
 
 public class TP3Stream: ITP3DataStream
 {
+    private const ulong DefaultMaxCount = 16 * 1024;
     private readonly Stream stream;
 
     public TP3Stream(Stream stream)
@@ -23,6 +24,11 @@ public class TP3Stream: ITP3DataStream
 
     public async Task<byte[]> Read(ulong offset, ulong maxCount)
     {
+        if (maxCount == 0)
+        {
+            maxCount = DefaultMaxCount;
+        }
+
         if (offset != (ulong)stream.Position)
         {
             stream.Seek((long)offset, SeekOrigin.Begin);

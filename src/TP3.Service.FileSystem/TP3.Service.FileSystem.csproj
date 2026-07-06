@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TP3.Interfaces\TP3.Interfaces.csproj" />
+    <ProjectReference Include="..\TP3.Protocol\TP3.Protocol.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

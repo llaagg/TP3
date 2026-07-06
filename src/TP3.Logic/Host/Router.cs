@@ -20,13 +20,14 @@ public sealed class Router : IRouter
 
     public async Task Respond(IAgent agent, TP3Message message, INetworkPipe targetTransport)
     {
-        // someone asked about this while ago, and i can respond to it but where :-)
+        logger?.LogDebug("Responding TP3 message: {Command}", message.AttachRequest);
+
         await targetTransport.TP3Transport.Send(targetTransport, message);
     }
 
     public async Task Route(INetworkPipe sourceTransport, TP3Message message)
     {
-        logger?.LogDebug("Routing TP3 message: {Command}", message.AttachRequest);
+        logger?.LogDebug("Processing TP3 message: {Command}", message.AttachRequest);
 
 #warning TODO: namespace filtering
 #warning TODO: tcp forward, currelnty we only send to our local agent, but we should forward to other agents if the target is not local
