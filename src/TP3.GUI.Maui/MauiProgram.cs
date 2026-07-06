@@ -23,6 +23,11 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		return builder.Build();
+		var app = builder.Build();
+		
+		var serverManager = app.Services.GetRequiredService<IServerManager>();
+		serverManager.StartServer();
+
+		return app;
 	}
 }

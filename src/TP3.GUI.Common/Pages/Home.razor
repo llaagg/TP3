@@ -5,24 +5,16 @@
 @inject NavigationManager NavigationManager
 @inject IServerManager ServerManager
 
-<Framed>
-    <pre class="code">
-    TP3 - 
-        Three Plus 3
-        Tree plus 3
-    </pre>
-</Framed>
-
+<div class"text-center">🌳✚3️⃣ <ConnectionStatus></ConnectionStatus></div>
+@* 
 <Framed>
     <div>
-        
         <button class="btn btn-primary" @onclick="OnClick">Connect to existing server</button>
     </div>
     <div>
          <button class="btn btn-primary" @onclick="OnStartServer">Start server</button>
-
     </div>
-</Framed>
+</Framed> *@
 
 <Framed>
     @if(TP3Client.Status == "Connected")
@@ -54,5 +46,10 @@
     private async Task OnStartServer()
     {
         await ServerManager.StartServer();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TP3Client.Connect();
     }
 }
