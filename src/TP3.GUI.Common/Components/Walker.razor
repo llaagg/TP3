@@ -6,7 +6,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item">
-                <button class="link-button" @onclick="() => NavigateToRoot()">Root</button>
+                <a href="" class="text-decoration-none" @onclick="NavigateToRoot" @onclick:preventDefault="true">Root</a>
             </li>
             @for (int i = 0; i < currentPath.Length; i++)
             {
@@ -19,7 +19,7 @@
                 else
                 {
                     <li class="breadcrumb-item">
-                        <button class="link-button" @onclick="() => NavigateToSegment(idx)">@segment</button>
+                        <a href="" class="text-decoration-none" @onclick="() => NavigateToSegment(idx)" @onclick:preventDefault="true">@segment</a>
                     </li>
                 }
             }
