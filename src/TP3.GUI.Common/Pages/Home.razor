@@ -1,27 +1,42 @@
 ﻿@page "/"
+@using TP3.GUI.Common.Components
 
 @inject TP3ClientWrapper TP3Client
 @inject NavigationManager NavigationManager
 
+<Framed>
 <pre class="code">
-TP3 - 
-    Three Plus 3
-    Tree plus 3
-</pre>
+    TP3 - 
+        Three Plus 3
+        Tree plus 3
+    </pre>
+</Framed>
 
-<button class="btn btn-primary" @onclick="OnClick">Connect</button>
+<Framed>
+
+    <button class="btn btn-primary" @onclick="OnClick">Connect</button>
+
+    <button class="btn btn-primary" @onclick="OnClick">Connect</button>
+</Framed>
+
+<Framed>
+    @if(TP3Client.Status == "Connected")
+    {
+        <Walker></Walker>
+    }
+    else
+    {
+        <p>Not connected to IPC server.</p>
+    }
+</Framed>
 
 @code
 {
     private async Task OnClick()
     {
-
-        
         try
         {
             await TP3Client.Connect();
-            NavigationManager.NavigateTo("/walk");
-
         }
         catch (Exception ex)
         {
