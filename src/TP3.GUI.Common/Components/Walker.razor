@@ -64,9 +64,9 @@
         List<string> pathList = currentPath.ToList();
         pathList.Add(item.Name);
 
-        var ourRootSesion = await TP3Client.NewSession(pathList.ToArray());
+        var tag = await TP3Client.NewSession(pathList.ToArray());
 
-        var d = TP3Client.GetStream(ourRootSesion);
+        var d = TP3Client.GetStream(tag);
 
         await Task.Run(()=>{
             using (var reader = new StreamReader(d))
@@ -75,7 +75,8 @@
                 logger.LogInformation("File contents of {FileName}:\n{FileContents}", item.Name, data);
             }
         });
-        
+
+        await TP3Client.CloseSession(tag);
     }
 
 
@@ -106,10 +107,10 @@
 
     async Task load(IList<string> path)
     {
-        var ourRootSesion = await TP3Client.NewSession(path.ToArray());
+        var tag = await TP3Client.NewSession(path.ToArray());
 
-         await TP3Client.ListFolder(
-            ourRootSesion,
+        await TP3Client.ListFolder(
+            tag,
             async (response) =>
         {
             if (response != null)
@@ -118,6 +119,8 @@
                 await InvokeAsync(StateHasChanged);
             }
         });
+
+        await TP3Client.CloseSession(tag);
     }
 
     override protected async Task OnInitializedAsync()
@@ -128,7 +131,7 @@
                 .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         await load(this.currentPath);
-       
+
     }
 
     private string GetFolderUrl(string folderName)
@@ -143,4 +146,5 @@
     {
         return item.Info.NodeType == TP3.Messages.NodeType.Directory ? "📁" : "📄";
     }
+
 }

@@ -41,9 +41,9 @@ public class ConnectionsNode : INode
         this.userSessions = userSessions;
     }
 
-    public string Id =>  "ConnectionsNode";
+    public string Id => "ConnectionsNode";
 
-    public string Name =>  "Connections";
+    public string Name => "Connections";
 
     public NodeType NodeType => NodeType.Directory;
 
@@ -52,11 +52,11 @@ public class ConnectionsNode : INode
     private IEnumerable<INode>? GetChildern()
     {
         var userSessions = this.userSessions as NetworkSessions;
-            foreach (var connection in userSessions!.Connections)
-            {
-                var sessionNode = new SessionNode(connection);
-                yield return sessionNode;
-            }
+        foreach (var connection in userSessions!.Connections)
+        {
+            var sessionNode = new SessionNode(connection);
+            yield return sessionNode;
+        }
     }
 
     public Task<ITP3DataStream?> Get()

@@ -15,16 +15,47 @@ class SessionNode : INode
         this.connection1 = connection1;
     }
 
-    public NodeType NodeType => NodeType.File;
+    public NodeType NodeType => NodeType.Directory;
 
     public string Id => $"Session_{connection1.Value.Session.AgentID}";
 
     public string Name => connection1.Key;
 
-    public IEnumerable<INode>? Children => null;
+    public IEnumerable<INode>? Children
+    {
+        get
+        {
+            return this.connection1.Value.Pointers.Select(kvp => new PointerNode(kvp.Key, kvp.Value));
+        }
+    }
 
     public async Task<ITP3DataStream?> Get()
     {
-        return new TP3Stream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes($"Session: {connection1.Key}"))); 
+        return null;
+    }
+}
+
+internal class PointerNode : INode
+{
+    private IPointer pointer;
+    private string name;
+
+    public PointerNode(string name, IPointer pointer)
+    {
+        this.pointer = pointer;
+        this.name = name;
+    }
+
+    public string Id => name;
+
+    public string Name => $"pointer_{name}";
+
+    public NodeType NodeType => NodeType.File;
+
+    public IEnumerable<INode>? Children => null;
+
+    public Task<ITP3DataStream?> Get()
+    {
+        return Task.FromResult<ITP3DataStream?>(new TP3Stream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes($"Pointer: {name} {pointer.Node} {pointer.Data?.Position}"))));
     }
 }

@@ -87,6 +87,24 @@ public class TP3ClientWrapper
 
         return tag;
     }
+    public async Task CloseSession(string tag)
+    {
+
+        var response = await ipcClient.SendAndWaitOne(new TP3Message()
+        {
+            Tag = tag,
+            ClunkRequest = new TP3ClunkRequest()
+        }, logger);
+
+        if(response is null)
+        {
+            throw new InvalidOperationException("Received null response from IPC server.");
+        }
+        if(response.PayloadCase == TP3Message.PayloadOneofCase.Error)
+        {
+            throw new InvalidOperationException($"Error received from IPC server: {response.Error?.Message}");
+        }
+    }
 
     private string GenerateRandomTag(int v)
     {
