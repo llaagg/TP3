@@ -3,6 +3,7 @@
   <Project Path="TP3.Protocol/TP3.Protocol.csproj" />
   <Project Path="TP3.GUI.Common/TP3.GUI.Common.csproj" />
   <Project Path="TP3.GUI.GTK/TP3.GUI.GTK.csproj" />
+  <Project Path="TP3.GUI.WebDav/TP3.GUI.WebDav.csproj" />
   <Project Path="TP3.Interfaces/TP3.Interfaces.csproj" />
   <Project Path="TP3.Server/TP3.Server.csproj" />
   <Project Path="TP3.Service.FileSystem/TP3.Service.FileSystem.csproj" />

@@ -14,6 +14,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\TP3.Protocol\TP3.Protocol.csproj" />
+	  <ProjectReference Include="..\TP3.GUI.WebDav\TP3.GUI.WebDav.csproj" />
 	</ItemGroup>
 
   <ItemGroup>

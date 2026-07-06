@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using TP3.GUI.WebDav
 
 @inject TP3ClientWrapper TP3Client
 @inject NavigationManager NavigationManager
@@ -11,8 +12,23 @@ TP3 -
 
 <button class="btn btn-primary" @onclick="OnClick">Connect</button>
 
+<button class="btn btn-primary" @onclick="OnClickDej">Dej</button>
+
 @code
 {
+    private async Task OnClickDej()
+    {
+        try
+        {
+            var s = new Server();
+            s.Start();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error connecting to IPC server: {ex.Message}");
+        }
+    }
+
     private async Task OnClick()
     {
 
