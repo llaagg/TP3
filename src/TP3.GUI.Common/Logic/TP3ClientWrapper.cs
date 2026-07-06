@@ -28,7 +28,6 @@ public class TP3ClientWrapper
         this.logger = logger;
 
         ipcClient = new TP3.Protocol.Client.TP3Client();
-
         
         // get hostname and user name
         var hostname = System.Net.Dns.GetHostName();

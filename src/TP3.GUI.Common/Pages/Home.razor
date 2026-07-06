@@ -5,7 +5,7 @@
 @inject NavigationManager NavigationManager
 
 <Framed>
-<pre class="code">
+    <pre class="code">
     TP3 - 
         Three Plus 3
         Tree plus 3
@@ -13,10 +13,12 @@
 </Framed>
 
 <Framed>
-
-    <button class="btn btn-primary" @onclick="OnClick">Connect</button>
-
-    <button class="btn btn-primary" @onclick="OnClick">Connect</button>
+    <p>Welcome to the TP3 GUI. This is a simple interface to interact with the TP3 IPC server.</p>
+    
+    <button class="btn btn-primary" @onclick="OnClick">Connect to existing server</button>
+    <input type="text" class="form-control mt-2" placeholder="Enter server address" @bind="serverAddress" />
+    
+    <button class="btn btn-primary" @onclick="OnClick">Start server</button>
 </Framed>
 
 <Framed>
@@ -32,6 +34,8 @@
 
 @code
 {
+    private string serverAddress = string.Empty;
+
     private async Task OnClick()
     {
         try
