@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using TP3.Messages;
 
@@ -13,6 +14,7 @@ public class StatusChangedEventArgs
     }
 }
 
+[UnsupportedOSPlatform("browser")]
 public class TP3ClientWrapper
 {
     private readonly TP3.Protocol.Client.TP3Client ipcClient;
@@ -24,17 +26,19 @@ public class TP3ClientWrapper
     public TP3ClientWrapper(ILogger? logger = null)
     {
         this.logger = logger;
-        ipcClient = new TP3.Protocol.Client.TP3Client();
-    }
 
-    public async Task Connect()
-    {
+        ipcClient = new TP3.Protocol.Client.TP3Client();
+
+        
         // get hostname and user name
         var hostname = System.Net.Dns.GetHostName();
         var username = Environment.UserName;
 
         this.rootTag = "tp3-" + username + "@" + hostname;
+    }
 
+    public async Task Connect()
+    {
         try
         {
             this.UpdateStatus("Connecting", "Attempting to connect to IPC server...");
@@ -155,4 +159,30 @@ public class TP3ClientWrapper
 
 
     public List<string> Sessions { get; } = new List<string>();
+
+    public Stream GetStream(string tag)
+    {
+        var openResponse = Task.Run(async () =>
+        {
+            var openResponse = await ipcClient.SendAndWaitOne(new TP3Message()
+            {
+                Tag = tag,
+                OpenRequest = new TP3OpenRequest()
+            }, logger).ConfigureAwait(false);
+
+            if(openResponse is null)
+            {
+                throw new InvalidOperationException("Received null response from IPC server.");
+            }
+            if(openResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+            {
+                throw new InvalidOperationException($"Error received from IPC server: {openResponse.Error?.Message}");
+            }
+
+            return openResponse;
+        }).Result;
+
+        var stream = ipcClient.GetStream(openResponse, logger);
+        return stream;
+    }
 }

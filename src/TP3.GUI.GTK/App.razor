@@ -2,11 +2,11 @@
 
 <Router AppAssembly="@typeof(TP3.GUI.GTK.App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(TP3.GUI.Common.MainLayout)" />
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(TP3.GUI.Common.Layout.MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <LayoutView Layout="@typeof(TP3.GUI.Common.MainLayout)">
+        <LayoutView Layout="@typeof(TP3.GUI.Common.Layout.MainLayout)">
             <p role="alert">Sorry, there's nothing at this address.</p>
         </LayoutView>
     </NotFound>

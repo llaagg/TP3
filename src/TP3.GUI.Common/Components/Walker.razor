@@ -1,6 +1,6 @@
 @inject TP3ClientWrapper TP3Client
+@inject ILogger     logger
 
-<!-- breadcrumps with ucrretn path and navrigation -->
 <div class="d-flex align-items-center mb-3">
     <span class="me-2">Path:</span>
     <nav aria-label="breadcrumb">
@@ -55,15 +55,27 @@
 </ul>
 
 @code {
-        [Parameter] 
-        public string? Folder { get; set; }
+    [Parameter] 
+    public string? Folder { get; set; }
 
     // dump file to logger
     private async Task loadFile(TP3.Protocol.TP3StatPayload item)
     {
-        var ourRootSesion = await TP3Client.NewSession(currentPath.ToArray());
+        List<string> pathList = currentPath.ToList();
+        pathList.Add(item.Name);
 
-        var d = await TP3Client.ReadFile(ourRootSesion);
+        var ourRootSesion = await TP3Client.NewSession(pathList.ToArray());
+
+        var d = TP3Client.GetStream(ourRootSesion);
+
+        await Task.Run(()=>{
+            using (var reader = new StreamReader(d))
+            {
+                var data = reader.ReadToEnd();
+                logger.LogInformation("File contents of {FileName}:\n{FileContents}", item.Name, data);
+            }
+        });
+        
     }
 
 
@@ -96,16 +108,16 @@
     {
         var ourRootSesion = await TP3Client.NewSession(path.ToArray());
 
-        await TP3Client.ListFolder(
-           ourRootSesion,
-           async (response) =>
-       {
-           if (response != null)
-           {
-               folderContents.Add(response);
-               await InvokeAsync(StateHasChanged);
-           }
-       });
+         await TP3Client.ListFolder(
+            ourRootSesion,
+            async (response) =>
+        {
+            if (response != null)
+            {
+                folderContents.Add(response);
+                await InvokeAsync(StateHasChanged);
+            }
+        });
     }
 
     override protected async Task OnInitializedAsync()
@@ -116,7 +128,7 @@
                 .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         await load(this.currentPath);
-
+       
     }
 
     private string GetFolderUrl(string folderName)
@@ -131,9 +143,4 @@
     {
         return item.Info.NodeType == TP3.Messages.NodeType.Directory ? "📁" : "📄";
     }
-
-    internal async Task ReadFile(string ourRootSesion)
-    {
-        throw new NotImplementedException();
-    }#line (17,1)-(20,1) "C:\Work\Sandbox\TP3\src\TP3.GUI.Common\Components\Walker.razor"
 }

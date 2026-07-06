@@ -29,7 +29,6 @@ namespace TP3.Tests.Protocol
             // Assert
             Assert.Equal("123456789", data);
         }
-
-
+        
     }
 }

@@ -9,12 +9,11 @@ public static class TP3ClientHelpers
     public static async Task<TP3Message?> SendAndWaitOne(this TP3Client ipcClient, TP3Message request, ILogger? logger = null)
     {
         logger?.LogInformation("Sending request to IPC server: {Request}", request);
-        await ipcClient.SendMessageAsync(request).ConfigureAwait(false);
-        var response =  await ipcClient.ReceiveSingleResponse(logger).ConfigureAwait(false);
+        await ipcClient.SendMessageAsync(request);
+        var response =  await ipcClient.ReceiveSingleResponse(logger);
         
         return response;
     }
-
     
     public static async Task<TP3.Messages.TP3Message?> ReceiveSingleResponse(this TP3Client ipcClient, ILogger? logger = null)
     {
@@ -25,6 +24,14 @@ public static class TP3ClientHelpers
         }
 
         return null;
+    }
+
+    public static Stream GetStream(this TP3Client pipe, TP3Message openResponse, ILogger? logger = null)
+    {
+        IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(openResponse.Tag, openResponse.OpenResponse.Iounit,  logger);
+        TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
+
+        return stream;
     }
 
     public static IEnumerable<TP3StatPayload> ReadDirectory(this TP3Client pipe, TP3Message openResponse, ILogger? logger = null)
@@ -61,7 +68,13 @@ public static class TP3ClientHelpers
                 }
             };
             
-            var message = ipcClient.SendAndWaitOne(readRequest, logger).Result;
+            var message = Task.Run(async () =>
+            {
+                logger?.LogInformation("Sending read request to IPC server: {Request}", readRequest);
+                var message = await ipcClient.SendAndWaitOne(readRequest, logger).ConfigureAwait(false);
+                return message;
+            }).Result;
+            
             if(message is null)
             {
                 throw new InvalidOperationException("Received null response from IPC server.");
