@@ -38,8 +38,10 @@ public static class CommandLineApplication
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
 
-        var ah = new AgentHost(logger, new[] { new FileSystemService() }, new []{
-                new TP3Transport(logger, new IpcTransport(ipcPort, logger))});
+        var ah = new AgentHost(logger, 
+                new[] { new FileSystemService() }, 
+                new []{ new TP3Transport(logger, new IpcTransport(ipcPort, logger))}
+        );
 
         logger.LogInformation("Initializing agent host...");
         await ah.Init();

@@ -15,33 +15,6 @@
       "stopAtEntry": false
     },
     {
-      "name": "CLI - Read",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build TP3.CLI",
-      "program": "${workspaceFolder}/src/TP3.CLI/bin/Debug/net10.0/TP3.CLI.dll",
-      "args": [
-        "read",
-        "/"
-      ],
-      "cwd": "${workspaceFolder}/src/TP3.CLI",
-      "console": "integratedTerminal",
-      "stopAtEntry": false
-    },
-    {
-      "name": "CLI - Walk (get root folder)",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "build TP3.CLI",
-      "program": "${workspaceFolder}/src/TP3.CLI/bin/Debug/net10.0/TP3.CLI.dll",
-      "args": [
-        "walk",
-      ],
-      "cwd": "${workspaceFolder}/src/TP3.CLI",
-      "console": "integratedTerminal",
-      "stopAtEntry": false
-    },
-    {
       "name": "CLI - LIST",
       "type": "coreclr",
       "request": "launch",

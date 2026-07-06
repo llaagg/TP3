@@ -4,7 +4,7 @@ namespace TP3.Agent.Logic.Transport;
 
 public class Connection
 {   
-    public INetworkPipe Session { get; set; }
+    public INetworkPipe Session { get; set; } = null!;
     
     /// <summary>
     /// tags to pointers

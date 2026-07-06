@@ -34,7 +34,7 @@
         if (item.Info.NodeType == TP3.Messages.NodeType.Directory)
         {
             <li class="list-group-item d-flex align-items-center justify-content-between">
-                <button class="text-decoration-none fw-semibold" @onclick="() => navigate(item)">
+                <button class="btn" @onclick="() => navigate(item)">
                     <span class="me-2">@GetIcon(item)</span>
                     @item.Name
                 </button>
@@ -44,7 +44,7 @@
         else
         {
             <li class="list-group-item d-flex align-items-center justify-content-between">
-                <button class="text-decoration-none fw-semibold" @onclick="() => loadFile(item)">
+                <button class="btn" @onclick="() => loadFile(item)">
                     <span class="me-2">@GetIcon(item)</span>
                     @item.Name
                 </button>

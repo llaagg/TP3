@@ -25,6 +25,4 @@ public class TP3StatPayload
     public string Name { get; set; } = string.Empty;
 
     public NodeInfo Info { get; set; } = new NodeInfo();
-
-
 }
