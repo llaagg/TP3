@@ -1,5 +1,4 @@
 ﻿using TP3.Interfaces;
-using TP3.Messages;
 
 namespace TP3.Service.Remote;
 
@@ -8,6 +7,7 @@ public class RemotesService : BaseDirectoryNode, IService
     public RemotesService() : base()
     {
         this.State = new RemoteNodes();
+        this.Control = new ControlNodes();
     }
 
     public async Task Init(IAgent me)
@@ -15,14 +15,8 @@ public class RemotesService : BaseDirectoryNode, IService
 
     }
 
-    override public IEnumerable<INode>? Children => new List<INode>() { State };
+    override public IEnumerable<INode>? Children => new List<INode>() { State, Control };
 
     public RemoteNodes State { get; }
-}
-
-public class RemoteNodes : BaseDirectoryNode
-{
-    public RemoteNodes() : base("state")
-    {
-    }
+    public ControlNodes Control { get; }
 }
