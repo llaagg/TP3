@@ -18,6 +18,9 @@ public static class MauiProgram
 		builder.Services.RegisterTP3();
         builder.Services.AddSingleton<IServerManager, ServerManager>();
 
+		builder.Services.AddSingleton<IService, TP3.Service.FileSystem.FileSystemService>();
+		builder.Services.AddSingleton<IService, TP3.Service.Remote.RemotesService>();
+
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();

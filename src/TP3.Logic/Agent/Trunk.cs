@@ -35,7 +35,7 @@ public class Trunk : INode
         {
             foreach (var s in service)
             {
-                yield return new ServiceNode(s);
+                yield return s;
             }
         }
     }

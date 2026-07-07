@@ -13,6 +13,20 @@
       "cwd": "${workspaceFolder}/src/TP3.Server",
       "console": "integratedTerminal",
       "stopAtEntry": false
+    },{
+      "name": "Server 6001",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build TP3.Server",
+      "program": "${workspaceFolder}/src/TP3.Server/bin/Debug/net10.0/TP3.Server.dll",
+      "args": [
+        "--port",
+        "6001",
+        "run"
+      ],
+      "cwd": "${workspaceFolder}/src/TP3.Server",
+      "console": "externalTerminal",
+      "stopAtEntry": false
     },
     {
       "name": "CLI - LIST",
@@ -39,7 +53,7 @@
   "compounds": [
     {
       "name": "Server & GUI",
-      "configurations": [ "Server", "GUI"],
+      "configurations": [ "Server 6001", "GUI"],
       "stopAll": true,
       "preLaunchTask": "build solution with GUI",
       "presentation": {

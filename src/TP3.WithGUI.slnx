@@ -7,6 +7,7 @@
   <Project Path="TP3.Interfaces/TP3.Interfaces.csproj" />
   <Project Path="TP3.Server/TP3.Server.csproj" />
   <Project Path="TP3.Service.FileSystem/TP3.Service.FileSystem.csproj" />
+  <Project Path="TP3.Service.Remote/TP3.Service.Remote.csproj" />
   <Project Path="TP3.Tests/TP3.Tests.csproj" />
   <Project Path="TP3.CLI/TP3.CLI.csproj" />
 </Solution>

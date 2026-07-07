@@ -6,11 +6,12 @@ namespace TP3.Service.FileSystem;
 /// <summary>
 /// Service that allows access to filesystem, in tp3 space
 /// </summary>
-public class FileSystemService : IService
+public class FileSystemService : BaseDirectoryNode, IService
 {
     public FileSystemService()
+        : base("FileSystemService")
     {
-        this.State = new StateNode("fs:state");
+        this.State = new StateNode("state");
     }
 
     public INode State { get; private set; } = null!;
@@ -22,5 +23,7 @@ public class FileSystemService : IService
     public async Task Init(IAgent me)
     {
     }
+
+    override public IEnumerable<INode>? Children => new INode[] { State };
 }
 

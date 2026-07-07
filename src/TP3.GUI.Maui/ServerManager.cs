@@ -9,15 +9,17 @@ using TP3.Agent.Logic.Host;
 public class ServerManager : IServerManager
 {
     private readonly ILogger logger;
+    private readonly IService[] services;
 
-    public ServerManager(ILogger logger)
+    public ServerManager(ILogger logger, IEnumerable<IService> services)
     {
         this.logger = logger;
+        this.services = services.ToArray();
     }
 
     public async Task StartServer()
     {
-        await StartServerTask();
+        await StartServerTask(this.services);
     }
 
     public async Task StartServerCmd()
@@ -45,11 +47,11 @@ public class ServerManager : IServerManager
     }
 
     
-	public async Task StartServerTask()
+	public async Task StartServerTask(IService[]? services)
 	{
 		var ipcport =5001;
         var ah = new AgentHost(logger, 
-                new[] { new FileSystemService() }, 
+                services,
                 new []{ new TP3Transport(logger, new IpcTransport(ipcport, logger))}
         );
 

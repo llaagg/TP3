@@ -3,33 +3,19 @@ using TP3.Messages;
 
 namespace TP3.Agent.Logic.Transport;
 
-public class StateNode : INode
+public class StateNode : BaseDirectoryNode
 {
     public StateNode(INetworkSessions userSessions)
+        : base("state")
     {
         this.connectionsNode = new ConnectionsNode(userSessions);
     }
 
     private INode connectionsNode;
 
-    public NodeType NodeType => NodeType.Directory;
 
-    public string Id => "UserSessionsStateNode";
+    public override IEnumerable<INode>? Children => new List<INode>() { connectionsNode };
 
-    public IEnumerable<INode>? Children
-    {
-        get
-        {
-            yield return connectionsNode;
-        }
-    }
-
-    public string Name => "Connections";
-
-    public Task<ITP3DataStream?> Get()
-    {
-        return Task.FromResult<ITP3DataStream?>(null);
-    }
 }
 
 public class ConnectionsNode : INode

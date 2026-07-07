@@ -76,6 +76,7 @@
       <ProjectReference Include="..\TP3.GUI.Common\TP3.GUI.Common.csproj" />
       <ProjectReference Include="..\TP3.Logic\TP3.Logic.csproj" />
       <ProjectReference Include="..\TP3.Service.FileSystem\TP3.Service.FileSystem.csproj" />
+      <ProjectReference Include="..\TP3.Service.Remote\TP3.Service.Remote.csproj" />
     </ItemGroup>
 
 </Project>

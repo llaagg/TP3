@@ -237,8 +237,6 @@ namespace TP3.Tests.Intergration
             // | Read directory | `fid + offset` | `Stat[]`       |
             // | Read file      | `fid + offset` | `bytes`        |
             // | Clunk          | `fid`          | acknowledgment |
-
-
         }
 
         private List<TP3StatPayload> TReadOnADirectory(INetworkPipe pipe, AgentHost sut, string tag)

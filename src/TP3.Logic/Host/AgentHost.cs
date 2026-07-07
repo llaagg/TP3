@@ -65,9 +65,10 @@ public class AgentHost : IAgentHost, IDisposable
                     logger?.LogError(ex, "Failed to initialize service: {ServiceName}", service.GetType().Name);
                 }
 
-                // let's add just another one
-                await Me.AddService(new AgentService(this, logger, this.NetworkSessions));
             }
+            
+            // let's add just another one
+            await Me.AddService(new AgentService(this, logger, this.NetworkSessions));
         }
     }
 
