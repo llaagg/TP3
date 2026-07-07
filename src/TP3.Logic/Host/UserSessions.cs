@@ -19,7 +19,19 @@ class SessionNode : INode
 
     public string Id => $"Session_{connection1.Value.Session.AgentID}";
 
-    public string Name => connection1.Key;
+    public string Name => connection1.Key+"("+getNetworkDetails()+")";
+
+    public string getNetworkDetails()
+    {
+        var session = connection1.Value.Session;
+        if (session is IpcSession ipcSession)
+        {
+            return $"{ipcSession.Client.Client.RemoteEndPoint}";
+        }else
+        {
+            return "";
+        }
+    }
 
     public IEnumerable<INode>? Children
     {
@@ -56,6 +68,6 @@ internal class PointerNode : INode
 
     public Task<ITP3DataStream?> Get()
     {
-        return Task.FromResult<ITP3DataStream?>(new TP3Stream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes($"Pointer: {name} {pointer.Node} {pointer.Data?.Position}"))));
+        return Task.FromResult<ITP3DataStream?>(new TP3Stream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes($"Pointer: {name} Data: {pointer.Node.Name}({pointer.Node.NodeType} {pointer.Node.Id}) Positions: {pointer.Data?.Position}"))));
     }
 }

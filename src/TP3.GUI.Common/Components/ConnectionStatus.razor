@@ -1,8 +1,6 @@
 @inject TP3ClientWrapper client
 
-<div class="panel panel-warning text-center text-white">
-    @(client.Status)
-</div>
+<button @onclick="Reconnect" class="btn btn-warning">@client.Status</button>
 
 @code
 {
@@ -11,7 +9,12 @@
         // start sign in process
         client.StatusChanged += (sender, e) =>
         {
-            StateHasChanged();
+            InvokeAsync(StateHasChanged);
         };
+    }
+
+    private async Task Reconnect()
+    {
+        await client.Connect();
     }
 }

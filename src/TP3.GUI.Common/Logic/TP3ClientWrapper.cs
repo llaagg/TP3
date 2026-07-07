@@ -43,6 +43,7 @@ public class TP3ClientWrapper
             await ipcClient.ConnectAsync();
             // let's attach and get the root of all
             this.UpdateStatus("Connected", "Successfully connected to IPC server.");
+            this.UpdateStatus("Attaching", "Attaching to root...");
             var attachResult = await ipcClient.SendAndWaitOne(new TP3Message()
             {
                 Tag = this.rootTag,
@@ -57,6 +58,7 @@ public class TP3ClientWrapper
             {
                 throw new InvalidOperationException($"Error received from IPC server: {attachResult.Error?.Message}");
             }
+            this.UpdateStatus("Attached", "Successfully attached to root.");
         }
         catch (Exception ex)
         {
