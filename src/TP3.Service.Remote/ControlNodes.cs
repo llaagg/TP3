@@ -9,5 +9,5 @@ public class ControlNodes : BaseDirectoryNode
     {
     }
 
-    override public IEnumerable<INode>? Children => new List<INode>() { new ControlNode("attach") };
+    override public IEnumerable<INode>? Children => new List<INode>() { new ControlNode() };
 }
