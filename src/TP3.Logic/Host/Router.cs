@@ -9,10 +9,10 @@ namespace TP3.Agent.Logic.Transport;
 
 public sealed class Router : IRouter
 {
-    private readonly AgentHost host;
+    private readonly NetworkManager host;
     private readonly ILogger? logger;
 
-    public Router(AgentHost host, ILogger? logger)
+    public Router(NetworkManager host, ILogger? logger)
     {
         this.host = host ?? throw new ArgumentNullException(nameof(host));
         this.logger = logger;

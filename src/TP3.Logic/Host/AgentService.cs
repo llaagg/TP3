@@ -6,11 +6,11 @@ namespace TP3.Agent.Logic.Host;
 
 internal class AgentService : BaseDirectoryNode, IService
 {
-    private AgentHost agentHost;
+    private NetworkManager agentHost;
     private ILogger? logger;
     private INetworkSessions networkSessions;
 
-    public AgentService(AgentHost agentHost, ILogger? logger, INetworkSessions networkSessions)
+    public AgentService(NetworkManager agentHost, ILogger? logger, INetworkSessions networkSessions)
         : base("AgentService")
     {
         this.agentHost = agentHost;

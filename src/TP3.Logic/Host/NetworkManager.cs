@@ -14,7 +14,7 @@ namespace TP3.Agent.Logic.Host;
 /// I filter messages with namespaces. 
 ///    TODO: implement namespace filtering
 /// </summary>
-public class AgentHost : IAgentHost, IDisposable
+public class NetworkManager : IAgentHost, IDisposable
 {
     public readonly IAgent Me;
     private readonly IService[] services;
@@ -26,7 +26,7 @@ public class AgentHost : IAgentHost, IDisposable
 
     public INetworkSessions NetworkSessions => networkSessions;
 
-    public AgentHost(ILogger? logger = null, IService[]? services = null)
+    public NetworkManager(ILogger? logger = null, IService[]? services = null)
     {
         this.logger = logger;
 
