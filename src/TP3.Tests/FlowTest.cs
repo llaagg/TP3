@@ -113,10 +113,6 @@ namespace TP3.Tests.Integration
             Assert.Equal("tag1", lastMessageSent.Tag);                                                ///                   tag
             Assert.NotNull(lastAttachResponse.Info);
             Assert.NotNull(lastAttachResponse.Info.Id);                                           ///                   quid
-            // var pointer = sut.NetworkSessions.GetPointer(fakeNetworkPipe, "tag1");
-            // Assert.NotNull(pointer);
-            // Assert.NotNull(pointer!.Node);
-            // Assert.Null(pointer!.Data);
 
             await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2"));
             Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
