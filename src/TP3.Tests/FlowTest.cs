@@ -104,6 +104,7 @@ namespace TP3.Tests.Integration
 
             await sut.Init();
             transport = await sut.AddTransport(fakeNetworkTransport);
+            transport.NewUserNetworkConnection(fakeNetworkPipe);
 
             await sut.Handle(fakeNetworkPipe, AttachMessage("tag1"));                                      /// Tattach (tag)
             Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, lastMessageSent.PayloadCase);                                           ///                   Rattach
