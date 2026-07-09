@@ -8,7 +8,7 @@ using TP3.Messages;
 using TP3.Protocol;
 
 
-namespace TP3.Tests.Intergration
+namespace TP3.Tests.Integration
 {
     public class FlowTest
     {
@@ -70,7 +70,7 @@ namespace TP3.Tests.Intergration
         
 
         [Fact]
-        public async Task AgentHost_StartsAndStopsSuccessfully()
+        public async Task GoldenPath_CompleteEndToEnd()
         {
             var fakeservice = A.Fake<IService>();
             var fileData = System.Text.Encoding.UTF8.GetBytes("sample-readme-content");

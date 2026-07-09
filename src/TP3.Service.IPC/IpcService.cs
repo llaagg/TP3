@@ -25,17 +25,20 @@ public class IpcService : BaseDirectoryNode, IService
 
         this.transport = new IpcTransport(this.Port, this.logger);
 
-        me.AddTransport(this.transport);
+        await me.AddTransport(this.transport);
     }
 
     public async Task Start()
     {
-        this.logger?.LogInformation("Starting IPC service... ipc transport is handled by network manager, no init control here.");
+        this.logger?.LogInformation("Starting IPC service...");
+        await this.transport.Start();
+
     }
 
     public async Task Stop()
     {
-        this.logger?.LogInformation("Stopping IPC service... ipc transport is handled by network manager, no init control here.");
+        this.logger?.LogInformation("Stopping IPC service...");
+        this.transport.Stop();
     }
 
     public void Dispose()

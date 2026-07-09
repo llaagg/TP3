@@ -38,12 +38,12 @@ public class Agent : IAgent
 
     public async Task Start()
     {
-        await ServiceManager?.Start();
+        await ServiceManager.Start();
     }
 
     public async Task Stop()
     {
-        await ServiceManager?.Stop();
+        await ServiceManager.Stop();
     }
 
     public INode T

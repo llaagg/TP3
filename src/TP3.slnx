@@ -1,6 +1,5 @@
 <Solution>
   <Project Path="TP3.Logic/TP3.Logic.csproj" />
-  <Project Path="TP3.GUI.WebDav/TP3.GUI.WebDav.csproj" />
   <Project Path="TP3.Interfaces/TP3.Interfaces.csproj" />
   <Project Path="TP3.Protocol/TP3.Protocol.csproj" />
   <Project Path="TP3.Server/TP3.Server.csproj" />

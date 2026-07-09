@@ -29,18 +29,6 @@ public class TP3Transport : ITP3Transport
         await networkTransport.Send(session, message);
     }
 
-    public async Task Start()
-    {
-        logger?.LogInformation("TP3Transport started.");
-        await networkTransport.Start();
-    }
-
-    public void Stop()
-    {
-        logger?.LogInformation("TP3Transport stopped.");
-        networkTransport.Stop();
-    }
-
     public async Task Init(INetworkManager agentHost, IRouter router)
     {
         this.agentHost = agentHost;

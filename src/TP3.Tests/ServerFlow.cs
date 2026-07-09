@@ -1,3 +1,7 @@
+
+
+namespace TP3.Tests.ServerFlow;
+
 public class ServerFlow
 {
     [Fact]

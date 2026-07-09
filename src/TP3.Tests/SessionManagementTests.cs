@@ -5,6 +5,9 @@ using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
 
+
+namespace TP3.Tests.SessionManagement;
+
 public class SessionManagementTests
 {
 

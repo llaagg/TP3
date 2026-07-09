@@ -53,8 +53,8 @@ public class NetworkManager : INetworkManager, IDisposable
 
     public async Task AddTransport(INetworkTransport transport)
     {
+        this.logger?.LogInformation("Adding transport: {TransportType}", transport.GetType().Name);
         var tp3Transport = new TP3Transport(this.logger, transport);
-
         if (this.transports.Any(t => t.TransportTag == tp3Transport.TransportTag))
         {
             throw new Exception($"Transport with tag '{tp3Transport.TransportTag}' already exists.");
