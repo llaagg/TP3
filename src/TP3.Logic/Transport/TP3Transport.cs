@@ -7,7 +7,7 @@ using TP3.Messages;
 public class TP3Transport : ITP3Transport
 {
     private readonly ILogger? logger;
-    private INetworkManager agentHost;
+    private INetworkManager networkManager;
     private IRouter? router = null!;
     private readonly INetworkTransport networkTransport;
 
@@ -29,9 +29,9 @@ public class TP3Transport : ITP3Transport
         await networkTransport.Send(session, message);
     }
 
-    public async Task Init(INetworkManager agentHost, IRouter router)
+    public async Task Init(INetworkManager networkManager, IRouter router)
     {
-        this.agentHost = agentHost;
+        this.networkManager = networkManager;
         this.router = router;
         await this.networkTransport.Init(this);
         logger?.LogInformation("TP3Transport initialized with router.");
@@ -43,26 +43,26 @@ public class TP3Transport : ITP3Transport
         logger?.LogInformation("TP3Transport disposed.");
     }
 
-    public void NewUserNetworkConnection(INetworkTransport ipcTransport, INetworkPipe session)
+    public void NewUserNetworkConnection(INetworkPipe session)
     {
-        this.agentHost.NetworkSessions.AddSession(session);
+        this.networkManager.NetworkSessions.AddSession(session);
     }
 
     public INode GetNode(INetworkPipe incomingTransport, string tag)
     {
-        INode result = this.agentHost.NetworkSessions.FindNode(incomingTransport, tag);
+        INode result = this.networkManager.NetworkSessions.FindNode(incomingTransport, tag);
 
         return result;
     }
 
     public void AttachTag(string tag, INode rootNode, INetworkPipe incomingNetworkSession)
     {
-        this.agentHost.NetworkSessions.AttachTagToPointer(tag, rootNode, incomingNetworkSession);
+        this.networkManager.NetworkSessions.AttachTagToPointer(tag, rootNode, incomingNetworkSession);
     }
 
     public async Task<ITP3DataStream> GetData(INetworkPipe incomingTransport, string tag)
     {
-        var pointer = this.agentHost.NetworkSessions.GetPointer(incomingTransport, tag);
+        var pointer = this.networkManager.NetworkSessions.GetPointer(incomingTransport, tag);
         if (pointer == null)
         {
             throw new Exception($"No pointer found for tag: {tag}");
@@ -91,7 +91,7 @@ public class TP3Transport : ITP3Transport
 
     public IPointer GetPointer(INetworkPipe incomingTransport, string tag)
     {
-        var pointer = this.agentHost.NetworkSessions.GetPointer(incomingTransport, tag);
+        var pointer = this.networkManager.NetworkSessions.GetPointer(incomingTransport, tag);
         if (pointer == null)
         {
             throw new Exception($"No pointer found for tag: {tag}");
@@ -103,7 +103,7 @@ public class TP3Transport : ITP3Transport
 
     public async Task ClosePointer(INetworkPipe incomingTransport, string tag)
     {
-        this.agentHost.NetworkSessions.CloseSession(incomingTransport, tag);
+        this.networkManager.NetworkSessions.CloseSession(incomingTransport, tag);
     }
 
     public Task Route(INetworkPipe session, TP3Message message)
@@ -111,3 +111,4 @@ public class TP3Transport : ITP3Transport
         return this.router!.Route(session, message);
     }
 }
+            

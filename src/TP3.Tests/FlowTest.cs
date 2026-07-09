@@ -102,7 +102,7 @@ namespace TP3.Tests.Integration
             var fakeNetwrokTransport = A.Fake<INetworkTransport>();
 
             var transport = new TP3Transport(A.Fake<ILogger>(), fakeNetwrokTransport);
-
+            
             var pipe = A.Fake<INetworkPipe>();
             A.CallTo(() => pipe.AgentID).Returns("agent1");
             A.CallTo(() => pipe.TP3Transport).Returns(transport);
@@ -120,9 +120,11 @@ namespace TP3.Tests.Integration
             var sut = new TP3.Agent.Logic.Agent.Agent(A.Fake<ILogger>(),
                 new List<IService> { fakeservice }.ToArray());
 
+
             await sut.Init();
 
-            transport.NewUserNetworkConnection(fakeNetwrokTransport, pipe);
+            await sut.AddTransport(fakeNetwrokTransport);
+            transport.NewUserNetworkConnection(pipe);
 
             await sut.Handle(pipe, AttachMessage("tag1"));                                      /// Tattach (tag)
             Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, lastMessageSent.PayloadCase);                                           ///                   Rattach

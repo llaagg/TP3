@@ -46,22 +46,30 @@ namespace TP3.Tests.Protocol
             await directoryStreamData.Open(); // creates a stream that can be serilized and sent
 
             TP3Message lastMessageSent = null!;
-            var fakeRouter = A.Fake<IRouter>();
-            A.CallTo(() => fakeRouter.Respond(A<IAgent>.Ignored, A<TP3Message>.Ignored, A<INetworkPipe>.Ignored))
-                .Invokes((IAgent agent, TP3Message message, INetworkPipe targetTransport) =>
-                {
-                    lastMessageSent = message;
-                    Trace.TraceInformation("Fake router respond called with {0}", lastMessageSent);
-                })
-                .Returns(Task.CompletedTask);
+            // var fakeRouter = A.Fake<IRouter>();
+            // A.CallTo(() => fakeRouter.Respond(A<IAgent>.Ignored, A<TP3Message>.Ignored, A<INetworkPipe>.Ignored))
+            //     .Invokes((IAgent agent, TP3Message message, INetworkPipe targetTransport) =>
+            //     {
+            //         lastMessageSent = message;
+            //         Trace.TraceInformation("Fake router respond called with {0}", lastMessageSent);
+            //     })
+            //     .Returns(Task.CompletedTask);
 
-            var fakeTp3Trasnport = A.Fake<ITP3Transport>();
             var fakePointer = A.Fake<IPointer>();
             A.CallTo(() => fakePointer.Data).Returns(directoryStreamData);
+
+            var fakeTp3Trasnport = A.Fake<ITP3Transport>();
             A.CallTo(() => fakeTp3Trasnport.GetData(A<INetworkPipe>.Ignored, A<string>.Ignored))
                 .Returns(Task.FromResult<ITP3DataStream>(directoryStreamData));
             A.CallTo(() => fakeTp3Trasnport.GetPointer(A<INetworkPipe>.Ignored, A<string>.Ignored))
                 .Returns(fakePointer);
+            A.CallTo(() => fakeTp3Trasnport.Send(A<INetworkPipe>.Ignored, A<TP3Message>.Ignored))
+                .Invokes((INetworkPipe targetTransport, TP3Message message) =>
+                {
+                    lastMessageSent = message;
+                    Trace.TraceInformation("Fake transport send called with {0}", lastMessageSent);
+                })
+                .Returns(Task.CompletedTask);
 
             var fakeNetworkPie = A.Fake<INetworkPipe>();
             A.CallTo(() => fakeNetworkPie.TP3Transport).Returns(fakeTp3Trasnport);

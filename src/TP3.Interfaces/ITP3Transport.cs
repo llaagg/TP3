@@ -10,7 +10,7 @@ public interface ITP3Transport : IDisposable
     string TransportTag { get; } 
     Task Send(INetworkPipe session, TP3Message message);
     Task Init(INetworkManager agentHost, IRouter router);
-    void NewUserNetworkConnection(INetworkTransport ipcTransport, INetworkPipe session);
+    void NewUserNetworkConnection(INetworkPipe session);
     INode GetNode(INetworkPipe incomingTransport, string tag);
     void AttachTag(string tag, INode rootNode, INetworkPipe incomingNetworkSession);
     Task<ITP3DataStream> GetData(INetworkPipe incomingTransport, string tag);

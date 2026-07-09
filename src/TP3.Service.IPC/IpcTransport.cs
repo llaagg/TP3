@@ -98,7 +98,7 @@ public class IpcTransport : INetworkTransport
     
         var session = new IpcSession(client, networkStream, this.transport, this, nameof(IpcTransport));
 
-        this.transport.NewUserNetworkConnection(this, session);
+        this.transport.NewUserNetworkConnection(session);
 
         var previousSession = currentSession.Value;
         currentSession.Value = session;
