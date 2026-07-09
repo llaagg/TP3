@@ -18,14 +18,13 @@ public class AgentHost : IAgentHost, IDisposable
 {
     public readonly IAgent Me;
     private readonly IService[] services;
-    private readonly ITP3Transport[]? transports;
     private readonly ILogger? logger;
     public readonly Router router;
 
     private NetworkSessions networkSessions = new NetworkSessions();
     public INetworkSessions NetworkSessions => networkSessions;
 
-    public AgentHost(ILogger? logger = null, IService[]? services = null, ITP3Transport[]? transports = null)
+    public AgentHost(ILogger? logger = null, IService[]? services = null)
     {
         this.logger = logger;
 
@@ -33,7 +32,6 @@ public class AgentHost : IAgentHost, IDisposable
         Me = new Agent.Agent(router, logger);
 
         this.services = services ?? Array.Empty<IService>();
-        this.transports = transports;
     }
 
 
@@ -68,8 +66,10 @@ public class AgentHost : IAgentHost, IDisposable
             }
             
             // let's add just another one
-            await Me.AddService(new AgentService(this, logger, this.NetworkSessions));
         }
+
+        await Me.AddService(new AgentService(this, logger, this.NetworkSessions));
+
     }
 
     public async Task Start()

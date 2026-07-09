@@ -24,9 +24,9 @@ class SessionNode : INode
     public string getNetworkDetails()
     {
         var session = connection1.Value.Session;
-        if (session is IpcSession ipcSession)
+        if (session is INetworkPipe ipcSession)
         {
-            return $"{ipcSession.Client.Client.RemoteEndPoint}";
+            return $"{ipcSession.ToString()}";
         }else
         {
             return "";

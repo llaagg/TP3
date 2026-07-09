@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Transport;
 using TP3.Service.FileSystem;
+using TP3.Service.IPC;
 
 namespace TP3.CLI;
 
@@ -38,9 +39,12 @@ public static class CommandLineApplication
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
 
-        var ah = new AgentHost(logger, 
-                new[] { new FileSystemService() }, 
-                new []{ new TP3Transport(logger, new IpcTransport(ipcPort, logger))}
+        var ah = new AgentHost(logger,
+                    new IService[]
+                    {
+                        new FileSystemService(),
+                        new IpcService(ipcPort, logger)
+                    }
         );
 
         logger.LogInformation("Initializing agent host...");
