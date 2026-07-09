@@ -24,6 +24,18 @@ public class FileSystemService : BaseDirectoryNode, IService
     {
     }
 
+    public async Task Start()
+    {
+    }
+
+    public async Task Stop()
+    {
+    }
+
+    public void Dispose()
+    {
+    }
+
     override public IEnumerable<INode>? Children => new INode[] { State };
 }
 

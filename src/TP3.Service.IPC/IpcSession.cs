@@ -24,6 +24,5 @@ public class IpcSession : INetworkPipe
 
     public string AgentID { get; }
 
-    public Dictionary<string, INode> Pointers => throw new NotImplementedException();
 
 }

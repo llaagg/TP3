@@ -28,5 +28,19 @@ internal class AgentService : BaseDirectoryNode, IService
         
     }
 
+    public Task Start()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Stop()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Dispose()
+    {
+    }
+
     public override IEnumerable<INode>? Children => new INode[] { State };
 }

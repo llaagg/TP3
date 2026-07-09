@@ -11,7 +11,7 @@ public interface ITP3Transport : IDisposable
     Task Send(INetworkPipe session, TP3Message message);
     Task Start();
     void Stop();
-    Task Init(IAgentHost agentHost, IRouter router);
+    Task Init(INetworkManager agentHost, IRouter router);
     void NewUserNetworkConnection(INetworkTransport ipcTransport, INetworkPipe session);
     INode GetNode(INetworkPipe incomingTransport, string tag);
     void AttachTag(string tag, INode rootNode, INetworkPipe incomingNetworkSession);

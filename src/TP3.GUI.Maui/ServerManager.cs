@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 using TP3.Service.FileSystem;
 using TP3.Agent.Logic.Transport;
 using TP3.Agent.Logic.Host;
+using TP3.Agent.Logic.Agent;
 
 [UnsupportedOSPlatform("browser")]
 public class ServerManager : IServerManager
@@ -49,11 +50,7 @@ public class ServerManager : IServerManager
     
 	public async Task StartServerTask(IService[]? services)
 	{
-		var ipcport =5001;
-        var ah = new AgentHost(logger, 
-                services,
-                new []{ new TP3Transport(logger, new IpcTransport(ipcport, logger))}
-        );
+		var ah = new Agent(logger, services);
 
         logger.LogInformation("Initializing agent host...");
         await ah.Init();

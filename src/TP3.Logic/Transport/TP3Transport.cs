@@ -6,8 +6,8 @@ using TP3.Messages;
 
 public class TP3Transport : ITP3Transport
 {
-    private readonly ILogger logger;
-    private IAgentHost agentHost;
+    private readonly ILogger? logger;
+    private INetworkManager agentHost;
     private IRouter? router = null!;
     private readonly INetworkTransport networkTransport;
 
@@ -16,7 +16,7 @@ public class TP3Transport : ITP3Transport
     /// </summary>
     public string TransportTag { get; }
 
-    public TP3Transport(ILogger logger, INetworkTransport networkTransport)
+    public TP3Transport(ILogger? logger, INetworkTransport networkTransport)
     {
         this.logger = logger;
         this.networkTransport = networkTransport;
@@ -31,28 +31,28 @@ public class TP3Transport : ITP3Transport
 
     public async Task Start()
     {
-        logger.LogInformation("TP3Transport started.");
+        logger?.LogInformation("TP3Transport started.");
         await networkTransport.Start();
     }
 
     public void Stop()
     {
-        logger.LogInformation("TP3Transport stopped.");
+        logger?.LogInformation("TP3Transport stopped.");
         networkTransport.Stop();
     }
 
-    public async Task Init(IAgentHost agentHost, IRouter router)
+    public async Task Init(INetworkManager agentHost, IRouter router)
     {
         this.agentHost = agentHost;
         this.router = router;
         await this.networkTransport.Init(this);
-        logger.LogInformation("TP3Transport initialized with router.");
+        logger?.LogInformation("TP3Transport initialized with router.");
     }
 
     public void Dispose()
     {
         networkTransport.Dispose();
-        logger.LogInformation("TP3Transport disposed.");
+        logger?.LogInformation("TP3Transport disposed.");
     }
 
     public void NewUserNetworkConnection(INetworkTransport ipcTransport, INetworkPipe session)

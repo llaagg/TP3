@@ -38,12 +38,12 @@ public class Agent : IAgent
 
     public async Task Start()
     {
-        await this.NetworkManager.Start();
+        await ServiceManager?.Start();
     }
 
     public async Task Stop()
     {
-        this.NetworkManager.Stop();
+        await ServiceManager?.Stop();
     }
 
     public INode T
@@ -80,5 +80,10 @@ public class Agent : IAgent
             logger?.LogError(ex, "Error handling TP3 message: {Command}", request.ToString());
             await router.Respond(this, MessageHandler.CreateErrorMessage(request.Tag, ex.Message, ex.ToString()), incomingTransport);
         }
+    }
+
+    public async Task AddTransport(INetworkTransport transport)
+    {
+        await this.NetworkManager.AddTransport(transport);
     }
 }

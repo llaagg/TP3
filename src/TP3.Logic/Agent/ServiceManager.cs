@@ -31,4 +31,16 @@ internal class ServiceManager
             }
         }
     }
+
+    public async Task Start()
+    {
+        var startTasks = this.services.Select(s => s.Start()).ToList();
+        await Task.WhenAll(startTasks);
+    }
+
+    public async Task Stop()
+    {
+        var stopTasks = this.services.Select(s => s.Stop()).ToList();
+        await Task.WhenAll(stopTasks);
+    }
 }

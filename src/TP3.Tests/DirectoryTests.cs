@@ -67,16 +67,22 @@ namespace TP3.Tests.Protocol
             A.CallTo(() => fakeNetworkPie.TP3Transport).Returns(fakeTp3Trasnport);
 
 
-            var agent = new TP3.Agent.Logic.Agent.Agent(fakeRouter, A.Fake<Microsoft.Extensions.Logging.ILogger>());
+            var agent = new TP3.Agent.Logic.Agent.Agent();
 
             string tag = "root-tag";
 
-            // ACT
-            await agent.ReadDataAndSend(new TP3ReadRequest
+            var m = new TP3Message
             {
-                Offset = 0,
-                MaxBytes = 16 * 1024,
-            }, tag, fakeNetworkPie);
+                Tag = tag,
+                ReadRequest = new TP3ReadRequest
+                {
+                    Offset = 0,
+                    MaxBytes = 16 * 1024,
+                }
+            };
+
+            // ACT
+            await agent.Handle(fakeNetworkPie, m);
 
             // ASSERT
             Assert.NotNull(lastMessageSent);

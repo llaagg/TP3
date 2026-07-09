@@ -1,4 +1,4 @@
-public interface IAgentHost
+public interface INetworkManager
 {
     INetworkSessions NetworkSessions { get; }
 }

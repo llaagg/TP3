@@ -4,17 +4,7 @@ using TP3.Interfaces;
 
 namespace TP3.Agent.Logic.Host;
 
-/// <summary>
-/// I know all.
-/// I know tcp.
-/// I know ipc.
-/// I allow to talk to me from my thread.
-/// I do not route messages to router.
-///    I let router do it.
-/// I filter messages with namespaces. 
-///    TODO: implement namespace filtering
-/// </summary>
-public class NetworkManager : IAgentHost, IDisposable
+public class NetworkManager : INetworkManager, IDisposable
 {
     private readonly ILogger? logger;
     public readonly IRouter router;
@@ -37,11 +27,7 @@ public class NetworkManager : IAgentHost, IDisposable
         if (this.transports != null)
         {
             // check if tags are uniq in tranbsports
-            var tags = transports.Select(t => t.TransportTag).ToList();
-            if (tags.Count != tags.Distinct().Count())
-            {
-                throw new Exception("Transport tags are not unique.");
-            }
+            ValidateTag();
 
             foreach (var t in transports)
             {
@@ -50,47 +36,31 @@ public class NetworkManager : IAgentHost, IDisposable
         }
     }
 
-    public async Task Start()
+    private void ValidateTag()
     {
-        logger?.LogInformation("Starting agent host.");
-
-        if (transports == null || transports.Count == 0)
+        var tags = transports.Select(t => t.TransportTag).ToList();
+        if (tags.Count != tags.Distinct().Count())
         {
-            logger?.LogWarning("No transports configured for AgentHost.");
+            throw new Exception("Transport tags are not unique.");
         }
-
-        List<Task> transportStartTasks = new List<Task>();
-        if (transports != null)
-        {
-            foreach (var t in transports)
-            {
-                transportStartTasks.Add(t.Start());
-            }
-        }
-
-        await Task.WhenAll(transportStartTasks);
     }
+
 
     public void Dispose()
     {
         logger?.LogInformation("Disposing agent host.");
-        if (transports != null)
-        {
-            foreach (var t in transports)
-            {
-                t.Dispose();
-            }
-        }
     }
 
-    public void Stop()
+    public async Task AddTransport(INetworkTransport transport)
     {
-        if (transports != null)
+        var tp3Transport = new TP3Transport(this.logger, transport);
+
+        if (this.transports.Any(t => t.TransportTag == tp3Transport.TransportTag))
         {
-            foreach (var t in transports)
-            {
-                t.Stop();
-            }
+            throw new Exception($"Transport with tag '{tp3Transport.TransportTag}' already exists.");
         }
+
+        this.transports.Add(tp3Transport);
+        await tp3Transport.Init(this, router);
     }
 }

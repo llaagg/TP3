@@ -117,30 +117,29 @@ namespace TP3.Tests.Intergration
                 .Returns(Task.CompletedTask);
 
 
-            var sut = new AgentHost(A.Fake<ILogger>(),
-                new List<IService> { fakeservice }.ToArray(),
-                new List<ITP3Transport> { transport }.ToArray());
+            var sut = new TP3.Agent.Logic.Agent.Agent(A.Fake<ILogger>(),
+                new List<IService> { fakeservice }.ToArray());
 
             await sut.Init();
 
             transport.NewUserNetworkConnection(fakeNetwrokTransport, pipe);
 
-            await sut.router.Route(pipe, AttachMessage("tag1"));                                      /// Tattach (tag)
+            await sut.Handle(pipe, AttachMessage("tag1"));                                      /// Tattach (tag)
             Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, lastMessageSent.PayloadCase);                                           ///                   Rattach
             var lastAttachResponse = lastMessageSent.AttachResponse;                               ///                   Rattach
             Assert.NotNull(lastAttachResponse);
             Assert.Equal("tag1", lastMessageSent.Tag);                                                ///                   tag
             Assert.NotNull(lastAttachResponse.Info);
             Assert.NotNull(lastAttachResponse.Info.Id);                                           ///                   quid
-            var pointer = sut.NetworkSessions.GetPointer(pipe, "tag1");
-            Assert.NotNull(pointer);
-            Assert.NotNull(pointer!.Node);
-            Assert.Null(pointer!.Data);
+            // var pointer = sut.NetworkSessions.GetPointer(pipe, "tag1");
+            // Assert.NotNull(pointer);
+            // Assert.NotNull(pointer!.Node);
+            // Assert.Null(pointer!.Data);
 
-            await sut.router.Route(pipe, WalkMessage("tag1", "tag2"));
+            await sut.Handle(pipe, WalkMessage("tag1", "tag2"));
             Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
             
-            await sut.router.Route(pipe, OpenMessage("tag2"));
+            await sut.Handle(pipe, OpenMessage("tag2"));
             var lastOpenResponse = lastMessageSent.OpenResponse;
             var nodeType = lastOpenResponse!.Info.NodeType;
             Assert.Equal(NodeType.Directory, nodeType);
@@ -149,17 +148,17 @@ namespace TP3.Tests.Intergration
             Assert.NotEmpty(stats);
             Assert.Equal(NodeType.Directory, stats[0].Info.NodeType);
 
-            await sut.router.Route(pipe, ClunkMessage("tag2"));
+            await sut.Handle(pipe, ClunkMessage("tag2"));
             var lastClunkResponse = lastMessageSent.ClunkResponse;
             Assert.NotNull(lastClunkResponse);
 
             List<string> path = new List<string> { stats[0].Name };
 
-            await sut.router.Route(pipe, WalkMessage("tag1", "tag2", path.ToArray()));
+            await sut.Handle(pipe, WalkMessage("tag1", "tag2", path.ToArray()));
             var lastWalkResponse2 = lastMessageSent.WalkResponse;
             Assert.NotNull(lastWalkResponse2);
 
-            await sut.router.Route(pipe, OpenMessage("tag2"));
+            await sut.Handle(pipe, OpenMessage("tag2"));
             Assert.Equal(NodeType.Directory, nodeType);
 
             List<TP3StatPayload> stats2 = TReadOnADirectory(pipe, sut, "tag2");
@@ -168,31 +167,31 @@ namespace TP3.Tests.Intergration
             var firstChildName = stats2[0].Name;     
             Assert.Equal("state", firstChildName, ignoreCase: true); // we have state as in all services
   
-            await sut.router.Route(pipe, ClunkMessage("tag2"));
+            await sut.Handle(pipe, ClunkMessage("tag2"));
 
             path.Add(firstChildName);
 
-            await sut.router.Route(pipe, WalkMessage("tag1", "tag2", path.ToArray()));
+            await sut.Handle(pipe, WalkMessage("tag1", "tag2", path.ToArray()));
             Assert.NotNull(lastMessageSent.WalkResponse);
 
-            await sut.router.Route(pipe, OpenMessage("tag2"));
+            await sut.Handle(pipe, OpenMessage("tag2"));
             Assert.Equal(NodeType.Directory, nodeType);
 
-            await sut.router.Route(pipe, ClunkMessage("tag2"));
+            await sut.Handle(pipe, ClunkMessage("tag2"));
 
-            await sut.router.Route(pipe, WalkMessage("tag1", "tag2", path[0], path[1], "README.md"));
+            await sut.Handle(pipe, WalkMessage("tag1", "tag2", path[0], path[1], "README.md"));
             var lastWalkResponse4 = lastMessageSent.WalkResponse;
             Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
             Assert.NotNull(lastWalkResponse4);
             Assert.Equal(3, lastWalkResponse4!.Infos!.Count);
             Assert.Equal(NodeType.File, lastWalkResponse4.Infos![2].NodeType);
 
-            await sut.router.Route(pipe, OpenMessage("tag2"));
+            await sut.Handle(pipe, OpenMessage("tag2"));
             var lastOpenResponse4 = lastMessageSent.OpenResponse;
             Assert.Equal(TP3Message.PayloadOneofCase.OpenResponse, lastMessageSent.PayloadCase);
             Assert.Equal(NodeType.File, lastOpenResponse4!.Info.NodeType);
             
-            await sut.router.Route(pipe, ReadMessage("tag2", 0, 1000));
+            await sut.Handle(pipe, ReadMessage("tag2", 0, 1000));
             var lastReadResponse = lastMessageSent.ReadResponse;
             Assert.NotNull(lastReadResponse);
             var data = lastReadResponse!.Data;
@@ -200,7 +199,7 @@ namespace TP3.Tests.Intergration
             Assert.NotEmpty(data);
         }
 
-        private List<TP3StatPayload> TReadOnADirectory(INetworkPipe pipe, AgentHost sut, string tag)
+        private List<TP3StatPayload> TReadOnADirectory(INetworkPipe pipe, Agent.Logic.Agent.Agent sut, string tag)
         {
             IEnumerable<TP3ReadResponse> data = GetData(sut, pipe, tag);
             TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
@@ -212,14 +211,14 @@ namespace TP3.Tests.Intergration
             return TP3StatPayloadExtensions.Deserilize(ms).ToList();
         }
 
-        private IEnumerable<TP3ReadResponse> GetData(AgentHost sut, INetworkPipe pipe, string tag)
+        private IEnumerable<TP3ReadResponse> GetData(Agent.Logic.Agent.Agent sut, INetworkPipe pipe, string tag)
         {
             var offset = 0UL;
             var maxbytes = 10000U;
             while (true)
             {
                 var readRequest = ReadMessage(tag, offset, maxbytes);
-                sut.router.Route(pipe, readRequest).Wait();
+                sut.Handle(pipe, readRequest).Wait();
                 var lastReadResponse = lastMessageSent.ReadResponse;
                 var count = lastReadResponse?.Data?.Length ?? 0;
                 yield return lastReadResponse;

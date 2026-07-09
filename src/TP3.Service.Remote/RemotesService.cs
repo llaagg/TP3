@@ -15,6 +15,18 @@ public class RemotesService : BaseDirectoryNode, IService
 
     }
 
+    public async Task Start()
+    {
+    }
+
+    public async Task Stop()
+    {
+    }
+
+    public void Dispose()
+    {
+    }
+
     override public IEnumerable<INode>? Children => new List<INode>() { State, Control };
 
     public RemoteNodes State { get; }
