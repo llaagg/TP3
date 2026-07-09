@@ -2,6 +2,7 @@ using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
 using TP3.Messages;
+using static TP3.Messages.TP3Message;
 
 namespace TP3.Agent.Logic.Agent;
 
@@ -21,23 +22,16 @@ public class MessageHandler
     private readonly IAgent agent;
     private readonly IRouter router;
     private readonly ILogger? logger;
-    private readonly INode T;
 
     public async Task Handle(INetworkPipe incomingTransport, TP3Message request)
-    {
-        await MainLoop(incomingTransport, request).ConfigureAwait(false);
-
-    }
-
-    private async Task MainLoop(INetworkPipe incomingTransport, TP3Message request)
     {
         switch (request.PayloadCase)
         {
             case TP3Message.PayloadOneofCase.WalkRequest:
-                    await Walk(incomingTransport, request).ConfigureAwait(false);
+                    await Walk(incomingTransport, request);
                     break;
             case TP3Message.PayloadOneofCase.ReadRequest:
-                    await Read(incomingTransport, request).ConfigureAwait(false);
+                    await Read(incomingTransport, request);
                     break;
             case TP3Message.PayloadOneofCase.AttachRequest:
                     await Attach(incomingTransport, request);
@@ -197,10 +191,10 @@ public class MessageHandler
 #warning TODO: auth
 
         // register Tag
-        incomingNetworkSession.TP3Transport.AttachTag(tag, this.T, incomingNetworkSession);
+        incomingNetworkSession.TP3Transport.AttachTag(tag, this.agent.T, incomingNetworkSession);
 
         // get quid
-        result.Info = ToNodeInfo(this.T);
+        result.Info = ToNodeInfo(this.agent.T);
 
         return result;
     }

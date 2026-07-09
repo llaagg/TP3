@@ -12,12 +12,18 @@ public class IpcService : BaseDirectoryNode, IService
     {
         this.Port = port;
         this.logger = logger;
+
+        this.State = new StateNode(this);
     }
 
     public int Port { get; }
 
     private ILogger? logger;
-    private IpcTransport transport;
+    public IpcTransport transport;
+
+    public override IEnumerable<INode>? Children => new List<INode>{ this.State };
+
+    public StateNode State { get; private set; }
 
     public async Task Init(IAgent me)
     {
