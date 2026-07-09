@@ -84,8 +84,8 @@ public class Agent : IAgent
         }
     }
 
-    public async Task AddTransport(INetworkTransport transport)
+    public async Task<ITP3Transport> AddTransport(INetworkTransport transport)
     {
-        await this.NetworkManager.AddTransport(transport);
+        return await this.NetworkManager.AddTransport(transport);
     }
 }

@@ -51,7 +51,7 @@ public class NetworkManager : INetworkManager, IDisposable
         logger?.LogInformation("Disposing agent host.");
     }
 
-    public async Task AddTransport(INetworkTransport transport)
+    public async Task<ITP3Transport> AddTransport(INetworkTransport transport)
     {
         this.logger?.LogInformation("Adding transport: {TransportType}", transport.GetType().Name);
         var tp3Transport = new TP3Transport(this.logger, transport);
@@ -62,5 +62,6 @@ public class NetworkManager : INetworkManager, IDisposable
 
         this.transports.Add(tp3Transport);
         await tp3Transport.Init(this, router);
+        return tp3Transport;
     }
 }
