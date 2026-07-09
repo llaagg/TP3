@@ -150,13 +150,20 @@ public class MessageHandler
         }
 
         var node = incomingTransport.TP3Transport.GetNode(incomingTransport, tag);
-        var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tag);
+        try{
+            var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tag);
 
-        return new TP3OpenResponse
+            return new TP3OpenResponse
+            {
+                Info = ToNodeInfo(node),
+                Iounit = data.Iounit,
+            };
+        }
+        catch (Exception ex)
         {
-            Info = ToNodeInfo(node),
-            Iounit = data.Iounit,
-        };
+            logger?.LogError(ex, "Error opening data stream for tag: {Tag}", tag);
+            return CreateErrorMessage(tag, "open_error", ex.Message).OpenResponse;
+        }
     }
 
     public async Task ReadDataAndSend(TP3ReadRequest tP3ReadRequest, string tag, INetworkPipe incomingTransport)
@@ -177,10 +184,17 @@ public class MessageHandler
             return;
         }
 
-        var bytes = await pointer.Data.Read(tP3ReadRequest.Offset, tP3ReadRequest.MaxBytes);
-        response.Data = ByteString.CopyFrom(bytes);
-
-        await router.Respond(this.agent, CreateMessage(tag, m => m.ReadResponse = response), incomingTransport);
+        try
+        {
+            var bytes = await pointer.Data.Read(tP3ReadRequest.Offset, tP3ReadRequest.MaxBytes);
+            response.Data = ByteString.CopyFrom(bytes);
+            await router.Respond(this.agent, CreateMessage(tag, m => m.ReadResponse = response), incomingTransport);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error reading data for tag: {Tag}", tag);
+            await router.Respond(this.agent, CreateErrorMessage(tag, "read_error", ex.Message), incomingTransport);
+        }
     }
 
     private async Task<TP3AttachResponse> AttachTagToConnectionAndGetRootGiq(INetworkPipe incomingNetworkSession, string tag, TP3AttachRequest tP3AttachRequest)

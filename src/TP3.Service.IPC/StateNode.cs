@@ -1,4 +1,5 @@
 using TP3.Interfaces;
+using TP3.Protocol;
 
 namespace TP3.Service.IPC;
 
@@ -9,13 +10,12 @@ public class StateNode : BaseDirectoryNode
     public StateNode(IpcService service) : base("state")
     {
         this.service = service;
-        
-        // who is connected
-        this.service.transport.
     }
 
-    override public IEnumerable<INode>? Children => new List<INode>();
-    {
-       
-    };
+    override public IEnumerable<INode>? Children => new List<INode>(
+        new INode[] {
+            new StreamNode(() => this.service.transport?.Describe() ?? "", "transport"),
+        }
+    );
 }
+

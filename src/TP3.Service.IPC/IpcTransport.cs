@@ -24,6 +24,11 @@ public class IpcTransport : INetworkTransport
         listener = new TcpListener(IPAddress.Loopback, port);
     }
 
+    public string Describe()
+    {
+        return $"IPC Transport on {listener.LocalEndpoint}";
+    }
+
     public void Dispose()
     {
         if (disposed)

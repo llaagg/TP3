@@ -81,7 +81,9 @@ public static class TP3ClientHelpers
             }
             if(message.PayloadCase == TP3Message.PayloadOneofCase.Error)
             {
-                throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
+                logger?.LogError("Error received from IPC server: {Error}", message.Error?.Message);
+                //throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
+                yield break;
             }
 
             var count = message.ReadResponse.Data.Count();
