@@ -39,7 +39,7 @@ public static class CommandLineApplication
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
 
-        var ah = new NetworkManager(logger,
+        var ah = new TP3.Agent.Logic.Agent.Agent(logger,
                     new IService[]
                     {
                         new FileSystemService(),

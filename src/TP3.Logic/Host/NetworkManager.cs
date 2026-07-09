@@ -16,24 +16,19 @@ namespace TP3.Agent.Logic.Host;
 /// </summary>
 public class NetworkManager : IAgentHost, IDisposable
 {
-    public readonly IAgent Me;
-    private readonly IService[] services;
     private readonly ILogger? logger;
-    public readonly Router router;
+    public readonly IRouter router;
 
     private NetworkSessions networkSessions = new NetworkSessions();
     private List<TP3Transport> transports = new List<TP3Transport>();
 
     public INetworkSessions NetworkSessions => networkSessions;
 
-    public NetworkManager(ILogger? logger = null, IService[]? services = null)
+    public NetworkManager(IRouter router, ILogger? logger = null)
     {
         this.logger = logger;
 
-        router = new Router(this, logger);
-        Me = new Agent.Agent(router, logger);
-
-        this.services = services ?? Array.Empty<IService>();
+        this.router = router;
     }
 
 
@@ -52,26 +47,7 @@ public class NetworkManager : IAgentHost, IDisposable
             {
                 await t.Init(this, router);
             }
-
-            foreach (var service in services)
-            {
-                logger?.LogInformation("Initializing service: {ServiceName}", service.GetType().Name);
-                try
-                {
-                    await Me.AddService(service);
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogError(ex, "Failed to initialize service: {ServiceName}", service.GetType().Name);
-                }
-
-            }
-            
-            // let's add just another one
         }
-
-        await Me.AddService(new AgentService(this, logger, this.NetworkSessions));
-
     }
 
     public async Task Start()

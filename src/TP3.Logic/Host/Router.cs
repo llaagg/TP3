@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Protocol;
+using TP3.Agent.Logic.Agent;
 using TP3.Interfaces;
 using TP3.Messages;
 
@@ -9,12 +10,12 @@ namespace TP3.Agent.Logic.Transport;
 
 public sealed class Router : IRouter
 {
-    private readonly NetworkManager host;
+    private readonly IAgent agent;
     private readonly ILogger? logger;
 
-    public Router(NetworkManager host, ILogger? logger)
+    public Router(IAgent agent, ILogger? logger)
     {
-        this.host = host ?? throw new ArgumentNullException(nameof(host));
+        this.agent = agent;
         this.logger = logger;
     }
 
@@ -32,6 +33,6 @@ public sealed class Router : IRouter
 #warning TODO: namespace filtering
 #warning TODO: tcp forward, currelnty we only send to our local agent, but we should forward to other agents if the target is not local
 
-        await host.Me.Handle(sourceTransport, message);
+        await agent.Handle(sourceTransport, message);
     }
 }
