@@ -13,6 +13,10 @@ public static class MauiProgram
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 			});
+		builder.Services.AddLogging(logging =>
+		{
+			
+		});
 
 		builder.Services.AddMauiBlazorWebView();
 		builder.Services.RegisterTP3();
@@ -20,6 +24,10 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<IService, TP3.Service.FileSystem.FileSystemService>();
 		builder.Services.AddSingleton<IService, TP3.Service.Remote.RemotesService>();
+		builder.Services.AddSingleton<IService>(serviceProvider =>
+		{
+			return new TP3.Service.IPC.IpcService(5001, serviceProvider.GetRequiredService<ILogger<TP3.Service.IPC.IpcService>>());
+		});
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

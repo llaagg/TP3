@@ -17,6 +17,7 @@ public class Agent : IAgent
     private readonly ILogger? logger;
     private NetworkManager NetworkManager;
     private ServiceManager ServiceManager;
+    private MessageHandler MessageHandler;
 
     public Agent(ILogger? logger = null, IService[]? services = null)
     {
@@ -24,11 +25,12 @@ public class Agent : IAgent
         this.router = new Router(this, logger);
         this.NetworkManager = new NetworkManager(this.router, logger);
         this.ServiceManager = new ServiceManager(this, services ?? Array.Empty<IService>(), logger);
-        this.MessageHandler = new MessageHandler(this, this.router, this.T, logger);
+        this.Services = new List<IService>(services ?? Array.Empty<IService>());
+        this.MessageHandler = new MessageHandler(this, this.router, logger);
     }
 
-    public List<IService> Services { get; private set; } = new List<IService>();
-    public MessageHandler MessageHandler { get; private set; }
+    public List<IService> Services { get; private set; }
+
 
     public async Task Init()
     {
@@ -50,7 +52,7 @@ public class Agent : IAgent
     {
         get
         {
-            return new Trunk(this.Services);
+            return new Trunk(this.ServiceManager.GetServices());
         }
     }
 

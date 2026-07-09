@@ -15,6 +15,10 @@
 
     private async Task Reconnect()
     {
+        if(client.Connected)
+        {
+            await client.Disconnect();
+        }
         await client.Connect();
     }
 }

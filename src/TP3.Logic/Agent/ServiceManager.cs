@@ -9,7 +9,7 @@ internal class ServiceManager
     private ILogger? logger;
     private List<IService> services;
 
-    public ServiceManager(IAgent agent, IEnumerable<IService> services, ILogger? logger)
+    public ServiceManager(IAgent agent, IEnumerable<IService> services, ILogger logger)
     {
         this.agent = agent;
         this.logger = logger;
@@ -30,6 +30,11 @@ internal class ServiceManager
                 logger?.LogError(ex, "Failed to initialize service: {ServiceName}", service.GetType().Name);
             }
         }
+    }
+
+    public IList<IService> GetServices()
+    {
+        return this.services.ToList();
     }
 
     public async Task Start()

@@ -203,4 +203,21 @@ public class TP3ClientWrapper
         var stream = ipcClient.GetStream(openResponse, logger);
         return stream;
     }
+
+    public bool Connected => Status == "Connected" || Status == "Attached";
+
+    public async Task Disconnect()
+    {
+        if (Connected)
+        {
+            await ipcClient.SendAndWaitOne(new TP3Message()
+            {
+                Tag = this.rootTag,
+                ClunkRequest = new TP3ClunkRequest()
+            }, logger).ConfigureAwait(false);
+            
+            await ipcClient.DisconnectAsync();
+            this.UpdateStatus("Disconnected", "Disconnected from IPC server.");
+        }
+    }
 }

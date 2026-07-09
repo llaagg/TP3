@@ -8,13 +8,12 @@ namespace TP3.Agent.Logic.Agent;
 public class MessageHandler
 {
     
-    public MessageHandler(IAgent agent, IRouter router, INode t, ILogger? logger = null)
+    public MessageHandler(IAgent agent, IRouter router, ILogger? logger = null)
     {
         
         this.walker = new PathWalker();
         this.agent = agent;
         this.router = router;
-        this.T = t;
         this.logger = logger;
     }
 
