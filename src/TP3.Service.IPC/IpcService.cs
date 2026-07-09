@@ -17,16 +17,11 @@ public class IpcService : BaseDirectoryNode, IService
     public int Port { get; }
 
     private ILogger? logger;
-    private IpcTransport transport;
-    private TP3Transport tp3Transport;
 
     public async Task Init(IAgent me)
     {
         this.logger?.LogInformation("Initializing IPC service...");
 
-        this.transport = new IpcTransport(this.Port, this.logger);
-        this.tp3Transport = new TP3Transport(this.logger, this.transport);
-        
-        me.AddTransport(this.tp3Transport);
+        //this.transport = new IpcTransport(this.Port, this.logger);
     }
 }

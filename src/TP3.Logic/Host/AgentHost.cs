@@ -22,6 +22,8 @@ public class AgentHost : IAgentHost, IDisposable
     public readonly Router router;
 
     private NetworkSessions networkSessions = new NetworkSessions();
+    private List<TP3Transport> transports = new List<TP3Transport>();
+
     public INetworkSessions NetworkSessions => networkSessions;
 
     public AgentHost(ILogger? logger = null, IService[]? services = null)
@@ -76,7 +78,7 @@ public class AgentHost : IAgentHost, IDisposable
     {
         logger?.LogInformation("Starting agent host.");
 
-        if (transports == null || transports.Length == 0)
+        if (transports == null || transports.Count == 0)
         {
             logger?.LogWarning("No transports configured for AgentHost.");
         }
