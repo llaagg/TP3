@@ -46,4 +46,3 @@ public class StreamNode : INode
         return Task.FromResult<ITP3DataStream?>(new TP3Stream(streamProvider()));
     }
 }
-
