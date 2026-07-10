@@ -1,16 +1,20 @@
 using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
+using TP3.Protocol;
 
 namespace TP3.Service.Attached;
 
 public class AttachedService: BaseDirectoryNode, IService
 {
     private readonly ILogger logger;
+    private readonly int port;
+    private TcpServerTransport? transport;
 
     public AttachedService(int port, ILogger logger)
         : base($"attached")
     {
-        this.State = new StateNode("state");
+        this.port = port;
+        this.State = new StateNode("state", () => this.transport?.Describe() ?? $"TCP server not started on port {this.port}");
         this.logger = logger;
     }
 
@@ -24,31 +28,39 @@ public class AttachedService: BaseDirectoryNode, IService
 
     public void Dispose()
     {
+        this.transport?.Dispose();
     }
 
     public async Task Init(IAgent me)
     {
+        this.logger?.LogInformation("Initializing attached TCP server on port {Port}...", this.port);
+        this.transport = new TcpServerTransport(this.port, this.logger);
+        await me.AddTransport(this.transport);
     }
 
     public async Task Start()
     {
-        while(true)
+        this.logger?.LogInformation("Starting attached TCP server...");
+
+        if (this.transport is null)
         {
-            this.logger?.LogInformation("AttachedService running...");
-            await Task.Delay(1000);
+            throw new InvalidOperationException("Attached TCP transport is not initialized.");
         }
+
+        await this.transport.Start();
     }
 
     public async Task Stop()
     {
+        this.transport?.Stop();
     }
 }
 
 internal class StateNode : BaseDirectoryNode
 {
-    public StateNode(string name) : base(name)
+    public StateNode(string name, Func<string> transportDescription) : base(name)
     {
-        this.Tcp = new TcpStateNode("tcp");
+        this.Tcp = new TcpStateNode("tcp", transportDescription);
     }
 
     public INode Tcp { get; private set; } = null!;
@@ -58,10 +70,15 @@ internal class StateNode : BaseDirectoryNode
 
 public class TcpStateNode : BaseDirectoryNode
 {
-    public TcpStateNode(string name) : base(name)
+    private readonly Func<string> transportDescription;
+
+    public TcpStateNode(string name, Func<string> transportDescription) : base(name)
     {
-        
+        this.transportDescription = transportDescription;
     }
 
-    override public IEnumerable<INode>? Children => Array.Empty<INode>();
+    override public IEnumerable<INode>? Children => new INode[]
+    {
+        new StreamNode(this.transportDescription, "transport")
+    };
 }
