@@ -37,8 +37,10 @@ public class IpcService : BaseDirectoryNode, IService
     public async Task Start()
     {
         this.logger?.LogInformation("Starting IPC service...");
-        await this.transport?.Start();
-
+        if(this.transport!=null)
+        {
+            await transport.Start();
+        }
     }
 
     public async Task Stop()
