@@ -208,9 +208,13 @@ namespace TP3.Tests.Protocol
 
     public class EchoCommand : BaseControlCommand
     {
-        protected override async Task HandleStreamCommand(Stream input, Stream output, StreamWriter control)
+        protected override async Task HandleStreamCommand(Stream input, Stream output)
         {
-            control.Write("Echo: ");
+            using var writer = new StreamWriter(output, leaveOpen: true)
+            {
+                AutoFlush = true
+            };
+            writer.Write("Echo: ");
 
             // Demo behavior: pass bytes through. Derived commands can replace this with transforms.
             await input.CopyToAsync(output);

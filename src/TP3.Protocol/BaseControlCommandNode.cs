@@ -35,17 +35,16 @@ public class BaseControlCommand : INode
 
     public async Task Command(Stream input, Stream output)
     {
+        await HandleStreamCommand(input, output);
+    }
+
+    protected virtual async Task HandleStreamCommand(Stream input, Stream output)
+    {
         using var writer = new StreamWriter(output, leaveOpen: true)
         {
             AutoFlush = true
         };
-
-        await HandleStreamCommand(input, output, writer);
-    }
-
-    protected virtual async Task HandleStreamCommand(Stream input, Stream output, StreamWriter control)
-    {
-        await control.WriteLineAsync("not implemented");
+        await writer.WriteLineAsync("not implemented");
     }
 
     private sealed class MemeoryCachedCommandDataStream : ITP3DataStream
