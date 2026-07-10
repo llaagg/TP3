@@ -56,14 +56,14 @@
 {
     private readonly List<DynamicFrame> frames = new();
 
-    private void OpenFileFrame(TP3.Protocol.TP3StatPayload item)
+    private void OpenFileFrame((string Tag, string Name, string Content) file)
     {
         frames.Add(new DynamicFrame
         {
-            Tag = NextTag(),
+            Tag = file.Tag,
             Type = FrameType.FilePreview,
-            Caption = $"File: {item.Name}",
-            OutputPreview = string.Empty,
+            Caption = $"File: {file.Name}",
+            OutputPreview = file.Content,
         });
     }
 

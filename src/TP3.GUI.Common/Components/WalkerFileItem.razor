@@ -1,3 +1,5 @@
+@inject TP3ClientWrapper TP3Client
+
 <li class="list-group-item d-flex align-items-center justify-content-between">
     <button class="btn" @onclick="OnClick">
         <span class="me-2">📄</span>
@@ -11,10 +13,32 @@
     public TP3.Protocol.TP3StatPayload Item { get; set; } = default!;
 
     [Parameter]
-    public EventCallback<TP3.Protocol.TP3StatPayload> OnFileClick { get; set; }
+    public string[] CurrentPath { get; set; } = Array.Empty<string>();
 
-    private Task OnClick()
+    [Parameter]
+    public EventCallback<(string Tag, string Name, string Content)> OnFileOpened { get; set; }
+
+    private async Task OnClick()
     {
-        return OnFileClick.InvokeAsync(Item);
+        List<string> pathList = CurrentPath.ToList();
+        pathList.Add(Item.Name);
+
+        var tag = await TP3Client.NewSession(pathList.ToArray());
+
+        try
+        {
+            var stream = TP3Client.GetStream(tag);
+            string content;
+            using (var reader = new StreamReader(stream))
+            {
+                content = await reader.ReadToEndAsync();
+            }
+
+            await OnFileOpened.InvokeAsync((tag, Item.Name, content));
+        }
+        finally
+        {
+            await TP3Client.CloseSession(tag);
+        }
     }
 }

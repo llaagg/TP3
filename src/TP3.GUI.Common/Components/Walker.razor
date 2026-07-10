@@ -41,7 +41,7 @@
         }
         else
         {
-            <WalkerFileItem Item="item" OnFileClick="HandleFileSelected" />
+            <WalkerFileItem Item="item" CurrentPath="currentPath" OnFileOpened="HandleFileSelected" />
         }
     }
 </ul>
@@ -49,12 +49,12 @@
 @code {
 
     [Parameter]
-    public EventCallback<TP3.Protocol.TP3StatPayload> OnFileSelected { get; set; }
+    public EventCallback<(string Tag, string Name, string Content)> OnFileSelected { get; set; }
 
     [Parameter]
     public EventCallback<TP3.Protocol.TP3StatPayload> OnCommandSelected { get; set; }
 
-    private Task HandleFileSelected(TP3.Protocol.TP3StatPayload item)
+    private Task HandleFileSelected((string Tag, string Name, string Content) item)
     {
         return OnFileSelected.InvokeAsync(item);
     }
