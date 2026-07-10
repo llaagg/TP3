@@ -2,18 +2,22 @@ using TP3.Protocol;
 
 namespace TP3.Service.Remote;
 
-internal class AttachRemote : BaseControlCommand
+internal class AttachRemote : BaseControlParamsArgsCommand
 {
-    protected override async Task HandleStreamCommand(Stream input, Stream output)
+    protected override Task HandleParamsArgsCommand(Stream output, params string[]? args)
     {
         using var writer = new StreamWriter(output, leaveOpen: true)
         {
             AutoFlush = true
         };
-        await writer.WriteLineAsync("ok attach stream started");
 
-        // Demo behavior: pass bytes through. Derived commands can replace this with transforms.
-        await input.CopyToAsync(output);
-        await output.FlushAsync();
+        if(string.IsNullOrEmpty(args?.FirstOrDefault()))
+        {
+            writer.WriteLine("AttachRemote command executed with no args");
+            return Task.CompletedTask;
+        }        
+
+        writer.WriteLine("AttachRemote command executed with args: " + string.Join(", ", args));
+        return Task.CompletedTask;
     }
 }

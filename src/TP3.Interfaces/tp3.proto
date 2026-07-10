@@ -8,6 +8,7 @@ option csharp_namespace = "TP3.Messages";
 enum NodeType {
     Directory = 0;
     File = 1;
+    Command = 2;
 }
 
 message NodeInfo {

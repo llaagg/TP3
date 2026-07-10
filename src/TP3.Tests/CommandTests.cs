@@ -32,19 +32,6 @@ namespace TP3.Tests.Protocol
         }
 
         [Fact]
-        public async Task Command_StreamMode_CanReadAndWriteOnSameDuplexStream()
-        {
-            string sent = "Hello command";
-            var cmd = new EchoCommand();
-            var duplex = new InMemoryDuplexStream($"{sent}");
-
-            await cmd.Command(duplex);
-
-            var output = duplex.GetWrittenText();
-            Assert.Equal($"Echo: {sent}", output);
-        }
-
-        [Fact]
         public async Task Command_Get_Stream_GluesWriteToReadOutput()
         {
             string sent = "Hello from Get()";
@@ -60,6 +47,23 @@ namespace TP3.Tests.Protocol
             var response = Encoding.UTF8.GetString(responseBytes);
 
             Assert.Equal($"Echo: {sent}", response);
+        }
+
+        [Fact]
+        public async Task Command_Get_ParamsArgsHelper_ParsesInputAndWritesOutput()
+        {
+            var cmd = new ArgsEchoCommand();
+            var dataStream = await cmd.Get();
+            Assert.NotNull(dataStream);
+
+            await dataStream!.Open();
+            var request = Encoding.UTF8.GetBytes("hello   my   friend");
+            await dataStream.Write(0, request);
+
+            var responseBytes = await dataStream.Read(0, 4096);
+            var response = Encoding.UTF8.GetString(responseBytes);
+
+            Assert.Equal("Args: hello|my|friend", response);
         }
 
         [Fact]
@@ -116,93 +120,23 @@ namespace TP3.Tests.Protocol
             var lastReadResponse = lastMessageSent.ReadResponse;
             Assert.Equal("Echo: hello my friend", lastReadResponse!.Data.ToStringUtf8());
 
+
+            // CLUNK
+            await sut.Handle(fakeNetworkPipe, FlowTest.ClunkMessage("tag2"));
+            Assert.Equal(TP3Message.PayloadOneofCase.ClunkResponse, lastMessageSent.PayloadCase);
         }
+   }
 
-        private sealed class InMemoryDuplexStream : Stream
+    public class ArgsEchoCommand : BaseControlParamsArgsCommand
+    {
+        protected override async Task HandleParamsArgsCommand(Stream output, params string[]? args)
         {
-            private readonly byte[] inputBytes;
-            private readonly MemoryStream output = new MemoryStream();
-            private int readPosition;
-            private bool headerServed;
-            private readonly int headerEndIndex;
-
-            public InMemoryDuplexStream(string inputText)
+            using var writer = new StreamWriter(output, leaveOpen: true)
             {
-                inputBytes = Encoding.UTF8.GetBytes(inputText);
-                var newline = Array.IndexOf(inputBytes, (byte)'\n');
-                headerEndIndex = newline >= 0 ? newline + 1 : inputBytes.Length;
-            }
+                AutoFlush = true
+            };
 
-            public string GetWrittenText()
-            {
-                return Encoding.UTF8.GetString(output.ToArray());
-            }
-
-            public override bool CanRead => true;
-            public override bool CanSeek => false;
-            public override bool CanWrite => true;
-            public override long Length => throw new NotSupportedException();
-            public override long Position
-            {
-                get => throw new NotSupportedException();
-                set => throw new NotSupportedException();
-            }
-
-            public override void Flush()
-            {
-                output.Flush();
-            }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                if (readPosition >= inputBytes.Length)
-                {
-                    return 0;
-                }
-
-                int remaining = inputBytes.Length - readPosition;
-                int bytesToRead;
-
-                if (!headerServed)
-                {
-                    var headerRemaining = headerEndIndex - readPosition;
-                    bytesToRead = Math.Min(count, Math.Max(0, headerRemaining));
-                    headerServed = true;
-                }
-                else
-                {
-                    bytesToRead = Math.Min(count, remaining);
-                }
-
-                Array.Copy(inputBytes, readPosition, buffer, offset, bytesToRead);
-                readPosition += bytesToRead;
-                return bytesToRead;
-            }
-
-            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-            {
-                return Task.FromResult(Read(buffer, offset, count));
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                output.Write(buffer, offset, count);
-            }
-
-            public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-            {
-                return output.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
-            }
-
-            public override long Seek(long offset, SeekOrigin origin)
-            {
-                throw new NotSupportedException();
-            }
-
-            public override void SetLength(long value)
-            {
-                throw new NotSupportedException();
-            }
+            await writer.WriteAsync($"Args: {string.Join("|", args ?? Array.Empty<string>())}");
         }
     }
 

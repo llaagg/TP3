@@ -19,7 +19,7 @@ public class BaseControlCommand : INode
     public string Id { get; }
     public string Name { get; }
 
-    public NodeType NodeType => NodeType.File;
+    public NodeType NodeType => NodeType.Command;
 
     public IEnumerable<INode>? Children => null;
 
