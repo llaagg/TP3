@@ -1,64 +1,111 @@
-name: MAUI CI - Android only
+name: Build All Apps
 
 on:
   push:
     branches:
-      - '**'
+      - "**"
   pull_request:
     branches:
-      - '**'
+      - "**"
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: 10.0.x
 
 jobs:
-  build-android:
-    name: Build Android
+  build-cli-server-gtk:
+    name: Build CLI, Server, GTK (Linux)
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install Android SDK (packages)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk-headless unzip
-          # sdkmanager is available via Android SDK; attempt install but tolerate failures
-          yes | sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
+      - name: Restore solution
+        run: dotnet restore src/TP3.slnx
 
-      - name: Cache NuGet packages and workloadpacks
-        uses: actions/cache@v4
+      - name: Build CLI
+        run: dotnet build src/TP3.CLI/TP3.CLI.csproj -c Release --no-restore
+
+      - name: Build Server
+        run: dotnet build src/TP3.Server/TP3.Server.csproj -c Release --no-restore
+
+      - name: Build GTK
+        run: dotnet build src/TP3.GUI.GTK/TP3.GUI.GTK.csproj -c Release --no-restore
+
+  build-maui-windows:
+    name: Build MAUI Desktop (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          path: |
-            ~/.nuget/packages
-            ~/.dotnet/workloadpacks
-          key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('src/TP3.slnx') }}
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install MAUI workloads for Android
-        run: |
-          set -e
-          cd src
-          dotnet --info
-          dotnet workload restore
-          # retry installs to reduce flakiness
-          for i in 1 2 3; do
-            dotnet workload install maui-android && break || {
-              echo "maui-android install failed, retrying ($i)";
-              sleep $((i * 5));
-            }
-          done || true
-      - name: Post-install: list installed workload packs
-        run: |
-          cd src
-          dotnet workload list || true
+      - name: Install MAUI workload
+        run: dotnet workload install maui
 
-      - name: Restore for Android only
-        run: |
-          cd src
-          dotnet restore TP3.Maui.Client/TP3.Maui.Client.csproj -p:TargetFramework=net10.0-android
+      - name: Restore MAUI (Windows target)
+        run: dotnet restore src/TP3.GUI.Maui/TP3.GUI.Maui.csproj -p:TargetFramework=net10.0-windows10.0.19041.0
 
-      - name: Build Android
-        run: |
-          cd src
-          dotnet build TP3.Maui.Client/TP3.Maui.Client.csproj -f net10.0-android -c Release --no-restore
+      - name: Build MAUI (Windows target)
+        run: dotnet build src/TP3.GUI.Maui/TP3.GUI.Maui.csproj -f net10.0-windows10.0.19041.0 -c Release --no-restore
+
+  build-maui-android:
+    name: Build MAUI Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install MAUI Android workload
+        run: dotnet workload install maui-android
+
+      - name: Restore MAUI (Android target)
+        run: dotnet restore src/TP3.GUI.Maui/TP3.GUI.Maui.csproj -p:TargetFramework=net10.0-android
+
+      - name: Build MAUI (Android target)
+        run: dotnet build src/TP3.GUI.Maui/TP3.GUI.Maui.csproj -f net10.0-android -c Release --no-restore
+
+  build-maui-ios:
+    name: Build MAUI iPhone (iOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install MAUI iOS workload
+        run: dotnet workload install maui-ios
+
+      - name: Restore MAUI (iOS target)
+        run: dotnet restore src/TP3.GUI.Maui/TP3.GUI.Maui.csproj -p:TargetFramework=net10.0-ios
+
+      - name: Build MAUI (iOS simulator)
+        run: dotnet build src/TP3.GUI.Maui/TP3.GUI.Maui.csproj -f net10.0-ios -c Release -p:RuntimeIdentifier=iossimulator-arm64 -p:BuildIpa=false --no-restore
