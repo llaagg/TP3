@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using FakeItEasy;
+using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Transport;
@@ -260,6 +261,17 @@ namespace TP3.Tests.Integration
             }
         }
 
+        internal static TP3Message WriteMessage(string tag, string data)
+        {
+            return new TP3Message
+            {
+                Tag = tag,
+                WriteRequest = new TP3WriteRequest
+                {
+                    Data = ByteString.CopyFrom(System.Text.Encoding.UTF8.GetBytes(data))                    
+                }
+            };
+        }
     }
 
 }

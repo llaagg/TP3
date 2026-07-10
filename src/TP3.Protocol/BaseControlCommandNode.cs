@@ -1,13 +1,14 @@
 using TP3.Interfaces;
 using TP3.Messages;
 using TP3.Protocol;
-using TP3.Service.Remote;
 
 namespace TP3.Protocol;
 
-public class BaseControlCommandNode : INode
+public class BaseControlCommand : INode
 {
-    public BaseControlCommandNode()
+    private const ulong DefaultMaxCount = 16 * 1024;
+
+    public BaseControlCommand()
     {
         // short guid if empty
         this.Id = Guid.NewGuid().ToString().Substring(0, 8);
@@ -22,12 +23,9 @@ public class BaseControlCommandNode : INode
 
     public IEnumerable<INode>? Children => null;
 
-    public async Task<ITP3DataStream?> Get()
+    public Task<ITP3DataStream?> Get()
     {
-        // Placeholder data stream for command nodes.
-        // Real duplex command execution should be bound to transport session streams.
-        var stream = new MemoryStream();
-        return await Task.FromResult<ITP3DataStream?>(new TP3Stream(stream));
+        return Task.FromResult<ITP3DataStream?>(new MemeoryCachedCommandDataStream(this));
     }
 
     public Task Command(Stream duplex)
@@ -37,111 +35,99 @@ public class BaseControlCommandNode : INode
 
     public async Task Command(Stream input, Stream output)
     {
-        using var reader = new StreamReader(input, leaveOpen: true);
         using var writer = new StreamWriter(output, leaveOpen: true)
         {
             AutoFlush = true
         };
 
-        var hasArgsOverride = SupportsArgsMode();
-        var hasStreamOverride = SupportsStreamMode();
-
-        if (!hasArgsOverride && !hasStreamOverride)
-        {
-            await writer.WriteLineAsync("error command has no handlers");
-            return;
-        }
-
-        // First line decides the command mode:
-        // args <arg1> <arg2> ...
-        // stream
-        var header = await reader.ReadLineAsync();
-        if (string.IsNullOrWhiteSpace(header))
-        {
-            await writer.WriteLineAsync("error empty command header");
-            return;
-        }
-
-        var parts = header.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var mode = parts[0].Trim().ToLowerInvariant();
-
-        if (mode == "args")
-        {
-            if (!hasArgsOverride)
-            {
-                await writer.WriteLineAsync("error args mode not supported");
-                return;
-            }
-
-            var args = parts.Skip(1).ToArray();
-            await HandleArgsCommand(args, writer);
-            await writer.WriteLineAsync("ok done");
-            return;
-        }
-
-        if (mode == "stream")
-        {
-            if (!hasStreamOverride)
-            {
-                await writer.WriteLineAsync("error stream mode not supported");
-                return;
-            }
-
-            await HandleStreamCommand(input, output, writer);
-            return;
-        }
-
-        // Auto mode makes one-handler commands easy:
-        // - only args handler -> whole line treated as args payload
-        // - only stream handler -> first line is treated as the beginning of stream payload
-        if (hasArgsOverride && !hasStreamOverride)
-        {
-            var args = header.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            await HandleArgsCommand(args, writer);
-            await writer.WriteLineAsync("ok done");
-            return;
-        }
-
-        if (hasStreamOverride && !hasArgsOverride)
-        {
-            var prefix = System.Text.Encoding.UTF8.GetBytes(header + Environment.NewLine);
-            using var prefixedInput = new PrefixStream(prefix, input);
-            await HandleStreamCommand(prefixedInput, output, writer);
-            return;
-        }
-
-        await writer.WriteLineAsync("error unsupported command mode (expected: args|stream)");
-    }
-
-    protected virtual Task HandleArgsCommand(string[] args, StreamWriter output)
-    {
-        return output.WriteLineAsync("error args mode not implemented");
+        await HandleStreamCommand(input, output, writer);
     }
 
     protected virtual async Task HandleStreamCommand(Stream input, Stream output, StreamWriter control)
     {
-        await control.WriteLineAsync("error stream mode not implemented");
+        await control.WriteLineAsync("not implemented");
     }
 
-    private bool SupportsArgsMode()
+    private sealed class MemeoryCachedCommandDataStream : ITP3DataStream
     {
-        var method = GetType().GetMethod(
-            nameof(HandleArgsCommand),
-            System.Reflection.BindingFlags.Instance |
-            System.Reflection.BindingFlags.NonPublic |
-            System.Reflection.BindingFlags.Public);
+        private readonly BaseControlCommand command;
+        private readonly MemoryStream commandInput = new MemoryStream();
+        private MemoryStream? commandOutput;
+        private bool commandExecuted;
 
-        return method?.DeclaringType != typeof(BaseControlCommandNode);
-    }
+        public MemeoryCachedCommandDataStream(BaseControlCommand command)
+        {
+            this.command = command;
+        }
 
-    private bool SupportsStreamMode()
-    {
-        var method = GetType().GetMethod(
-            nameof(HandleStreamCommand),
-            System.Reflection.BindingFlags.Instance |
-            System.Reflection.BindingFlags.NonPublic |
-            System.Reflection.BindingFlags.Public);
+        public uint Iounit => 0;
 
-        return method?.DeclaringType != typeof(BaseControlCommandNode);
+        public ulong Position => (ulong)(commandOutput?.Position ?? 0);
+
+        public Task Open()
+        {
+            return Task.CompletedTask;
+        }
+
+        public async Task<byte[]> Read(ulong offset, ulong maxCount)
+        {
+            await EnsureExecuted();
+
+            var output = commandOutput!;
+            if (offset != (ulong)output.Position)
+            {
+                output.Seek((long)offset, SeekOrigin.Begin);
+            }
+
+            if (maxCount == 0)
+            {
+                maxCount = DefaultMaxCount;
+            }
+
+            var buffer = new byte[maxCount];
+            var bytesRead = await output.ReadAsync(buffer, 0, (int)maxCount);
+            if (bytesRead < (int)maxCount)
+            {
+                Array.Resize(ref buffer, bytesRead);
+            }
+
+            return buffer;
+        }
+
+        public async Task<ulong> Write(ulong offset, byte[] data)
+        {
+            if (commandExecuted)
+            {
+                throw new InvalidOperationException("Cannot write to command stream after command execution has started.");
+            }
+
+            if (offset != (ulong)commandInput.Position)
+            {
+                commandInput.Seek((long)offset, SeekOrigin.Begin);
+            }
+
+            await commandInput.WriteAsync(data, 0, data.Length);
+            return (ulong)data.Length;
+        }
+
+        public void Close()
+        {
+            commandInput.Dispose();
+            commandOutput?.Dispose();
+        }
+
+        private async Task EnsureExecuted()
+        {
+            if (commandExecuted)
+            {
+                return;
+            }
+
+            commandInput.Seek(0, SeekOrigin.Begin);
+            commandOutput = new MemoryStream();
+            await command.Command(commandInput, commandOutput);
+            commandOutput.Seek(0, SeekOrigin.Begin);
+            commandExecuted = true;
+        }
     }
 }

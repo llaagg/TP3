@@ -191,19 +191,6 @@ namespace TP3.Tests.Protocol
             var result = Encoding.UTF8.GetString(memoryStream.ToArray());
             Assert.Equal("Hello, World!", result);
         }
-
-        private static async Task FillUp(MemoryStream data, int sizeInBytes = 1024 * 1024)
-        {
-            // fill with some ascii characters
-            var random = new Random();
-            var buffer = new byte[sizeInBytes];
-            for (int i = 0; i < sizeInBytes; i++)
-            {
-                buffer[i] = (byte)('a' + random.Next(0, 26));
-            }
-            await data.WriteAsync(buffer, 0, buffer.Length);
-            data.Seek(0, SeekOrigin.Begin);
-        }
     }
 }
 
