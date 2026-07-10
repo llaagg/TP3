@@ -9,7 +9,7 @@ namespace TP3.Service.FileSystem;
 public class FileSystemService : BaseDirectoryNode, IService
 {
     public FileSystemService()
-        : base("FileSystemService")
+        : base("filesystem")
     {
         this.State = new StateNode("state");
     }

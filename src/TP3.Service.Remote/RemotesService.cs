@@ -5,7 +5,7 @@ namespace TP3.Service.Remote;
 
 public class RemotesService : BaseDirectoryNode, IService
 {
-    public RemotesService(ILogger logger) : base()
+    public RemotesService(ILogger logger) : base("remotes")
     {
         this.State = new RemoteNodes();
         this.Control = new ControlNodes(this);

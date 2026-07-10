@@ -13,7 +13,7 @@ public class BaseControlCommand : INode
         // short guid if empty
         this.Id = Guid.NewGuid().ToString().Substring(0, 8);
         // type name if empty
-        this.Name = this.GetType().Name;
+        this.Name = BaseDirectoryNode.NameCreator(this.GetType());
     }
 
     public string Id { get; }

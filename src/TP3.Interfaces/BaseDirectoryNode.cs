@@ -9,7 +9,17 @@ public class BaseDirectoryNode : INode
         // short guid if empty
         this.Id = id ?? Guid.NewGuid().ToString().Substring(0, 8);
         // type name if empty
-        this.Name = name ?? this.GetType().Name;
+        // put - before all capital letter make to lowercase and trim - from beginning and end
+        this.Name = name ?? NameCreator(this.GetType());
+    }
+
+    public static string NameCreator(Type type)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(
+            type.Name,
+            "([A-Z])",
+            "-$1"
+        ).ToLower().Trim('-');
     }
 
     public string Id { get; protected set; } = null!;

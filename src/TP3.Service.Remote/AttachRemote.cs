@@ -2,11 +2,11 @@ using TP3.Protocol;
 
 namespace TP3.Service.Remote;
 
-internal class AttachRemote : BaseControlParamsArgsCommand
+internal class Attach : BaseControlParamsArgsCommand
 {
     private RemotesService service;
 
-    public AttachRemote(RemotesService service)
+    public Attach(RemotesService service)
     {
         this.service = service;
     }

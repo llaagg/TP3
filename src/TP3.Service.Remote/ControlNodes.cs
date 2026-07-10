@@ -12,5 +12,5 @@ public class ControlNodes : BaseDirectoryNode
         this.service = remotesService;
     }
 
-    override public IEnumerable<INode>? Children => new List<INode>() { new AttachRemote(this.service) };
+    override public IEnumerable<INode>? Children => new List<INode>() { new Attach(this.service) };
 }
