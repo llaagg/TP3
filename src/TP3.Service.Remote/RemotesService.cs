@@ -1,13 +1,15 @@
-﻿using TP3.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using TP3.Interfaces;
 
 namespace TP3.Service.Remote;
 
 public class RemotesService : BaseDirectoryNode, IService
 {
-    public RemotesService() : base()
+    public RemotesService(ILogger logger) : base()
     {
         this.State = new RemoteNodes();
         this.Control = new ControlNodes(this);
+        this.logger = logger;
     }
 
     public async Task Init(IAgent me)
@@ -27,8 +29,31 @@ public class RemotesService : BaseDirectoryNode, IService
     {
     }
 
+    public async Task<AttachRemoteResult> AttachTcpRemote(string host, int port)
+    {
+        var result = new AttachRemoteResult();
+        
+        try
+        {
+            var client = new TCPTP3RemoveClient(this.logger, host, port);
+            await client.ConnectAsync();
+            await client.TP3Attach();
+
+            result.Success = true;
+            result.Message = "Connected successfully";
+        }
+        catch (Exception ex)
+        {
+            result.Success = false;
+            result.Message = $"Failed to connect: {ex.Message}";
+        }
+        return result;
+    }
+
     override public IEnumerable<INode>? Children => new List<INode>() { State, Control };
 
     public RemoteNodes State { get; }
     public ControlNodes Control { get; }
+
+    private ILogger logger;
 }
