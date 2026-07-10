@@ -4,6 +4,10 @@ TP3 is a tree-based protocol and runtime for exposing resources (files, director
 
 This document keeps only the essential information for understanding and working on the codebase.
 
+## Additional Docs
+
+- `ClientFlows.md`: practical client interaction patterns for file, directory, and command nodes.
+
 ## What TP3 Does
 
 - Exposes a node tree where each node is a `File` or `Directory`.
