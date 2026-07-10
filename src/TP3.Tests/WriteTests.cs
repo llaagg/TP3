@@ -1,4 +1,5 @@
 using System.Text;
+using System.Collections.Concurrent;
 using Google.Protobuf;
 using TP3.Interfaces;
 using TP3.Messages;
@@ -107,7 +108,72 @@ namespace TP3.Tests.Protocol
             var writeResponse = lastMessageSent.WriteResponse;
             Assert.Equal(test.Length, (int)writeResponse!.Count);
             Assert.NotNull(writeResponse);
-            
+        }
+
+        [Fact]
+        public async Task HandlesWriteRequests_InParallel()
+        {
+            var targetMemoryStream = new MemoryStream();
+            var node = new StreamNode(targetMemoryStream, "TestNode", "wut");
+
+            var sentMessages = new ConcurrentBag<TP3Message>();
+            var (fakeNetworkPipe, sut) = await FlowTest.InitilizeTP3(
+                new List<INode> { node },
+                async (message) =>
+                {
+                    sentMessages.Add(message);
+                    await Task.CompletedTask;
+                });
+
+            await sut.Handle(fakeNetworkPipe, FlowTest.AttachMessage("tag1"));
+
+            var walkRequest = new TP3WalkRequest
+            {
+                NewTag = "tag2",
+                Path = { "service1", "TestNode" }
+            };
+            await sut.Handle(fakeNetworkPipe, new TP3Message { Tag = "tag1", WalkRequest = walkRequest });
+            await sut.Handle(fakeNetworkPipe, FlowTest.OpenMessage("tag2"));
+
+            var chunks = new[]
+            {
+                new { Offset = 0UL, Text = "Hel" },
+                new { Offset = 3UL, Text = "lo," },
+                new { Offset = 6UL, Text = " Wo" },
+                new { Offset = 9UL, Text = "rld!" },
+            };
+
+            var writeTasks = chunks.Select(chunk =>
+                sut.Handle(fakeNetworkPipe, new TP3Message
+                {
+                    Tag = "tag2",
+                    WriteRequest = new TP3WriteRequest
+                    {
+                        Offset = chunk.Offset,
+                        Data = ByteString.CopyFrom(Encoding.UTF8.GetBytes(chunk.Text))
+                    }
+                }));
+
+            await Task.WhenAll(writeTasks);
+
+            var writeResponses = sentMessages
+                .Where(m => m.PayloadCase == TP3Message.PayloadOneofCase.WriteResponse)
+                .Select(m => m.WriteResponse!.Count)
+                .ToList();
+
+            Assert.Equal(chunks.Length, writeResponses.Count);
+
+            var expectedCounts = chunks
+                .Select(c => (ulong)c.Text.Length)
+                .OrderBy(c => c)
+                .ToList();
+
+            var actualCounts = writeResponses
+                .OrderBy(c => c)
+                .ToList();
+
+            Assert.Equal(expectedCounts, actualCounts);
+            Assert.Equal("Hello, World!", Encoding.UTF8.GetString(targetMemoryStream.ToArray()));
         }
 
         [Fact]
@@ -118,8 +184,8 @@ namespace TP3.Tests.Protocol
 
             StreamNode streamNode = StreamNode;
             var dataStream = await streamNode.Get();
-            dataStream!.Open();
-            dataStream.Write(0, Encoding.UTF8.GetBytes("Hello, World!"));
+            await dataStream!.Open();
+            await dataStream.Write(0, Encoding.UTF8.GetBytes("Hello, World!"));
             dataStream.Close();
 
             var result = Encoding.UTF8.GetString(memoryStream.ToArray());
