@@ -23,14 +23,15 @@ message TP3Message {
         TP3WalkResponse walkResponse = 11;
         TP3ReadRequest readRequest = 12;
         TP3ReadResponse readResponse = 13;
-        TP3AttachRequest attachRequest = 14;
-        TP3AttachResponse attachResponse = 15;
-        TP3OpenRequest openRequest = 16;
-        TP3OpenResponse openResponse = 17;
-        TP3ClunkRequest clunkRequest = 18;
-        TP3ClunkResponse clunkResponse = 19;
-        TP3Error error = 20;
-        TP3GenericMessage genericMessage = 22;
+        TP3WriteRequest writeRequest = 14;
+        TP3WriteResonse writeResponse = 15;
+        TP3AttachRequest attachRequest = 16;
+        TP3AttachResponse attachResponse = 17;
+        TP3OpenRequest openRequest = 18;
+        TP3OpenResponse openResponse = 19;
+        TP3ClunkRequest clunkRequest = 20;
+        TP3ClunkResponse clunkResponse = 21;
+        TP3Error error = 22;
     }
 }
 
@@ -50,6 +51,16 @@ message TP3ReadRequest {
 
 message TP3ReadResponse {
     bytes data = 1;
+}
+
+
+message TP3WriteRequest {
+    uint64 offset = 1;
+    bytes data = 2;
+}
+
+message TP3WriteResonse {
+    uint64 count=1;
 }
 
 message TP3AttachRequest {
@@ -76,7 +87,4 @@ message TP3ClunkResponse {
 message TP3Error {
     string message = 1;
     repeated string args = 2;
-}
-
-message TP3GenericMessage {
 }

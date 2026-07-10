@@ -47,4 +47,15 @@ public class TP3Stream: ITP3DataStream
     {
         stream.Close();
     }
+
+    public Task<ulong> Write(ulong offset, byte[] data)
+    {
+        if (offset != (ulong)stream.Position)
+        {
+            stream.Seek((long)offset, SeekOrigin.Begin);
+        }
+
+        stream.Write(data, 0, data.Length);
+        return Task.FromResult((ulong)data.Length);
+    }
 }

@@ -6,10 +6,10 @@ using TP3.Messages;
 
 public class TP3Transport : ITP3Transport
 {
-    private readonly ILogger? logger;
-    private INetworkManager networkManager;
+    private ILogger? logger;
     private IRouter? router = null!;
-    private readonly INetworkTransport networkTransport;
+    private INetworkTransport networkTransport;
+    private INetworkManager networkManager;
 
     /// <summary>
     /// Identifies transport instance, used to route messages to the correct transport.

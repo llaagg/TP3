@@ -8,7 +8,7 @@ using TP3.Protocol;
 
 namespace TP3.Tests.Protocol
 {
-    public class TP3ReadResponseTests
+    public class ReadResponseTests
     {
         [Fact]
         public async Task TP3ReadResponseDataStream_ReadsDataCorrectly()
@@ -30,5 +30,15 @@ namespace TP3.Tests.Protocol
             Assert.Equal("123456789", data);
         }
         
+        [Fact]
+        public async Task IsAbleToReadResponseFromNode()
+        {
+            var node = new StreamNode(()=>"This will be a text string" );
+            var dataStream = await node.Get();
+
+            var readData = await dataStream!.Read(0, 1000);
+            var readString = Encoding.UTF8.GetString(readData);
+            Assert.Equal("This will be a text string", readString);
+        }
     }
 }

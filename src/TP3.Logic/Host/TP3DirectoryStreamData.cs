@@ -108,4 +108,9 @@ public class TP3DirectoryStreamData : ITP3DataStream
         this.enumerator = null;
         _position = 0;
     }
+
+    public Task<ulong> Write(ulong offset, byte[] data)
+    {
+        throw new NotSupportedException("Write operation is not supported on TP3DirectoryStreamData.");
+    }
 }

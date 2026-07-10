@@ -222,7 +222,7 @@ namespace TP3.Tests.Integration
                 sut.Handle(pipe, readRequest).Wait();
                 var lastReadResponse = lastMessageSent.ReadResponse;
                 var count = lastReadResponse?.Data?.Length ?? 0;
-                yield return lastReadResponse;
+                yield return lastReadResponse!;
 
 
                 if (count == 0 || count < maxbytes)
