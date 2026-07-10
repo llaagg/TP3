@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using TP3.Messages;
 
@@ -202,6 +203,58 @@ public class TP3ClientWrapper
 
         var stream = ipcClient.GetStream(openResponse, logger);
         return stream;
+    }
+
+    public async Task<(string Tag, string Output)> RunCommand(string[] path, string arguments)
+    {
+        var tag = await NewSession(path);
+
+        try
+        {
+            var openResponse = await ipcClient.SendAndWaitOne(new TP3Message()
+            {
+                Tag = tag,
+                OpenRequest = new TP3OpenRequest()
+            }, logger).ConfigureAwait(false);
+
+            if (openResponse is null)
+            {
+                throw new InvalidOperationException("Received null response from IPC server.");
+            }
+            if (openResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+            {
+                throw new InvalidOperationException($"Error received from IPC server: {openResponse.Error?.Message}");
+            }
+
+            var writeResponse = await ipcClient.SendAndWaitOne(new TP3Message()
+            {
+                Tag = tag,
+                WriteRequest = new TP3WriteRequest
+                {
+                    Offset = 0,
+                    Data = Google.Protobuf.ByteString.CopyFrom(Encoding.UTF8.GetBytes(arguments ?? string.Empty))
+                }
+            }, logger).ConfigureAwait(false);
+
+            if (writeResponse is null)
+            {
+                throw new InvalidOperationException("Received null response from IPC server.");
+            }
+            if (writeResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+            {
+                throw new InvalidOperationException($"Error received from IPC server: {writeResponse.Error?.Message}");
+            }
+
+            var stream = ipcClient.GetStream(openResponse, logger);
+            using var reader = new StreamReader(stream);
+            var output = await reader.ReadToEndAsync();
+
+            return (tag, output);
+        }
+        finally
+        {
+            await CloseSession(tag);
+        }
     }
 
     public bool Connected => Status == "Connected" || Status == "Attached";

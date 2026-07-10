@@ -36,11 +36,10 @@
                     }
                     else
                     {
-                        <label class="form-label">Arguments</label>
-                        <input class="form-control mb-2" @bind="frame.CommandArgs" placeholder="arg1 arg2 arg3" />
-
-                        <label class="form-label">Response Preview</label>
-                        <textarea class="form-control" rows="8" @bind="frame.OutputPreview"></textarea>
+                        <CommandControl
+                            @bind-CommandArgs="frame.CommandArgs"
+                            @bind-OutputPreview="frame.OutputPreview"
+                            OnRun="() => RunCommand(frame)" />
                     }
                 </section>
             }
@@ -67,16 +66,29 @@
         });
     }
 
-    private void OpenCommandFrame(TP3.Protocol.TP3StatPayload item)
+    private void OpenCommandFrame((string Name, string[] Path) command)
     {
         frames.Add(new DynamicFrame
         {
             Tag = NextTag(),
             Type = FrameType.Command,
-            Caption = $"Command: {item.Name}",
+            Caption = $"Command: {command.Name}",
+            CommandPath = command.Path,
             CommandArgs = string.Empty,
             OutputPreview = string.Empty,
         });
+    }
+
+    private async Task RunCommand(DynamicFrame frame)
+    {
+        if (frame.Type != FrameType.Command)
+        {
+            return;
+        }
+
+        var (tag, output) = await TP3Client.RunCommand(frame.CommandPath, frame.CommandArgs);
+        frame.Tag = tag;
+        frame.OutputPreview = output;
     }
 
     private void CloseFrame(Guid id)
@@ -100,6 +112,7 @@
         public string Tag { get; set; } = string.Empty;
         public FrameType Type { get; set; }
         public string Caption { get; set; } = string.Empty;
+        public string[] CommandPath { get; set; } = Array.Empty<string>();
         public string CommandArgs { get; set; } = string.Empty;
         public string OutputPreview { get; set; } = string.Empty;
     }

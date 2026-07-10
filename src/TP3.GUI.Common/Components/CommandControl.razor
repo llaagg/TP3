@@ -1,0 +1,40 @@
+<label class="form-label">Arguments</label>
+<div class="input-group mb-2">
+    <input class="form-control" value="@CommandArgs" @oninput="OnArgsInput" placeholder="arg1 arg2 arg3" />
+    <button class="btn btn-outline-primary" @onclick="Run">Run</button>
+</div>
+
+<label class="form-label">Response Preview</label>
+<textarea class="form-control" rows="8" value="@OutputPreview" @oninput="OnOutputInput"></textarea>
+
+@code {
+    [Parameter]
+    public string CommandArgs { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> CommandArgsChanged { get; set; }
+
+    [Parameter]
+    public string OutputPreview { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OutputPreviewChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnRun { get; set; }
+
+    private Task Run()
+    {
+        return OnRun.InvokeAsync();
+    }
+
+    private Task OnArgsInput(ChangeEventArgs e)
+    {
+        return CommandArgsChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+    }
+
+    private Task OnOutputInput(ChangeEventArgs e)
+    {
+        return OutputPreviewChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
+    }
+}

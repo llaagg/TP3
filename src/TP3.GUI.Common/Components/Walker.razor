@@ -52,7 +52,7 @@
     public EventCallback<(string Tag, string Name, string Content)> OnFileSelected { get; set; }
 
     [Parameter]
-    public EventCallback<TP3.Protocol.TP3StatPayload> OnCommandSelected { get; set; }
+    public EventCallback<(string Name, string[] Path)> OnCommandSelected { get; set; }
 
     private Task HandleFileSelected((string Tag, string Name, string Content) item)
     {
@@ -61,7 +61,9 @@
 
     private Task HandleCommandSelected(TP3.Protocol.TP3StatPayload item)
     {
-        return OnCommandSelected.InvokeAsync(item);
+        List<string> pathList = currentPath.ToList();
+        pathList.Add(item.Name);
+        return OnCommandSelected.InvokeAsync((item.Name, pathList.ToArray()));
     }
 
 
