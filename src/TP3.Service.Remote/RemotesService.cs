@@ -7,7 +7,7 @@ public class RemotesService : BaseDirectoryNode, IService
     public RemotesService() : base()
     {
         this.State = new RemoteNodes();
-        this.Control = new ControlNodes();
+        this.Control = new ControlNodes(this);
     }
 
     public async Task Init(IAgent me)

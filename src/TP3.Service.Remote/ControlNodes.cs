@@ -4,10 +4,13 @@ namespace TP3.Service.Remote;
 
 public class ControlNodes : BaseDirectoryNode
 {
-    public ControlNodes():
+    private RemotesService service;
+
+    public ControlNodes(RemotesService remotesService) :
         base("control")
     {
+        this.service = remotesService;
     }
 
-    override public IEnumerable<INode>? Children => new List<INode>() { new AttachRemote() };
+    override public IEnumerable<INode>? Children => new List<INode>() { new AttachRemote(this.service) };
 }

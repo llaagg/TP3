@@ -4,6 +4,13 @@ namespace TP3.Service.Remote;
 
 internal class AttachRemote : BaseControlParamsArgsCommand
 {
+    private RemotesService service;
+
+    public AttachRemote(RemotesService service)
+    {
+        this.service = service;
+    }
+
     protected override Task HandleParamsArgsCommand(Stream output, params string[]? args)
     {
         using var writer = new StreamWriter(output, leaveOpen: true)
