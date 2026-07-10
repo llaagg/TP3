@@ -27,6 +27,13 @@ public class RemotesService : BaseDirectoryNode, IService
 
     public void Dispose()
     {
+        foreach (var connection in this.State.Children ?? Array.Empty<INode>())
+        {
+            if (connection is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
     }
 
     public async Task<AttachRemoteResult> AttachTcpRemote(string host, int port)
@@ -35,12 +42,13 @@ public class RemotesService : BaseDirectoryNode, IService
         
         try
         {
-            var client = new TCPTP3RemoveClient(this.logger, host, port);
-            await client.ConnectAsync();
-            await client.TP3Attach();
+            var client = new RemoteTcpClient(this.logger, host, port);
+            await client.ConnectAsync().ConfigureAwait(false);
+
+            this.State.AddConnection(new RemoteConnectionNode(client, client.RootTag, $"{host}:{port}"));
 
             result.Success = true;
-            result.Message = "Connected successfully";
+            result.Message = $"Connected successfully to {host}:{port}";
         }
         catch (Exception ex)
         {
