@@ -3,6 +3,7 @@ using FakeItEasy;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Agent;
+using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
 using TP3.Protocol;
@@ -56,12 +57,25 @@ namespace TP3.Tests.Protocol
         public async Task HandlesWriteRequests()
         {
             TP3Message lastMessageSent = null!;
+
             var fakeRouter = A.Fake<IRouter>();
-            A.CallTo(() => fakeRouter.Route)
-                .Invokes((INetworkPipe pipe, TP3Message message) =>
+            A.CallTo(() => fakeRouter.Respond(A<IAgent>.Ignored, A<TP3Message>.Ignored, A<INetworkPipe>.Ignored))
+                .Invokes((IAgent agent, TP3Message message, INetworkPipe pipe) =>
                 {
                     lastMessageSent = message;
                 });
+
+            // let's make a pointer that will return a node with memory stream in it
+            var targetStream = new MemoryStream();
+            var node = new StreamNode(targetStream);
+            var fakeTransport = A.Fake<ITP3Transport>();
+            var pointer = new Pointer
+            {
+                Node = node,
+            };
+            A.CallTo(() => fakeTransport.GetPointer(A<INetworkPipe>.Ignored, A<string>.Ignored, A<string>.Ignored))
+                .Returns(pointer);
+                
 
             var messageHandler = new MessageHandler(A.Fake<IAgent>(), fakeRouter, A.Fake<ILogger>());
 
@@ -87,9 +101,33 @@ namespace TP3.Tests.Protocol
                 Assert.Equal("test-tag", lastMessageSent.Tag);
                 Assert.Equal(TP3Message.PayloadOneofCase.WriteResponse, lastMessageSent.PayloadCase);
             }
+            targetStream.Flush();
+            targetStream.Seek(0, SeekOrigin.Begin);
 
+            var sourceData = data.ToArray();
+            byte [] targetData = new byte[sourceData.Length];
+            targetStream!.Read(targetData, 0, targetData.Length);
+            Assert.Equal((ulong)sourceData.Length, (ulong)targetData.Length);
+            var sourceString = Encoding.ASCII.GetString(sourceData);
+            var targetString = Encoding.ASCII.GetString(targetData);
+            Assert.Equal(sourceString, targetString);
         }
 
+        [Fact]
+        public async Task StreamNode_CanWrite()
+        {
+            var memoryStream = new MemoryStream();
+            var StreamNode = new StreamNode(memoryStream);
+
+            StreamNode streamNode = StreamNode;
+            var dataStream = await streamNode.Get();
+            dataStream!.Open();
+            dataStream.Write(0, Encoding.UTF8.GetBytes("Hello, World!"));
+            dataStream.Close();
+
+            var result = Encoding.UTF8.GetString(memoryStream.ToArray());
+            Assert.Equal("Hello, World!", result);
+        }
 
         private static async Task FillUp(MemoryStream data, int sizeInBytes = 1024 * 1024)
         {

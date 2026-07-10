@@ -24,7 +24,7 @@ message TP3Message {
         TP3ReadRequest readRequest = 12;
         TP3ReadResponse readResponse = 13;
         TP3WriteRequest writeRequest = 14;
-        TP3WriteResonse writeResponse = 15;
+        TP3WriteResponse writeResponse = 15;
         TP3AttachRequest attachRequest = 16;
         TP3AttachResponse attachResponse = 17;
         TP3OpenRequest openRequest = 18;
@@ -59,7 +59,7 @@ message TP3WriteRequest {
     bytes data = 2;
 }
 
-message TP3WriteResonse {
+message TP3WriteResponse {
     uint64 count=1;
 }
 

@@ -42,9 +42,50 @@ public class MessageHandler
             case TP3Message.PayloadOneofCase.ClunkRequest:
                     await Clunk(incomingTransport, request);
                     break;
+            case TP3Message.PayloadOneofCase.WriteRequest:
+                    await Write(incomingTransport, request);
+                    break;
             default:
                     await Unknown(incomingTransport, request);
                     break;
+        }
+    }
+
+    /// <summary>
+    /// We have incoming data to write
+    /// </summary>
+    /// <param name="incomingTransport"></param>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    private async Task Write(INetworkPipe incomingTransport, TP3Message request)
+    {
+        var tag = request.Tag;
+       
+        var pointer = incomingTransport.TP3Transport.GetPointer(incomingTransport, tag);
+        if (pointer == null)
+        {
+            // not attched?
+            await router.Respond(this.agent, CreateErrorMessage(tag, "not_attached"), incomingTransport);
+            return;
+        }
+        if (pointer.Data == null)
+        {
+            // not opened?
+            await router.Respond(this.agent, CreateErrorMessage(tag, "not_opened"), incomingTransport);
+            return;
+        }
+
+        try
+        {
+            var bytes = await pointer.Data.Write(request.WriteRequest.Offset, request.WriteRequest.Data.ToByteArray());
+            var response = new TP3WriteResponse();
+            response.Count = bytes;
+            await router.Respond(this.agent, CreateMessage(tag, m => m.WriteResponse = response), incomingTransport);
+        }
+        catch (Exception ex)
+        {
+            await router.Respond(this.agent, CreateErrorMessage(tag, "write_error", ex.Message), incomingTransport);
         }
     }
 
