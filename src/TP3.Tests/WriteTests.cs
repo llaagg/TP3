@@ -1,12 +1,9 @@
 using System.Text;
-using FakeItEasy;
 using Google.Protobuf;
-using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Agent;
-using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
 using TP3.Protocol;
+using TP3.Tests.Integration;
 
 
 namespace TP3.Tests.Protocol
@@ -53,64 +50,64 @@ namespace TP3.Tests.Protocol
             Assert.Equal("This will be a text string", readString);
         }
 
-         [Fact]
+        [Fact]
         public async Task HandlesWriteRequests()
         {
+            var targetMemoryStream = new MemoryStream();
+            var node = new StreamNode(targetMemoryStream, "TestNode", "wut");
+
             TP3Message lastMessageSent = null!;
 
-            var fakeRouter = A.Fake<IRouter>();
-            A.CallTo(() => fakeRouter.Respond(A<IAgent>.Ignored, A<TP3Message>.Ignored, A<INetworkPipe>.Ignored))
-                .Invokes((IAgent agent, TP3Message message, INetworkPipe pipe) =>
+            var (fakeNetworkPipe, sut) = await FlowTest.InitilizeTP3(
+                new List<INode> { node }, 
+                async (message) =>
                 {
                     lastMessageSent = message;
                 });
 
-            // let's make a pointer that will return a node with memory stream in it
-            var targetStream = new MemoryStream();
-            var node = new StreamNode(targetStream);
-            var fakeTransport = A.Fake<ITP3Transport>();
-            var pointer = new Pointer
+            // * ATTACH
+            await sut.Handle(fakeNetworkPipe, FlowTest.AttachMessage("tag1"));
+            Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, lastMessageSent.PayloadCase);
+            var lastAttachResponse = lastMessageSent.AttachResponse;
+            Assert.NotNull(lastAttachResponse);
+            Assert.Equal("tag1", lastMessageSent.Tag);
+            Assert.NotNull(lastAttachResponse.Info);
+            Assert.NotNull(lastAttachResponse.Info.Id);
+
+            // * WALK
+            List<string> path = new List<string> { "service1", "TestNode" };
+            var walkRequest = new TP3WalkRequest
             {
-                Node = node,
+                NewTag = "tag2",
+                Path = { path }
             };
-            A.CallTo(() => fakeTransport.GetPointer(A<INetworkPipe>.Ignored, A<string>.Ignored, A<string>.Ignored))
-                .Returns(pointer);
-                
+            await sut.Handle(fakeNetworkPipe, new TP3Message { Tag = "tag1", WalkRequest = walkRequest });
+            Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
+            Assert.Equal(walkRequest.Path.Count, lastMessageSent.WalkResponse!.Infos.Count);
 
-            var messageHandler = new MessageHandler(A.Fake<IAgent>(), fakeRouter, A.Fake<ILogger>());
+            // * OPEN
+            await sut.Handle(fakeNetworkPipe, FlowTest.OpenMessage("tag2"));
+            var lastOpenResponse = lastMessageSent.OpenResponse;
+            var nodeType = lastOpenResponse!.Info.NodeType;
+            Assert.Equal(NodeType.File, nodeType);
 
-            var data = new MemoryStream();
-            // put random 1mb of data 
-            await FillUp(data);
-
-            var writeRequestsProvider = new TP3WriteRequestsProvider(data, 1024 * 16);
-            foreach (var request in writeRequestsProvider.GetWriteRequests())
+            // * WRITE
+            string test = "Hello, World!";
+            var writeMessage = new TP3Message
             {
-                Assert.NotNull(request.Data);
-                Assert.True(request.Data.Length > 0);
-                // create messages to send
-                var message = new TP3Message
+                Tag = "tag2",
+                WriteRequest = new TP3WriteRequest
                 {
-                    Tag = "test-tag",
-                    WriteRequest = request
-                };
-                await messageHandler.Handle(A.Fake<INetworkPipe>(), message);
-
-                // assert that response is not error and is write response
-                Assert.NotNull(lastMessageSent);
-                Assert.Equal("test-tag", lastMessageSent.Tag);
-                Assert.Equal(TP3Message.PayloadOneofCase.WriteResponse, lastMessageSent.PayloadCase);
-            }
-            targetStream.Flush();
-            targetStream.Seek(0, SeekOrigin.Begin);
-
-            var sourceData = data.ToArray();
-            byte [] targetData = new byte[sourceData.Length];
-            targetStream!.Read(targetData, 0, targetData.Length);
-            Assert.Equal((ulong)sourceData.Length, (ulong)targetData.Length);
-            var sourceString = Encoding.ASCII.GetString(sourceData);
-            var targetString = Encoding.ASCII.GetString(targetData);
-            Assert.Equal(sourceString, targetString);
+                    Offset = 0,
+                    Data = ByteString.CopyFrom(Encoding.UTF8.GetBytes(test))
+                }
+            };
+            await sut.Handle(fakeNetworkPipe, writeMessage);
+            Assert.Equal(TP3Message.PayloadOneofCase.WriteResponse, lastMessageSent.PayloadCase);
+            var writeResponse = lastMessageSent.WriteResponse;
+            Assert.Equal(test.Length, (int)writeResponse!.Count);
+            Assert.NotNull(writeResponse);
+            
         }
 
         [Fact]
@@ -143,3 +140,4 @@ namespace TP3.Tests.Protocol
         }
     }
 }
+

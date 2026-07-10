@@ -12,9 +12,9 @@ namespace TP3.Tests.Integration
 {
     public class FlowTest
     {
-        public static TP3Message lastMessageSent = null!;
+        private static TP3Message LastMessageSent = null!;
 
-        private static TP3Message AttachMessage(string tag)
+        public static TP3Message AttachMessage(string tag)
         {
             return new TP3Message
             {
@@ -23,7 +23,7 @@ namespace TP3.Tests.Integration
             };
         }
 
-        private static TP3Message OpenMessage(string tag)
+        public static TP3Message OpenMessage(string tag)
         {
             return new TP3Message
             {
@@ -32,7 +32,7 @@ namespace TP3.Tests.Integration
             };
         }
 
-        private static TP3Message ClunkMessage(string tag)
+        public static TP3Message ClunkMessage(string tag)
         {
             return new TP3Message
             {
@@ -41,7 +41,7 @@ namespace TP3.Tests.Integration
             };
         }
 
-        private static TP3Message WalkMessage(string tag, string newTag, params string[] segments)
+        public static TP3Message WalkMessage(string tag, string newTag, params string[] segments)
         {
             var request = new TP3WalkRequest();
             request.NewTag = newTag;
@@ -54,7 +54,7 @@ namespace TP3.Tests.Integration
             };
         }
 
-        private static TP3Message ReadMessage(string tag, ulong offset, uint maxBytes)
+        public static TP3Message ReadMessage(string tag, ulong offset, uint maxBytes)
         {
             return new TP3Message
             {
@@ -72,11 +72,106 @@ namespace TP3.Tests.Integration
         [Fact]
         public async Task GoldenPath_CompleteEndToEnd()
         {
+            (INetworkPipe fakeNetworkPipe, Agent.Logic.Agent.Agent sut) = await InitilizeTP3(new List<INode> { StateNode() }, async (message) =>
+            {
+                Trace.TraceInformation("Message sent: {0}", message);
+              
+                LastMessageSent = message;
+            });
+
+            // * ATTACH
+            await sut.Handle(fakeNetworkPipe, AttachMessage("tag1"));
+            Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, LastMessageSent.PayloadCase);
+            var lastAttachResponse = LastMessageSent.AttachResponse;
+            Assert.NotNull(lastAttachResponse);
+            Assert.Equal("tag1", LastMessageSent.Tag);
+            Assert.NotNull(lastAttachResponse.Info);
+            Assert.NotNull(lastAttachResponse.Info.Id);
+
+            // * WALK
+            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2"));
+            Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, LastMessageSent.PayloadCase);
+
+            // * OPEN
+            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
+            var lastOpenResponse = LastMessageSent.OpenResponse;
+            var nodeType = lastOpenResponse!.Info.NodeType;
+            Assert.Equal(NodeType.Directory, nodeType);
+
+            // * READ on directory (multiple)
+            List<TP3StatPayload> stats = TReadOnADirectory(fakeNetworkPipe, sut, "tag2");
+            Assert.NotEmpty(stats);
+            Assert.Equal(NodeType.Directory, stats[0].Info.NodeType);
+
+            // * CLUNK
+            await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
+            var lastClunkResponse = LastMessageSent.ClunkResponse;
+            Assert.NotNull(lastClunkResponse);
+
+            List<string> path = new List<string> { stats[0].Name };
+
+            // * WALK to child
+            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path.ToArray()));
+            var lastWalkResponse2 = LastMessageSent.WalkResponse;
+            Assert.NotNull(lastWalkResponse2);
+
+            // * OPEN child
+            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
+            Assert.Equal(NodeType.Directory, nodeType);
+
+            // * READ on child (multiple)
+            List<TP3StatPayload> stats2 = TReadOnADirectory(fakeNetworkPipe, sut, "tag2");
+            Assert.NotEmpty(stats2);
+            Assert.Equal(NodeType.Directory, stats2[0].Info.NodeType);
+            var firstChildName = stats2[0].Name;
+            Assert.Equal("state", firstChildName, ignoreCase: true); // we have state as in all services
+
+            // * CLUNK child
+            await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
+
+            path.Add(firstChildName);
+
+            // * WALK to grandchild
+            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path.ToArray()));
+            Assert.NotNull(LastMessageSent.WalkResponse);
+
+            // * OPEN grandchild
+            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
+            Assert.Equal(NodeType.Directory, nodeType);
+
+            // * READ on grandchild (multiple)
+            await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
+
+            // * WALK to file
+            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path[0], path[1], "README.md"));
+            var lastWalkResponse4 = LastMessageSent.WalkResponse;
+            Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, LastMessageSent.PayloadCase);
+            Assert.NotNull(lastWalkResponse4);
+            Assert.Equal(3, lastWalkResponse4!.Infos!.Count);
+            Assert.Equal(NodeType.File, lastWalkResponse4.Infos![2].NodeType);
+
+            // * OPEN file
+            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
+            var lastOpenResponse4 = LastMessageSent.OpenResponse;
+            Assert.Equal(TP3Message.PayloadOneofCase.OpenResponse, LastMessageSent.PayloadCase);
+            Assert.Equal(NodeType.File, lastOpenResponse4!.Info.NodeType);
+
+            // * READ on file (multiple)
+            await sut.Handle(fakeNetworkPipe, ReadMessage("tag2", 0, 1000));
+            var lastReadResponse = LastMessageSent.ReadResponse;
+            Assert.NotNull(lastReadResponse);
+            var data = lastReadResponse!.Data;
+            Assert.NotNull(data);
+            Assert.NotEmpty(data);
+        }
+
+        public static async Task<(INetworkPipe fakeNetworkPipe, Agent.Logic.Agent.Agent sut)> InitilizeTP3(List<INode> nodes, Func<TP3Message, Task>? onMessageSent = null)
+        {
             var fakeservice = A.Fake<IService>();
             A.CallTo(() => fakeservice.Id).Returns("svc1");
             A.CallTo(() => fakeservice.Name).Returns("service1");
             A.CallTo(() => fakeservice.NodeType).Returns(NodeType.Directory);
-            A.CallTo(() => fakeservice.Children).Returns(new List<INode> { StateNode() });
+            A.CallTo(() => fakeservice.Children).Returns(nodes);
             A.CallTo(() => fakeservice.Get()).Returns(Task.FromResult<ITP3DataStream?>(null));
             A.CallTo(() => fakeservice.Init(A<IAgent>.Ignored)).Returns(Task.CompletedTask);
 
@@ -90,10 +185,12 @@ namespace TP3.Tests.Integration
 
 
             A.CallTo(() => fakeNetworkTransport.Send(fakeNetworkPipe, A<TP3Message>.Ignored))
-                .Invokes((a) =>
+                .Invokes(async (INetworkPipe pipe, TP3Message message) =>
                 {
-                    lastMessageSent = a.GetArgument<TP3Message>(1) ?? null!;
-                    Trace.TraceInformation("Fake network transport send called with {0}", lastMessageSent);
+                    if (onMessageSent != null)
+                    {
+                        await onMessageSent(message);
+                    }
                 })
                 .Returns(Task.CompletedTask);
 
@@ -105,76 +202,7 @@ namespace TP3.Tests.Integration
             await sut.Init();
             transport = await sut.AddTransport(fakeNetworkTransport);
             transport.NewUserNetworkConnection(fakeNetworkPipe);
-
-            await sut.Handle(fakeNetworkPipe, AttachMessage("tag1"));                                      /// Tattach (tag)
-            Assert.Equal(TP3Message.PayloadOneofCase.AttachResponse, lastMessageSent.PayloadCase);                                           ///                   Rattach
-            var lastAttachResponse = lastMessageSent.AttachResponse;                               ///                   Rattach
-            Assert.NotNull(lastAttachResponse);
-            Assert.Equal("tag1", lastMessageSent.Tag);                                                ///                   tag
-            Assert.NotNull(lastAttachResponse.Info);
-            Assert.NotNull(lastAttachResponse.Info.Id);                                           ///                   quid
-
-            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2"));
-            Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
-
-            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
-            var lastOpenResponse = lastMessageSent.OpenResponse;
-            var nodeType = lastOpenResponse!.Info.NodeType;
-            Assert.Equal(NodeType.Directory, nodeType);
-
-            List<TP3StatPayload> stats = TReadOnADirectory(fakeNetworkPipe, sut, "tag2");
-            Assert.NotEmpty(stats);
-            Assert.Equal(NodeType.Directory, stats[0].Info.NodeType);
-
-            await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
-            var lastClunkResponse = lastMessageSent.ClunkResponse;
-            Assert.NotNull(lastClunkResponse);
-
-            List<string> path = new List<string> { stats[0].Name };
-
-            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path.ToArray()));
-            var lastWalkResponse2 = lastMessageSent.WalkResponse;
-            Assert.NotNull(lastWalkResponse2);
-
-            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
-            Assert.Equal(NodeType.Directory, nodeType);
-
-            List<TP3StatPayload> stats2 = TReadOnADirectory(fakeNetworkPipe, sut, "tag2");
-            Assert.NotEmpty(stats2);
-            Assert.Equal(NodeType.Directory, stats2[0].Info.NodeType);
-            var firstChildName = stats2[0].Name;
-            Assert.Equal("state", firstChildName, ignoreCase: true); // we have state as in all services
-
-            await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
-
-            path.Add(firstChildName);
-
-            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path.ToArray()));
-            Assert.NotNull(lastMessageSent.WalkResponse);
-
-            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
-            Assert.Equal(NodeType.Directory, nodeType);
-
-            await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
-
-            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path[0], path[1], "README.md"));
-            var lastWalkResponse4 = lastMessageSent.WalkResponse;
-            Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, lastMessageSent.PayloadCase);
-            Assert.NotNull(lastWalkResponse4);
-            Assert.Equal(3, lastWalkResponse4!.Infos!.Count);
-            Assert.Equal(NodeType.File, lastWalkResponse4.Infos![2].NodeType);
-
-            await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
-            var lastOpenResponse4 = lastMessageSent.OpenResponse;
-            Assert.Equal(TP3Message.PayloadOneofCase.OpenResponse, lastMessageSent.PayloadCase);
-            Assert.Equal(NodeType.File, lastOpenResponse4!.Info.NodeType);
-
-            await sut.Handle(fakeNetworkPipe, ReadMessage("tag2", 0, 1000));
-            var lastReadResponse = lastMessageSent.ReadResponse;
-            Assert.NotNull(lastReadResponse);
-            var data = lastReadResponse!.Data;
-            Assert.NotNull(data);
-            Assert.NotEmpty(data);
+            return (fakeNetworkPipe, sut);
         }
 
         private static INode StateNode()
@@ -200,7 +228,7 @@ namespace TP3.Tests.Integration
             return stateNode;
         }
 
-        private List<TP3StatPayload> TReadOnADirectory(INetworkPipe pipe, Agent.Logic.Agent.Agent sut, string tag)
+        public static List<TP3StatPayload> TReadOnADirectory(INetworkPipe pipe, Agent.Logic.Agent.Agent sut, string tag)
         {
             IEnumerable<TP3ReadResponse> data = GetData(sut, pipe, tag);
             TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
@@ -212,7 +240,7 @@ namespace TP3.Tests.Integration
             return TP3StatPayloadExtensions.Deserilize(ms).ToList();
         }
 
-        private IEnumerable<TP3ReadResponse> GetData(Agent.Logic.Agent.Agent sut, INetworkPipe pipe, string tag)
+        private static IEnumerable<TP3ReadResponse> GetData(Agent.Logic.Agent.Agent sut, INetworkPipe pipe, string tag)
         {
             var offset = 0UL;
             var maxbytes = 10000U;
@@ -220,7 +248,7 @@ namespace TP3.Tests.Integration
             {
                 var readRequest = ReadMessage(tag, offset, maxbytes);
                 sut.Handle(pipe, readRequest).Wait();
-                var lastReadResponse = lastMessageSent.ReadResponse;
+                var lastReadResponse = LastMessageSent.ReadResponse;
                 var count = lastReadResponse?.Data?.Length ?? 0;
                 yield return lastReadResponse;
 
