@@ -9,7 +9,7 @@ internal class ServiceManager
     private ILogger? logger;
     private List<IService> services;
 
-    public ServiceManager(IAgent agent, IEnumerable<IService> services, ILogger? logger)
+    public ServiceManager(IAgent agent, IEnumerable<IService> services, ILogger? logger = null)
     {
         this.agent = agent;
         this.logger = logger;

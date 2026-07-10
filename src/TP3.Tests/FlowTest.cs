@@ -86,7 +86,7 @@ namespace TP3.Tests.Integration
 
             var fakeNetworkPipe = A.Fake<INetworkPipe>();
             A.CallTo(() => fakeNetworkPipe.AgentID).Returns("agent1");
-            A.CallTo(() => fakeNetworkPipe.TP3Transport).ReturnsLazily(() => transport);
+            A.CallTo(() => fakeNetworkPipe.TP3Transport).ReturnsLazily<ITP3Transport?>(() => transport!);
 
 
             A.CallTo(() => fakeNetworkTransport.Send(fakeNetworkPipe, A<TP3Message>.Ignored))
@@ -222,8 +222,7 @@ namespace TP3.Tests.Integration
                 sut.Handle(pipe, readRequest).Wait();
                 var lastReadResponse = lastMessageSent.ReadResponse;
                 var count = lastReadResponse?.Data?.Length ?? 0;
-                yield return lastReadResponse!;
-
+                yield return lastReadResponse;
 
                 if (count == 0 || count < maxbytes)
                 {
