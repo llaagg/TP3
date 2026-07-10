@@ -23,6 +23,7 @@ TP3 is a tree-oriented resource protocol with a small command surface and statef
 | `tag` | Session handle for a bound pointer | Per client connection |
 | `node/qid-like identity` | Resolved node identity in responses | Server namespace |
 | `path segments` | Navigation input for `WALK` | Request payload |
+| `CRUD`+ `SEARCH` | by convention we will have crud operations on nodes | Commands in control plane |
 
 ## Command Lifecycle
 

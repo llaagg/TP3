@@ -19,7 +19,7 @@ public class IpcService : BaseDirectoryNode, IService
     public int Port { get; }
 
     private ILogger? logger;
-    public IpcTransport transport;
+    public IpcTransport? transport = null;
 
     public override IEnumerable<INode>? Children => new List<INode>{ this.State };
 
@@ -37,18 +37,18 @@ public class IpcService : BaseDirectoryNode, IService
     public async Task Start()
     {
         this.logger?.LogInformation("Starting IPC service...");
-        await this.transport.Start();
+        await this.transport?.Start();
 
     }
 
     public async Task Stop()
     {
         this.logger?.LogInformation("Stopping IPC service...");
-        this.transport.Stop();
+        this.transport?.Stop();
     }
 
     public void Dispose()
     {
-        this.transport.Dispose();
+        this.transport?.Dispose();
     }
 }

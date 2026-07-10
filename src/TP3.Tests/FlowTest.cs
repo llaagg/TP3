@@ -82,11 +82,11 @@ namespace TP3.Tests.Integration
 
 
             var fakeNetworkTransport = A.Fake<INetworkTransport>();
-            ITP3Transport? transport = null;
+            ITP3Transport transport = null!;
 
             var fakeNetworkPipe = A.Fake<INetworkPipe>();
             A.CallTo(() => fakeNetworkPipe.AgentID).Returns("agent1");
-            A.CallTo(() => fakeNetworkPipe.TP3Transport).ReturnsLazily<ITP3Transport?>(() => transport!);
+            A.CallTo(() => fakeNetworkPipe.TP3Transport).ReturnsLazily<ITP3Transport>(() => transport);
 
 
             A.CallTo(() => fakeNetworkTransport.Send(fakeNetworkPipe, A<TP3Message>.Ignored))
