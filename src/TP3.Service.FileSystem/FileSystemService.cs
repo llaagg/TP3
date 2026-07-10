@@ -39,4 +39,3 @@ public class FileSystemService : BaseDirectoryNode, IService
 
     override public IEnumerable<INode>? Children => new INode[] { State };
 }
-

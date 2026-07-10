@@ -5,6 +5,7 @@
   <Project Path="TP3.GUI.GTK/TP3.GUI.GTK.csproj" />
   <Project Path="TP3.Interfaces/TP3.Interfaces.csproj" />
   <Project Path="TP3.Server/TP3.Server.csproj" />
+  <Project Path="TP3.Service.Attached/TP3.Service.Attached.csproj" />
   <Project Path="TP3.Service.FileSystem/TP3.Service.FileSystem.csproj" />
   <Project Path="TP3.Service.IPC/TP3.Service.IPC.csproj" />
   <Project Path="TP3.Service.Remote/TP3.Service.Remote.csproj" />

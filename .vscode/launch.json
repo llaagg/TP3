@@ -14,15 +14,17 @@
       "console": "integratedTerminal",
       "stopAtEntry": false
     },{
-      "name": "Server 6001",
+      "name": "Server 6000",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build TP3.Server",
       "program": "${workspaceFolder}/src/TP3.Server/bin/Debug/net10.0/TP3.Server.dll",
       "args": [
+        "run",
         "--port",
-        "6001",
-        "run"
+        "6000",
+        "--ipc-port",
+        "6001"
       ],
       "cwd": "${workspaceFolder}/src/TP3.Server",
       "console": "externalTerminal",
@@ -53,7 +55,7 @@
   "compounds": [
     {
       "name": "Server & GUI",
-      "configurations": [ "Server 6001", "GUI"],
+      "configurations": [ "Server 6000", "GUI"],
       "stopAll": true,
       "preLaunchTask": "build solution with GUI",
       "presentation": {

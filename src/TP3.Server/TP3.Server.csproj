@@ -11,6 +11,7 @@
     <ProjectReference Include="..\TP3.Logic\TP3.Logic.csproj" />
     <ProjectReference Include="..\TP3.Service.FileSystem\TP3.Service.FileSystem.csproj" />
     <ProjectReference Include="..\TP3.Service.IPC\TP3.Service.IPC.csproj" />
+    <ProjectReference Include="..\TP3.Service.Attached\TP3.Service.Attached.csproj" />
   </ItemGroup>
 
   <ItemGroup>

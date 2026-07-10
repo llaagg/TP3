@@ -2,6 +2,7 @@ using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Transport;
+using TP3.Service.Attached;
 using TP3.Service.FileSystem;
 using TP3.Service.IPC;
 
@@ -43,7 +44,8 @@ public static class CommandLineApplication
                     new IService[]
                     {
                         new FileSystemService(),
-                        new IpcService(ipcPort, logger)
+                        new IpcService(ipcPort, logger),
+                        new AttachedService(port, logger)
                     }
         );
 
