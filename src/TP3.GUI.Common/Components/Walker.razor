@@ -1,5 +1,4 @@
 @inject TP3ClientWrapper TP3Client
-@inject ILogger     logger
 
 <div class="d-flex align-items-center mb-3">
     <span class="me-2">Path:</span>
@@ -34,49 +33,35 @@
     {
         if (item.Info.NodeType == TP3.Messages.NodeType.Directory)
         {
-            <li class="list-group-item d-flex align-items-center justify-content-between">
-                <button class="btn" @onclick="() => Navigate(item)">
-                    <span class="me-2">@GetIcon(item)</span>
-                    @item.Name
-                </button>
-                <span class="badge text-bg-secondary">folder</span>
-            </li>
+            <WalkerDirectoryItem Item="item" OnDirectoryClick="Navigate" />
+        }
+        else if (item.Info.NodeType == TP3.Messages.NodeType.Command)
+        {
+            <WalkerCommandItem Item="item" OnCommandClick="HandleCommandSelected" />
         }
         else
         {
-            <li class="list-group-item d-flex align-items-center justify-content-between">
-                <button class="btn" @onclick="() => LoadFile(item)">
-                    <span class="me-2">@GetIcon(item)</span>
-                    @item.Name
-                </button>
-                <span class="badge text-bg-primary">file</span>
-            </li>
+            <WalkerFileItem Item="item" OnFileClick="HandleFileSelected" />
         }
     }
 </ul>
 
 @code {
-    
 
-    // dump file to logger
-    private async Task LoadFile(TP3.Protocol.TP3StatPayload item)
+    [Parameter]
+    public EventCallback<TP3.Protocol.TP3StatPayload> OnFileSelected { get; set; }
+
+    [Parameter]
+    public EventCallback<TP3.Protocol.TP3StatPayload> OnCommandSelected { get; set; }
+
+    private Task HandleFileSelected(TP3.Protocol.TP3StatPayload item)
     {
-        List<string> pathList = currentPath.ToList();
-        pathList.Add(item.Name);
+        return OnFileSelected.InvokeAsync(item);
+    }
 
-        var tag = await TP3Client.NewSession(pathList.ToArray());
-
-        var d = TP3Client.GetStream(tag);
-
-        await Task.Run(()=>{
-            using (var reader = new StreamReader(d))
-            {
-                var data = reader.ReadToEnd();
-                logger.LogInformation("File contents of {FileName}:\n{FileContents}", item.Name, data);
-            }
-        });
-
-        await TP3Client.CloseSession(tag);
+    private Task HandleCommandSelected(TP3.Protocol.TP3StatPayload item)
+    {
+        return OnCommandSelected.InvokeAsync(item);
     }
 
 
@@ -130,19 +115,6 @@
         currentPath = newPath;
         folderContents.Clear();
         await LoadFolder(this.currentPath);
-    }
-
-    private string GetFolderUrl(string folderName)
-    {
-        var pathSegments = currentPath.Append(folderName)
-            .Select(Uri.EscapeDataString);
-
-        return "/walk/" + string.Join('/', pathSegments);
-    }
-
-    private static string GetIcon(TP3.Protocol.TP3StatPayload item)
-    {
-        return item.Info.NodeType == TP3.Messages.NodeType.Directory ? "📁" : "📄";
     }
 
 }

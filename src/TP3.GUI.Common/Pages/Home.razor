@@ -2,24 +2,49 @@
 @using TP3.GUI.Common.Components
 
 @inject TP3ClientWrapper TP3Client
-@inject NavigationManager NavigationManager
-@inject IServerManager ServerManager
 
 <div class"text-center">🌳✚3️⃣ <ConnectionStatus></ConnectionStatus></div>
-@* 
-<Framed>
-    <div>
-        <button class="btn btn-primary" @onclick="OnClick">Connect to existing server</button>
-    </div>
-    <div>
-         <button class="btn btn-primary" @onclick="OnStartServer">Start server</button>
-    </div>
-</Framed> *@
 
 <Framed>
     @if(TP3Client.Status == "Attached")
     {
-        <Walker></Walker>
+        <div class="d-flex flex-wrap gap-3 align-items-start">
+            <section class="border rounded-3 p-3 bg-body" style="flex: 1 1 24rem; min-width: 20rem;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <strong>Walker</strong>
+                    <span class="badge text-bg-dark">fixed</span>
+                </div>
+                <Walker OnFileSelected="OpenFileFrame" OnCommandSelected="OpenCommandFrame"></Walker>
+            </section>
+
+            @foreach (var frame in frames)
+            {
+                var frameId = frame.Id;
+                <section class="border rounded-3 p-3 bg-body" style="flex: 1 1 24rem; min-width: 20rem; max-width: 34rem;">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div>
+                            <strong>@frame.Tag</strong>
+                            <div class="small text-body-secondary">@frame.Caption</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => CloseFrame(frameId)">Close</button>
+                    </div>
+
+                    @if (frame.Type == FrameType.FilePreview)
+                    {
+                        <label class="form-label">Preview</label>
+                        <textarea class="form-control" rows="10" @bind="frame.OutputPreview"></textarea>
+                    }
+                    else
+                    {
+                        <label class="form-label">Arguments</label>
+                        <input class="form-control mb-2" @bind="frame.CommandArgs" placeholder="arg1 arg2 arg3" />
+
+                        <label class="form-label">Response Preview</label>
+                        <textarea class="form-control" rows="8" @bind="frame.OutputPreview"></textarea>
+                    }
+                </section>
+            }
+        </div>
     }
     else
     {
@@ -29,27 +54,59 @@
 
 @code
 {
-    private string serverAddress = string.Empty;
+    private readonly List<DynamicFrame> frames = new();
 
-    private async Task OnClick()
+    private void OpenFileFrame(TP3.Protocol.TP3StatPayload item)
     {
-        try
+        frames.Add(new DynamicFrame
         {
-            await TP3Client.Connect();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error connecting to IPC server: {ex.Message}");
-        }
+            Tag = NextTag(),
+            Type = FrameType.FilePreview,
+            Caption = $"File: {item.Name}",
+            OutputPreview = string.Empty,
+        });
     }
 
-    private async Task OnStartServer()
+    private void OpenCommandFrame(TP3.Protocol.TP3StatPayload item)
     {
-        await ServerManager.StartServer();
+        frames.Add(new DynamicFrame
+        {
+            Tag = NextTag(),
+            Type = FrameType.Command,
+            Caption = $"Command: {item.Name}",
+            CommandArgs = string.Empty,
+            OutputPreview = string.Empty,
+        });
+    }
+
+    private void CloseFrame(Guid id)
+    {
+        frames.RemoveAll(f => f.Id == id);
+    }
+
+    private static string NextTag()
+    {
+        return "tag-" + Guid.NewGuid().ToString("N")[..8];
     }
 
     protected override async Task OnInitializedAsync()
     {
         await TP3Client.Connect();
+    }
+
+    private sealed class DynamicFrame
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string Tag { get; set; } = string.Empty;
+        public FrameType Type { get; set; }
+        public string Caption { get; set; } = string.Empty;
+        public string CommandArgs { get; set; } = string.Empty;
+        public string OutputPreview { get; set; } = string.Empty;
+    }
+
+    private enum FrameType
+    {
+        FilePreview,
+        Command
     }
 }
