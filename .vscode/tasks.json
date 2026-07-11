@@ -46,6 +46,50 @@
       "problemMatcher": "$msCompile"
     },
     {
+      "label": "build GUI packaged",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/TP3.GUI.Maui/TP3.GUI.Maui.csproj",
+        "-f",
+        "net10.0-windows10.0.19041.0",
+        "/p:WindowsPackageType=MSIX"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "run GUI maui",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/src/TP3.GUI.Maui/TP3.GUI.Maui.csproj",
+        "-f",
+        "net10.0-windows10.0.19041.0"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "run GUI packaged",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$ErrorActionPreference = \"Stop\"; $manifest = Join-Path \"${workspaceFolder}\" \"src/TP3.GUI.Maui/bin/Debug/net10.0-windows10.0.19041.0/win-x64/AppxManifest.xml\"; $packageName = \"com.companyname.tp3.gui.maui\"; try { Add-AppxPackage -ForceApplicationShutdown -Register $manifest; } catch { throw \"Failed to register packaged GUI app. Enable Windows Developer Mode or sideloading, then try again. Original error: $($_.Exception.Message)\"; } $package = Get-AppxPackage -Name $packageName | Select-Object -First 1; if ($null -eq $package) { throw \"Packaged GUI app was not registered.\"; } $aumid = \"$($package.PackageFamilyName)!App\"; Start-Process \"explorer.exe\" (\"shell:AppsFolder\\\" + $aumid)"
+      ],
+      "dependsOn": "build GUI packaged",
+      "problemMatcher": []
+    },
+    {
       "label": "build solution",
       "type": "shell",
       "command": "dotnet",

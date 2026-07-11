@@ -67,6 +67,18 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Content Update="wwwroot\index.html">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\app.css">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\lib\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
@@ -80,5 +92,24 @@
       <ProjectReference Include="..\TP3.Service.IPC\TP3.Service.IPC.csproj" />
       <ProjectReference Include="..\TP3.Service.CloudFilter\TP3.Service.CloudFilter.csproj" />
     </ItemGroup>
+
+    <Target Name="CopyBlazorWebViewFrameworkFiles" AfterTargets="Build">
+        <PropertyGroup>
+            <_StaticWebAssetsRoot>$(IntermediateOutputPath)staticwebassets</_StaticWebAssetsRoot>
+            <_OutputFrameworkDir>$(OutDir)wwwroot\_framework</_OutputFrameworkDir>
+        </PropertyGroup>
+
+        <MakeDir Directories="$(_OutputFrameworkDir)" />
+
+        <Copy SourceFiles="$(_StaticWebAssetsRoot)\_framework\blazor.webview.js"
+              DestinationFiles="$(_OutputFrameworkDir)\blazor.webview.js"
+              SkipUnchangedFiles="true"
+              Condition="Exists('$(_StaticWebAssetsRoot)\\_framework\\blazor.webview.js')" />
+
+        <Copy SourceFiles="$(_StaticWebAssetsRoot)\_framework\blazor.modules.json"
+              DestinationFiles="$(_OutputFrameworkDir)\blazor.modules.json"
+              SkipUnchangedFiles="true"
+              Condition="Exists('$(_StaticWebAssetsRoot)\\_framework\\blazor.modules.json')" />
+    </Target>
 
 </Project>

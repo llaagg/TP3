@@ -7,17 +7,10 @@ namespace TP3.Service.CloudFilter;
 
 public class FoldersService : BaseDirectoryNode, IService
 {
-    private const string SyncRootPathEnvVar = "TP3_CLOUDFILTER_ROOT";
-    private const string SyncRootIdEnvVar = "TP3_CLOUDFILTER_ID";
-    private const string SyncRootDisplayNameEnvVar = "TP3_CLOUDFILTER_DISPLAY_NAME";
-    private const string SyncRootIconEnvVar = "TP3_CLOUDFILTER_ICON";
-    private const string SyncRootNodePathEnvVar = "TP3_CLOUDFILTER_NODE_PATH";
-
-    private const string DefaultSyncRootId = "TP3.CloudFilter!DefaultUser";
-    private const string DefaultDisplayName = "TP3 Cloud Drive";
-    private const string DefaultNodePath = "/root";
+    private readonly Configuration configuration;
 
     private readonly Dictionary<string, INode> lazyFiles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, INode> lazyDirectories = new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim hydrateGate = new(1, 1);
     private FileSystemWatcher? watcher;
     private string? syncRootPath;
@@ -25,11 +18,13 @@ public class FoldersService : BaseDirectoryNode, IService
     public FoldersService()
         : base("folders")
     {
+        this.configuration = new Configuration();
     }
 
     public void Dispose()
     {
         this.watcher?.Dispose();
+        UnregisterExistingSyncRoot(this.configuration.SyncRootId);
         this.hydrateGate.Dispose();
     }
 
@@ -40,12 +35,13 @@ public class FoldersService : BaseDirectoryNode, IService
             throw new PlatformNotSupportedException("Cloud Files API is not supported on this Windows installation.");
         }
 
-        var rootPath = ResolveSyncRootPath();
+        var rootPath = this.configuration.SyncRootPath;
         this.syncRootPath = rootPath;
         Directory.CreateDirectory(rootPath);
         this.lazyFiles.Clear();
+        this.lazyDirectories.Clear();
 
-        var nodePath = Environment.GetEnvironmentVariable(SyncRootNodePathEnvVar) ?? DefaultNodePath;
+        var nodePath = this.configuration.NodePath;
         var nodeToMap = ResolveNodeForMapping(me.T, nodePath);
 
         if (nodeToMap == null)
@@ -55,11 +51,9 @@ public class FoldersService : BaseDirectoryNode, IService
 
         await MirrorNodeTreeAsync(nodeToMap, rootPath);
 
-        var syncRootId = Environment.GetEnvironmentVariable(SyncRootIdEnvVar) ?? DefaultSyncRootId;
-        var displayName = Environment.GetEnvironmentVariable(SyncRootDisplayNameEnvVar) ?? DefaultDisplayName;
-        var iconResource = Environment.GetEnvironmentVariable(SyncRootIconEnvVar) ?? string.Empty;
-
-        await UnregisterExistingSyncRootAsync(syncRootId);
+        var syncRootId = this.configuration.SyncRootId;
+        var displayName = this.configuration.DisplayName;
+        var iconResource = this.configuration.IconResource;
 
         StorageProviderSyncRootInfo info = new StorageProviderSyncRootInfo
         {
@@ -71,8 +65,24 @@ public class FoldersService : BaseDirectoryNode, IService
             PopulationPolicy = StorageProviderPopulationPolicy.AlwaysFull
         };
 
-        StorageProviderSyncRootManager.Register(info);
+        try{
+            StorageProviderSyncRootManager.Register(info);
+        }catch(Exception ex)
+        {
+            // let's try to unregister any existing sync root with the same ID and re-register
+            UnregisterExistingSyncRoot(syncRootId);
 
+            try
+            {
+                // 2nd attempt
+                StorageProviderSyncRootManager.Register(info);
+            }
+            catch (Exception ex2)
+            {
+                throw new InvalidOperationException($"Failed to register sync root '{syncRootId}' at '{rootPath}' after unregistering existing one.", ex2);
+            }
+
+        }
     }
 
     public Task Start()
@@ -90,7 +100,7 @@ public class FoldersService : BaseDirectoryNode, IService
         this.watcher = new FileSystemWatcher(this.syncRootPath)
         {
             IncludeSubdirectories = true,
-            NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastAccess | NotifyFilters.CreationTime
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size | NotifyFilters.LastAccess | NotifyFilters.CreationTime
         };
 
         this.watcher.Changed += this.OnPathTouched;
@@ -118,40 +128,25 @@ public class FoldersService : BaseDirectoryNode, IService
         return Task.CompletedTask;
     }
 
-    private static string ResolveSyncRootPath()
-    {
-        var configuredPath = Environment.GetEnvironmentVariable(SyncRootPathEnvVar);
-
-        if (!string.IsNullOrWhiteSpace(configuredPath))
-        {
-            return configuredPath;
-        }
-
-        var defaultRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TP3");
-        return defaultRoot;
-    }
-
-    private static async Task UnregisterExistingSyncRootAsync(string syncRootId)
+    private static void UnregisterExistingSyncRoot(string syncRootId)
     {
         var existing = StorageProviderSyncRootManager.GetCurrentSyncRoots();
         if (existing.Any(r => r.Id == syncRootId))
         {
             StorageProviderSyncRootManager.Unregister(syncRootId);
         }
-
-        await Task.CompletedTask;
     }
 
-    private async Task MirrorNodeTreeAsync(INode rootNode, string rootPath)
+    private Task MirrorNodeTreeAsync(INode rootNode, string rootPath)
     {
         if (rootNode.NodeType == NodeType.Directory)
         {
-            await this.MirrorChildrenAsync(rootNode, rootPath);
-            return;
+            return this.MaterializeDirectoryLevelAsync(rootNode, rootPath);
         }
 
         var rootFilePath = Path.Combine(rootPath, SafeName(rootNode.Name));
         this.CreatePlaceholder(rootNode, rootFilePath);
+        return Task.CompletedTask;
     }
 
     private static INode? ResolveNodeForMapping(INode trunk, string requestedPath)
@@ -204,28 +199,30 @@ public class FoldersService : BaseDirectoryNode, IService
         return current;
     }
 
-    private async Task MirrorChildrenAsync(INode node, string currentPath)
+    private Task MaterializeDirectoryLevelAsync(INode node, string currentPath)
     {
         var children = node.Children;
         if (children == null)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         foreach (var child in children)
         {
             var targetName = SafeName(child.Name);
-            var targetPath = Path.Combine(currentPath, targetName);
+            var targetPath = Path.GetFullPath(Path.Combine(currentPath, targetName));
 
             if (child.NodeType == NodeType.Directory)
             {
                 Directory.CreateDirectory(targetPath);
-                await this.MirrorChildrenAsync(child, targetPath);
+                this.lazyDirectories[targetPath] = child;
                 continue;
             }
 
             this.CreatePlaceholder(child, targetPath);
         }
+
+        return Task.CompletedTask;
     }
 
     private void CreatePlaceholder(INode node, string filePath)
@@ -247,12 +244,40 @@ public class FoldersService : BaseDirectoryNode, IService
 
     private void OnPathTouched(object sender, FileSystemEventArgs e)
     {
+        _ = this.TryExpandDirectoryAsync(e.FullPath);
         _ = this.TryHydrateAsync(e.FullPath);
     }
 
     private void OnPathRenamed(object sender, RenamedEventArgs e)
     {
+        _ = this.TryExpandDirectoryAsync(e.FullPath);
         _ = this.TryHydrateAsync(e.FullPath);
+    }
+
+    private async Task TryExpandDirectoryAsync(string path)
+    {
+        var normalizedPath = Path.GetFullPath(path);
+
+        if (!Directory.Exists(normalizedPath))
+        {
+            return;
+        }
+
+        await this.hydrateGate.WaitAsync();
+        try
+        {
+            if (!this.lazyDirectories.TryGetValue(normalizedPath, out var node))
+            {
+                return;
+            }
+
+            this.lazyDirectories.Remove(normalizedPath);
+            await this.MaterializeDirectoryLevelAsync(node, normalizedPath);
+        }
+        finally
+        {
+            this.hydrateGate.Release();
+        }
     }
 
     private async Task TryHydrateAsync(string path)
@@ -337,5 +362,18 @@ public class FoldersService : BaseDirectoryNode, IService
         var invalidChars = Path.GetInvalidFileNameChars();
         var sanitized = new string(name.Select(c => invalidChars.Contains(c) ? '_' : c).ToArray());
         return string.IsNullOrWhiteSpace(sanitized) ? "unnamed" : sanitized;
+    }
+
+    private sealed class Configuration
+    {
+        public string SyncRootPath { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TP3");
+
+        public string SyncRootId { get; } = "TP3.CloudFilter!DefaultUser";
+
+        public string DisplayName { get; } = "TP3 Cloud Drive";
+
+        public string IconResource { get; } = string.Empty;
+
+        public string NodePath { get; } = "/";
     }
 }

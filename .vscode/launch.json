@@ -48,14 +48,47 @@
       "type": "coreclr",
       "request": "launch",
       "cwd": "${workspaceFolder}/src/TP3.GUI.Maui",
-      "preLaunchTask": "build GUI",
-      "program": "${workspaceFolder}/src/TP3.GUI.Maui/bin/Debug/net10.0-windows10.0.19041.0/win-x64/TP3.GUI.Maui.exe",
+      "program": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/src/TP3.GUI.Maui/TP3.GUI.Maui.csproj",
+        "-f",
+        "net10.0-windows10.0.19041.0"
+      ],
+    },
+    {
+      "name": "GUI Packaged",
+      "type": "coreclr",
+      "request": "attach",
+      "preLaunchTask": "run GUI packaged",
+      "processId": "${command:pickProcess}",
+      "cwd": "${workspaceFolder}/src/TP3.GUI.Maui"
+    },
+    {
+      "name": "GUI MAUI Run",
+      "type": "coreclr",
+      "request": "attach",
+      "preLaunchTask": "run GUI maui",
+      "processId": "${command:pickProcess}",
+      "cwd": "${workspaceFolder}/src/TP3.GUI.Maui"
     }
   ],
   "compounds": [
     {
       "name": "Server & GUI",
       "configurations": [ "Server 6000", "GUI"],
+      "stopAll": true,
+      "preLaunchTask": "build solution",
+      "presentation": {
+        "hidden": false,
+        "group": "Server",
+        "order": 1
+      }
+    },
+    {
+      "name": "Server & GUI Packaged",
+      "configurations": [ "Server 6000", "GUI Packaged"],
       "stopAll": true,
       "preLaunchTask": "build solution",
       "presentation": {
