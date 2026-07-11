@@ -16,14 +16,14 @@ namespace TP3.Agent.Logic.Agent;
 /// </summary>
 public class Trunk : INode
 {
-    private IList<IService> service;
+    private IList<IService> services;
 
-    public Trunk(IList<IService> service)
+    public Trunk(IList<IService> services)
     {
-        this.service = service;
+        this.services = services;
     }
 
-    public string Id => "trunk:/";
+    public string Id => "/";
 
     public string Name => "/";
 
@@ -33,10 +33,7 @@ public class Trunk : INode
     {
         get
         {
-            foreach (var s in service)
-            {
-                yield return s;
-            }
+            yield return new BaseDirectoryNode("services", "services", services.Cast<INode>().ToList());
         }
     }
 

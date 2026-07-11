@@ -5,23 +5,24 @@ namespace TP3.Service.CloudFilter;
 
 public class FoldersService : BaseDirectoryNode, IService
 {
+    public FoldersService()
+        : base("folders")
+    {
+    }
+
     public void Dispose()
     {
-        throw new NotImplementedException();
     }
 
-    public Task Init(IAgent me)
+    public async Task Init(IAgent me)
     {
-        throw new NotImplementedException();
     }
 
-    public Task Start()
+    public async Task Start()
     {
-        throw new NotImplementedException();
     }
 
-    public Task Stop()
+    public async Task Stop()
     {
-        throw new NotImplementedException();
     }
 }

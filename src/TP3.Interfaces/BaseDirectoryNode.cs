@@ -4,13 +4,24 @@ namespace TP3.Interfaces;
 
 public class BaseDirectoryNode : INode
 {
-    public BaseDirectoryNode(string? name = null, string? id = null)
+    public BaseDirectoryNode()
+        : this(null, null, null)
+    {
+    }
+
+    public BaseDirectoryNode(IList<INode>? children = null)
+        : this(null, null, children)
+    {
+    }
+
+    public BaseDirectoryNode(string? name = null, string? id = null, IList<INode>? children = null)
     {
         // short guid if empty
         this.Id = id ?? Guid.NewGuid().ToString().Substring(0, 8);
         // type name if empty
         // put - before all capital letter make to lowercase and trim - from beginning and end
         this.Name = name ?? NameCreator(this.GetType());
+        this._children = children ?? new List<INode>();
     }
 
     public static string NameCreator(Type type)
@@ -26,9 +37,11 @@ public class BaseDirectoryNode : INode
 
     public string Name { get; protected set; } = null!;
 
+    private IList<INode> _children;
+
     public NodeType NodeType => NodeType.Directory;
 
-    public virtual IEnumerable<INode>? Children => new List<INode>();
+    public virtual IEnumerable<INode>? Children => _children;
     
     public Task<ITP3DataStream?> Get()
     {
