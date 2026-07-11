@@ -57,7 +57,7 @@
       "name": "Server & GUI",
       "configurations": [ "Server 6000", "GUI"],
       "stopAll": true,
-      "preLaunchTask": "build solution with GUI",
+      "preLaunchTask": "build solution",
       "presentation": {
         "hidden": false,
         "group": "Server",
