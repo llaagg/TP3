@@ -17,6 +17,11 @@ public class FoldersService : BaseDirectoryNode, IService
     private const string DefaultDisplayName = "TP3 Cloud Drive";
     private const string DefaultNodePath = "/root";
 
+    private readonly Dictionary<string, INode> lazyFiles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly SemaphoreSlim hydrateGate = new(1, 1);
+    private FileSystemWatcher? watcher;
+    private string? syncRootPath;
+
     public FoldersService()
         : base("folders")
     {
@@ -24,6 +29,8 @@ public class FoldersService : BaseDirectoryNode, IService
 
     public void Dispose()
     {
+        this.watcher?.Dispose();
+        this.hydrateGate.Dispose();
     }
 
     public async Task Init(IAgent me)
@@ -34,7 +41,9 @@ public class FoldersService : BaseDirectoryNode, IService
         }
 
         var rootPath = ResolveSyncRootPath();
+        this.syncRootPath = rootPath;
         Directory.CreateDirectory(rootPath);
+        this.lazyFiles.Clear();
 
         var nodePath = Environment.GetEnvironmentVariable(SyncRootNodePathEnvVar) ?? DefaultNodePath;
         var nodeToMap = ResolveNodeForMapping(me.T, nodePath);
@@ -66,12 +75,47 @@ public class FoldersService : BaseDirectoryNode, IService
 
     }
 
-    public async Task Start()
+    public Task Start()
     {
+        if (string.IsNullOrWhiteSpace(this.syncRootPath) || !Directory.Exists(this.syncRootPath))
+        {
+            return Task.CompletedTask;
+        }
+
+        if (this.watcher != null)
+        {
+            return Task.CompletedTask;
+        }
+
+        this.watcher = new FileSystemWatcher(this.syncRootPath)
+        {
+            IncludeSubdirectories = true,
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastAccess | NotifyFilters.CreationTime
+        };
+
+        this.watcher.Changed += this.OnPathTouched;
+        this.watcher.Created += this.OnPathTouched;
+        this.watcher.Renamed += this.OnPathRenamed;
+        this.watcher.EnableRaisingEvents = true;
+
+        return Task.CompletedTask;
     }
 
-    public async Task Stop()
+    public Task Stop()
     {
+        if (this.watcher == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        this.watcher.EnableRaisingEvents = false;
+        this.watcher.Changed -= this.OnPathTouched;
+        this.watcher.Created -= this.OnPathTouched;
+        this.watcher.Renamed -= this.OnPathRenamed;
+        this.watcher.Dispose();
+        this.watcher = null;
+
+        return Task.CompletedTask;
     }
 
     private static string ResolveSyncRootPath()
@@ -83,7 +127,7 @@ public class FoldersService : BaseDirectoryNode, IService
             return configuredPath;
         }
 
-        var defaultRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TP3", "MyCloudFolder");
+        var defaultRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TP3");
         return defaultRoot;
     }
 
@@ -98,16 +142,16 @@ public class FoldersService : BaseDirectoryNode, IService
         await Task.CompletedTask;
     }
 
-    private static async Task MirrorNodeTreeAsync(INode rootNode, string rootPath)
+    private async Task MirrorNodeTreeAsync(INode rootNode, string rootPath)
     {
         if (rootNode.NodeType == NodeType.Directory)
         {
-            await MirrorChildrenAsync(rootNode, rootPath);
+            await this.MirrorChildrenAsync(rootNode, rootPath);
             return;
         }
 
         var rootFilePath = Path.Combine(rootPath, SafeName(rootNode.Name));
-        await WriteNodeFileAsync(rootNode, rootFilePath);
+        this.CreatePlaceholder(rootNode, rootFilePath);
     }
 
     private static INode? ResolveNodeForMapping(INode trunk, string requestedPath)
@@ -160,7 +204,7 @@ public class FoldersService : BaseDirectoryNode, IService
         return current;
     }
 
-    private static async Task MirrorChildrenAsync(INode node, string currentPath)
+    private async Task MirrorChildrenAsync(INode node, string currentPath)
     {
         var children = node.Children;
         if (children == null)
@@ -176,11 +220,77 @@ public class FoldersService : BaseDirectoryNode, IService
             if (child.NodeType == NodeType.Directory)
             {
                 Directory.CreateDirectory(targetPath);
-                await MirrorChildrenAsync(child, targetPath);
+                await this.MirrorChildrenAsync(child, targetPath);
                 continue;
             }
 
-            await WriteNodeFileAsync(child, targetPath);
+            this.CreatePlaceholder(child, targetPath);
+        }
+    }
+
+    private void CreatePlaceholder(INode node, string filePath)
+    {
+        var normalizedPath = Path.GetFullPath(filePath);
+        var parent = Path.GetDirectoryName(normalizedPath);
+        if (!string.IsNullOrWhiteSpace(parent))
+        {
+            Directory.CreateDirectory(parent);
+        }
+
+        if (!File.Exists(normalizedPath))
+        {
+            using var _ = File.Create(normalizedPath);
+        }
+
+        this.lazyFiles[normalizedPath] = node;
+    }
+
+    private void OnPathTouched(object sender, FileSystemEventArgs e)
+    {
+        _ = this.TryHydrateAsync(e.FullPath);
+    }
+
+    private void OnPathRenamed(object sender, RenamedEventArgs e)
+    {
+        _ = this.TryHydrateAsync(e.FullPath);
+    }
+
+    private async Task TryHydrateAsync(string path)
+    {
+        var normalizedPath = Path.GetFullPath(path);
+
+        if (!this.lazyFiles.ContainsKey(normalizedPath))
+        {
+            return;
+        }
+
+        await this.hydrateGate.WaitAsync();
+        try
+        {
+            if (!this.lazyFiles.TryGetValue(normalizedPath, out var node))
+            {
+                return;
+            }
+
+            if (!File.Exists(normalizedPath))
+            {
+                this.lazyFiles.Remove(normalizedPath);
+                return;
+            }
+
+            var info = new FileInfo(normalizedPath);
+            if (info.Length > 0)
+            {
+                this.lazyFiles.Remove(normalizedPath);
+                return;
+            }
+
+            await WriteNodeFileAsync(node, normalizedPath);
+            this.lazyFiles.Remove(normalizedPath);
+        }
+        finally
+        {
+            this.hydrateGate.Release();
         }
     }
 
