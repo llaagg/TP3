@@ -20,8 +20,8 @@ public static partial class CLI
 
         var rootCommand = new RootCommand("TP3 CLI")
         {
-            ListCommand(ipcPortOption, bePatientAndWaitForServer, path, enableEmoted, logLevel)
-
+            ListCommand(ipcPortOption, bePatientAndWaitForServer, path, enableEmoted, logLevel),
+            TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel)
         };
 
         rootCommand.SetHandler(() =>
@@ -30,6 +30,20 @@ public static partial class CLI
         });
 
         return rootCommand.InvokeAsync(args);
+    }
+
+    private static Command TermCommand(Option<int> ipcPortOption, Option<int> bePatientAndWaitForServer, Option<LogLevel> logLevel)
+    {
+        var termCommand = new Command("term", "Start a terminal session with the IPC server")
+        {
+            ipcPortOption,
+            bePatientAndWaitForServer,
+            logLevel
+        };
+
+        termCommand.SetHandler(ExecuteTerm, ipcPortOption, bePatientAndWaitForServer, logLevel);
+
+        return termCommand;
     }
 
     private static Command ListCommand(Option<int> ipcPortOption, 
