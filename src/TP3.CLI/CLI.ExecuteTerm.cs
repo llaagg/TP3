@@ -11,8 +11,10 @@ public static partial class CLI
 
     private static async Task ExecuteTerm(int ipcPort, int bePatientAndWaitForServer, LogLevel level)
     {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         // bump it - debug
-        level = LogLevel.Debug;
+        //level = LogLevel.Debug;
         var logger = InitilizeLogger(level);
         logger.LogInformation("Starting terminal session with IPC server on port {IpcPort}", ipcPort);
 
@@ -23,21 +25,19 @@ public static partial class CLI
         var attachResponse = await ipcClient.Attach(logger).ConfigureAwait(false);
         attachResponse.ThrowIfError();
         var tag = attachResponse?.Tag;
+        
 
         // we are connected with tag
         logger.LogInformation("Connected to IPC server with tag {Tag}", tag);
-
-        string currentpath = "/";
 
         Context context = new Context()
         {
             RootTag = tag,
             ipcClient = ipcClient,
-            logger = logger
+            logger = logger,
+            nfo = attachResponse?.AttachResponse.Info
         };
-        // walk to root
-        Walk walk = new Walk();
-        context = await walk.Do(context, "walk /");
+    
 
         while (true)
         {
@@ -57,7 +57,7 @@ public static partial class CLI
 
             try
             {
-                if (line.StartsWith("walk "))
+                if (line.StartsWith("walk"))
                 {
                     var w = new Walk();
                     context = await w.Do(context, line);
@@ -93,21 +93,43 @@ internal class List
             context.logger.LogError("No node info available. Please walk to a valid path first.");
             return;
         }
-        if(context.nfo.Type != NodeType.Directory)
+        if(context.nfo.NodeType != NodeType.Directory)
         {
             context.logger.LogError("Current node is not a directory. Please walk to a valid directory first.");
             return;
         }
-        // let's read and show the folder
-        
-        var command = new TP3Message()
+
+        // i'll do the walk for new tag and clunk it
+        var walkResponse = await context.ipcClient.SendAndWaitOne(new TP3Message()
         {
-            Tag = context.Tag,
-            ReadRequest = new TP3ReadRequest()
-        };
-        // send request fr read 
-        var send = context.ipcClient.SendMessageAsync(command, context.logger);
-        var response = await context.ipcClient.WaitForResponseAsync(command.Tag, context.logger);
+            Tag = context.Tag ?? context.RootTag,
+            WalkRequest = new TP3WalkRequest()
+            {
+                NewTag = Guid.NewGuid().ToString("N").Substring(0, 8)
+            }
+        });
+        walkResponse.ThrowIfError();
+
+        var openResponse = await context.ipcClient.SendAndWaitOne(new TP3Message()
+        {
+            Tag = walkResponse!.Tag,
+            OpenRequest = new TP3OpenRequest()
+        }, context.logger);
+
+        openResponse.ThrowIfError();
+
+
+        foreach (var item in context.ipcClient.ReadDirectory(openResponse!, context.logger))
+        {
+            var empote = item.Info.NodeType == NodeType.Directory ? "📁" : "📄";
+            Console.WriteLine($"{empote} {item.Name}");
+        }
+
+        await context.ipcClient.SendAndWaitOne(new TP3Message()
+        {
+            Tag = walkResponse!.Tag,
+            ClunkRequest = new TP3ClunkRequest()
+        }, context.logger);
     }
 }
 

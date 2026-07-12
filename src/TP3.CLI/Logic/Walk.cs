@@ -21,9 +21,16 @@ public class Walk
 
     public async Task<Context> Do(Context context, string line)
     {
-        line = line.Substring("walk ".Length);
+        line = line.Substring("walk".Length);
 
         var walkRequest = new TP3WalkRequest();
+        
+        // if path start with / or contains .. - we panic
+        if (line.StartsWith("/") || line.Contains(".."))
+        {
+            context.logger.LogError("Invalid path: {Path}", line);
+            return context;
+        }
         
         var path = new List<string>();
         // exctract path from the 
@@ -33,6 +40,8 @@ public class Walk
             path.AddRange(line.Split('/').Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()));
             walkRequest.Path.Add(path.ToArray());
         }
+
+        
 
         // new tag, short guid
         var newTag = Guid.NewGuid().ToString("N").Substring(0, 8);
@@ -78,7 +87,7 @@ public class Walk
 
             var currentpath = "/" + string.Join("/", path.Take(numberOfNodes));
 
-            context.path = currentpath;
+            context.path += currentpath;
             context.Tag = newTag;
             context.nfo = walkResponse.Infos.LastOrDefault();
 
