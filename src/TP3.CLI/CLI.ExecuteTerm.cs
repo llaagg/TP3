@@ -61,7 +61,12 @@ public static partial class CLI
                 {
                     var w = new Walk();
                     context = await w.Do(context, line);
+                }else if (line.StartsWith("ls"))
+                {
+                    var l = new List();
+                    await l.Do(context, line);
                 }
+                
             }
             catch (Exception ex)
             {
@@ -69,10 +74,57 @@ public static partial class CLI
             }
 
 
-            List<string> path = new List<string>();
+        }
+    }
+}
 
+internal class List
+{
+    public List()
+    {
+    }
 
+    public async Task Do(Context context, string line)
+    {
+        line = line.Substring("ls".Length).Trim();
+        // Implement the list logic here
+        if(context.nfo == null)
+        {
+            context.logger.LogError("No node info available. Please walk to a valid path first.");
+            return;
+        }
+        if(context.nfo.Type != NodeType.Directory)
+        {
+            context.logger.LogError("Current node is not a directory. Please walk to a valid directory first.");
+            return;
+        }
+        // let's read and show the folder
+        
+        var command = new TP3Message()
+        {
+            Tag = context.Tag,
+            ReadRequest = new TP3ReadRequest()
+        };
+        // send request fr read 
+        var send = context.ipcClient.SendMessageAsync(command, context.logger);
+        var response = await context.ipcClient.WaitForResponseAsync(command.Tag, context.logger);
+    }
+}
 
+internal class Read
+{
+    public Read()
+    {
+    }
+
+    public async Task Do(Context context, string line)
+    {
+        line = line.Substring("read ".Length);
+        // Implement the read logic here
+        if(context.nfo == null)
+        {
+            context.logger.LogError("No node info available. Please walk to a valid path first.");
+            return;
         }
     }
 }
