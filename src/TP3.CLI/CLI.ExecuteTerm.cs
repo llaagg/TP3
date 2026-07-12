@@ -35,6 +35,9 @@ public static partial class CLI
             ipcClient = ipcClient,
             logger = logger
         };
+        // walk to root
+        Walk walk = new Walk();
+        context = await walk.Do(context, "walk /");
 
         while (true)
         {
@@ -57,7 +60,7 @@ public static partial class CLI
                 if (line.StartsWith("walk "))
                 {
                     var w = new Walk();
-                    await w.Do(context, line);
+                    context = await w.Do(context, line);
                 }
             }
             catch (Exception ex)
