@@ -26,6 +26,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IService, TP3.Service.Remote.RemotesService>();
 		builder.Services.AddSingleton<IService, TP3.Service.CloudFilter.FoldersService>();
 		builder.Services.AddSingleton<IService, TP3.Service.Shell.ShellService>();
+		builder.Services.AddSingleton<IService, TP3.Service.WebDav.WebDavService>();
 		
 		builder.Services.AddSingleton<IService>(serviceProvider =>
 		{

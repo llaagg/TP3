@@ -92,6 +92,7 @@
       <ProjectReference Include="..\TP3.Service.IPC\TP3.Service.IPC.csproj" />
       <ProjectReference Include="..\TP3.Service.CloudFilter\TP3.Service.CloudFilter.csproj" />
       <ProjectReference Include="..\TP3.Service.Shell\TP3.Service.Shell.csproj" />
+      <ProjectReference Include="..\TP3.Service.WebDav\TP3.Service.WebDav.csproj" />
     </ItemGroup>
 
     <Target Name="CopyBlazorWebViewFrameworkFiles" AfterTargets="Build">
