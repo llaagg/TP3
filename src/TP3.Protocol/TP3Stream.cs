@@ -6,15 +6,20 @@ public class TP3Stream: ITP3DataStream
 {
     private const ulong DefaultMaxCount = 16 * 1024;
     private readonly Stream stream;
+    private ulong logicalPosition;
 
     public TP3Stream(Stream stream)
     {
         this.stream = stream;
+        if (stream.CanSeek)
+        {
+            this.logicalPosition = (ulong)stream.Position;
+        }
     }
 
     public uint Iounit => 0;
 
-    public ulong Position => (ulong)stream.Position;
+    public ulong Position => stream.CanSeek ? (ulong)stream.Position : this.logicalPosition;
 
     public Task Open()
     {
@@ -29,13 +34,21 @@ public class TP3Stream: ITP3DataStream
             maxCount = DefaultMaxCount;
         }
 
-        if (offset != (ulong)stream.Position)
+        if (stream.CanSeek)
         {
-            stream.Seek((long)offset, SeekOrigin.Begin);
+            if (offset != (ulong)stream.Position)
+            {
+                stream.Seek((long)offset, SeekOrigin.Begin);
+            }
+        }
+        else if (offset != this.logicalPosition)
+        {
+            throw new NotSupportedException($"Non-seekable stream can only read at current position. Requested offset: {offset}, current position: {this.logicalPosition}.");
         }
 
         byte[] buffer = new byte[maxCount];
         int bytesRead = await stream.ReadAsync(buffer, 0, (int)maxCount);
+        this.logicalPosition += (ulong)bytesRead;
         if (bytesRead < (int)maxCount)
         {
             Array.Resize(ref buffer, bytesRead);
@@ -50,12 +63,20 @@ public class TP3Stream: ITP3DataStream
 
     public async Task<ulong> Write(ulong offset, byte[] data)
     {
-        if (offset != (ulong)stream.Position)
+        if (stream.CanSeek)
         {
-            stream.Seek((long)offset, SeekOrigin.Begin);
+            if (offset != (ulong)stream.Position)
+            {
+                stream.Seek((long)offset, SeekOrigin.Begin);
+            }
+        }
+        else if (offset != this.logicalPosition)
+        {
+            throw new NotSupportedException($"Non-seekable stream can only write at current position. Requested offset: {offset}, current position: {this.logicalPosition}.");
         }
 
         await stream.WriteAsync(data, 0, data.Length);
+        this.logicalPosition += (ulong)data.Length;
         return (ulong)data.Length;
     }
 }

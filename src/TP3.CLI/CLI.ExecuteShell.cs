@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using TP3.Messages;
 using TP3.Protocol.Client;
+using System.Text;
 
 namespace TP3.CLI;
 
@@ -19,62 +20,166 @@ public static partial class CLI
         logger.LogInformation("Starting terminal session with IPC server on port {IpcPort}", ipcPort);
 
         // attaching to the IPC server
-        var client = new TP3Client(ipcPort, logger);
         var ipcClient = new TP3Client(ipcPort, logger, bePatientAndWaitForServer);
         await ipcClient.ConnectAsync();
 
         var attachResponse = await ipcClient.Attach(logger);
         attachResponse.ThrowIfError();
-        var roooTag = attachResponse?.Tag;
+        var rootTag = attachResponse?.Tag;
+        if (string.IsNullOrWhiteSpace(rootTag))
+        {
+            throw new InvalidOperationException("Attach response did not provide a root tag.");
+        }
 
         // we are connected with tag
-        logger.LogInformation("Connected to IPC server with tag {Tag}", roooTag);
+        logger.LogInformation("Connected to IPC server with tag {Tag}", rootTag);
 
-        // go to service folder:
-        // shell/control/sh
-        // run the command and get the output
-        var shPath = new string[] { "services", "shell", "control", "sh" };
-        var walk = await ipcClient.Walk(roooTag, shPath, logger);
-        walk.ThrowIfError();
-        if( walk.WalkResponse?.Infos?.Count() != shPath.Length
-            && walk.WalkResponse?.Infos?.LastOrDefault()?.NodeType != NodeType.Command
-            )
+        var createPath = new[] { "services", "shell", "control", "create" };
+        var createWalk = await ipcClient.Walk(rootTag, createPath, logger);
+        createWalk.ThrowIfError();
+        if (createWalk?.WalkResponse?.Infos?.Count != createPath.Length
+            || createWalk.WalkResponse.Infos.LastOrDefault()?.NodeType != NodeType.Command)
         {
-            throw new InvalidOperationException($"Failed to find shell command in {string.Join("/", shPath)}");
+            throw new InvalidOperationException($"Failed to find create command in {string.Join("/", createPath)}");
         }
-        var tag = walk.Tag;
 
-        // let's open the command stream
-        var openResponse = await ipcClient.Open(tag, logger);
-        openResponse.ThrowIfError();
+        var createTag = createWalk.Tag;
+        var createOpen = await ipcClient.Open(createTag, logger);
+        createOpen.ThrowIfError();
 
-        // command expects to write to them, and then to read from them
-        var writeResponse = await ipcClient.Write(tag, System.Text.Encoding.UTF8.GetBytes(""), logger);
-        writeResponse.ThrowIfError();
+        // Execute create command, terminal name is written to command output.
+        var createWrite = await ipcClient.Write(createTag, Array.Empty<byte>(), logger);
+        createWrite.ThrowIfError();
 
-        while (true)
+        var createRead = await ipcClient.Read(createTag, logger);
+        createRead.ThrowIfError();
+        var terminalName = createRead.ReadResponse?.Data?.ToStringUtf8()?.Trim();
+        if (string.IsNullOrWhiteSpace(terminalName))
         {
-            string line = "";
-            try
+            throw new InvalidOperationException("Create command did not return terminal name.");
+        }
+
+        logger.LogInformation("Created terminal {TerminalName}", terminalName);
+
+        var inPath = new[] { "services", "shell", "state", terminalName, "in" };
+        var outPath = new[] { "services", "shell", "state", terminalName, "out" };
+
+        var inWalk = await ipcClient.Walk(rootTag, inPath, logger);
+        inWalk.ThrowIfError();
+        if (inWalk?.WalkResponse?.Infos?.Count != inPath.Length
+            || inWalk.WalkResponse.Infos.LastOrDefault()?.NodeType != NodeType.File)
+        {
+            throw new InvalidOperationException($"Failed to find input stream in {string.Join("/", inPath)}");
+        }
+
+        var outWalk = await ipcClient.Walk(rootTag, outPath, logger);
+        outWalk.ThrowIfError();
+        if (outWalk?.WalkResponse?.Infos?.Count != outPath.Length
+            || outWalk.WalkResponse.Infos.LastOrDefault()?.NodeType != NodeType.File)
+        {
+            throw new InvalidOperationException($"Failed to find output stream in {string.Join("/", outPath)}");
+        }
+
+        var inTag = inWalk.Tag;
+        var outTag = outWalk.Tag;
+
+        var inOpen = await ipcClient.Open(inTag, logger);
+        inOpen.ThrowIfError();
+        var outOpen = await ipcClient.Open(outTag, logger);
+        outOpen.ThrowIfError();
+
+        using var cts = new CancellationTokenSource();
+        Console.CancelKeyPress += OnCancel;
+
+        async void OnCancel(object? sender, ConsoleCancelEventArgs args)
+        {
+            args.Cancel = true;
+            cts.Cancel();
+            await Task.Yield();
+        }
+
+        var readTask = Task.Run(async () =>
+        {
+            while (!cts.Token.IsCancellationRequested)
             {
-                // let's read a line from the console 
-                var readResponse = await ipcClient.Read(tag, logger);
+                TP3Message? readResponse;
+                try
+                {
+                    readResponse = await ipcClient.Read(outTag, logger);
+                }
+                catch
+                {
+                    if (cts.Token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    throw;
+                }
+
                 readResponse.ThrowIfError();
-                Console.Write(readResponse.ReadResponse?.Data?.ToStringUtf8());
+                var chunk = readResponse?.ReadResponse?.Data?.ToStringUtf8();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    Console.Write(chunk);
+                }
+            }
+        }, cts.Token);
 
-                line = Console.ReadLine();
+        try
+        {
+            while (!cts.Token.IsCancellationRequested)
+            {
+                var line = Console.ReadLine();
 
-                if (line == null || line.Trim().Length == 0)
+                if (line is null)
+                {
+                    cts.Cancel();
+                    break;
+                }
+
+                if (line.Trim().Equals("exit", StringComparison.OrdinalIgnoreCase))
+                {
+                    cts.Cancel();
+                    break;
+                }
+
+                if (line.Trim().Length == 0)
                 {
                     continue;
                 }
 
-                var terminalSendWrite = await ipcClient.Write(tag, System.Text.Encoding.UTF8.GetBytes(line), logger);
-                terminalSendWrite.ThrowIfError();
+                var bytes = Encoding.UTF8.GetBytes(line + Environment.NewLine);
+                var inWrite = await ipcClient.Write(inTag, bytes, logger);
+                inWrite.ThrowIfError();
             }
-            catch (Exception ex)
+        }
+        finally
+        {
+            cts.Cancel();
+            try
             {
-                logger.LogError(ex, "Error while processing command: {Command}", line);
+                await readTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // expected on shutdown
+            }
+
+            Console.CancelKeyPress -= OnCancel;
+
+            // Try to close working tags.
+            if (!string.IsNullOrWhiteSpace(inTag))
+            {
+                await ipcClient.SendAndWaitOne(new TP3Message { Tag = inTag, ClunkRequest = new TP3ClunkRequest() }, logger);
+            }
+            if (!string.IsNullOrWhiteSpace(outTag))
+            {
+                await ipcClient.SendAndWaitOne(new TP3Message { Tag = outTag, ClunkRequest = new TP3ClunkRequest() }, logger);
+            }
+            if (!string.IsNullOrWhiteSpace(createTag))
+            {
+                await ipcClient.SendAndWaitOne(new TP3Message { Tag = createTag, ClunkRequest = new TP3ClunkRequest() }, logger);
             }
         }
     }
