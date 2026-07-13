@@ -15,10 +15,12 @@ public class Shell : BaseDirectoryNode
         this.Out = new StreamNode(() => outStream);
 
         this.childs = new List<INode>() { In, Out };
+        
+
     }
 
-    private Stream inStream;
-    private Stream outStream;
+    public Stream inStream;
+    public Stream outStream;
 
     public StreamNode In { get; }
     public StreamNode Out { get; }
