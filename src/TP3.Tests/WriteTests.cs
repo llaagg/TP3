@@ -76,7 +76,7 @@ namespace TP3.Tests.Protocol
             Assert.NotNull(lastAttachResponse.Info.Id);
 
             // * WALK
-            List<string> path = new List<string> { "service1", "TestNode" };
+            List<string> path = new List<string> { "services", "service1", "TestNode" };
             var walkRequest = new TP3WalkRequest
             {
                 NewTag = "tag2",
@@ -130,7 +130,7 @@ namespace TP3.Tests.Protocol
             var walkRequest = new TP3WalkRequest
             {
                 NewTag = "tag2",
-                Path = { "service1", "TestNode" }
+                Path = { "services", "service1", "TestNode" }
             };
             await sut.Handle(fakeNetworkPipe, new TP3Message { Tag = "tag1", WalkRequest = walkRequest });
             await sut.Handle(fakeNetworkPipe, FlowTest.OpenMessage("tag2"));

@@ -92,7 +92,7 @@ namespace TP3.Tests.Protocol
             Assert.NotNull(lastAttachResponse.Info.Id);
 
             // * WALK
-            List<string> path = new List<string> { "service1", nameof(EchoCommand) };
+            List<string> path = new List<string> { "services", "service1", "echo-command"};
             var walkRequest = new TP3WalkRequest
             {
                 NewTag = "tag2",
@@ -107,13 +107,13 @@ namespace TP3.Tests.Protocol
             await sut.Handle(fakeNetworkPipe, FlowTest.OpenMessage("tag2"));
             var lastOpenResponse = lastMessageSent.OpenResponse;
             var nodeType = lastOpenResponse!.Info.NodeType;
-            Assert.Equal(NodeType.File, nodeType);
+            Assert.Equal(NodeType.Command, nodeType);
 
             // * WRITE
             //// aka send args
             await sut.Handle(fakeNetworkPipe, FlowTest.WriteMessage("tag2", "hello my friend"));
             var lastWriteResponse = lastMessageSent.WriteResponse;
-            Assert.Equal(NodeType.File, nodeType);
+            Assert.Equal(NodeType.Command, nodeType);
             Assert.Equal(15UL, lastWriteResponse!.Count);
             //// akaa get response aka READ
             await sut.Handle(fakeNetworkPipe, FlowTest.ReadMessage("tag2", 0, 1000));
