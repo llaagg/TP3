@@ -58,6 +58,37 @@ public class ShellServiceTests
     }
 
     [Fact]
+    public async Task AddNewShell_Listener_ForwardsInputBytesToOutput()
+    {
+        var service = new ShellService();
+        await service.Start();
+
+        var terminalName = await service.AddNewShell();
+
+        var stateNode = service.Children!.Single(n => n.Name == "state");
+        var terminalNode = stateNode.Children!
+            .OfType<Shell>()
+            .Single(n => n.Name == terminalName);
+
+        var payload = new byte[] { 0x41, 0x42, 0x43 };
+        var readBuffer = new byte[payload.Length];
+
+        var readTask = terminalNode.outStream.ReadAsync(readBuffer, 0, readBuffer.Length);
+
+        await terminalNode.inStream.WriteAsync(payload, 0, payload.Length);
+        await terminalNode.inStream.FlushAsync();
+
+        var completed = await Task.WhenAny(readTask, Task.Delay(1000));
+        Assert.Equal(readTask, completed);
+
+        var read = await readTask;
+        Assert.Equal(payload.Length, read);
+        Assert.Equal(payload, readBuffer);
+
+        await service.Stop();
+    }
+
+    [Fact]
     public async Task Stop_CancelsShellListener_WithoutHanging()
     {
         var service = new ShellService();

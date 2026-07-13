@@ -125,7 +125,7 @@ namespace TP3.Tests.Integration
             Assert.NotEmpty(stats2);
             Assert.Equal(NodeType.Directory, stats2[0].Info.NodeType);
             var firstChildName = stats2[0].Name;
-            Assert.Equal("state", firstChildName, ignoreCase: true); // we have state as in all services
+            Assert.Equal("service1", firstChildName, ignoreCase: true); // we have state as in all services
 
             // * CLUNK child
             await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
@@ -144,12 +144,12 @@ namespace TP3.Tests.Integration
             await sut.Handle(fakeNetworkPipe, ClunkMessage("tag2"));
 
             // * WALK to file
-            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path[0], path[1], "README.md"));
+            await sut.Handle(fakeNetworkPipe, WalkMessage("tag1", "tag2", path[0], path[1], "state","README.md"));
             var lastWalkResponse4 = LastMessageSent.WalkResponse;
             Assert.Equal(TP3Message.PayloadOneofCase.WalkResponse, LastMessageSent.PayloadCase);
             Assert.NotNull(lastWalkResponse4);
-            Assert.Equal(3, lastWalkResponse4!.Infos!.Count);
-            Assert.Equal(NodeType.File, lastWalkResponse4.Infos![2].NodeType);
+            Assert.Equal(4, lastWalkResponse4!.Infos!.Count);
+            Assert.Equal(NodeType.File, lastWalkResponse4.Infos![3].NodeType);
 
             // * OPEN file
             await sut.Handle(fakeNetworkPipe, OpenMessage("tag2"));
