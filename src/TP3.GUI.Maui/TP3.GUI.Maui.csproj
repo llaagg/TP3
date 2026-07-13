@@ -91,6 +91,7 @@
       <ProjectReference Include="..\TP3.Service.Remote\TP3.Service.Remote.csproj" />
       <ProjectReference Include="..\TP3.Service.IPC\TP3.Service.IPC.csproj" />
       <ProjectReference Include="..\TP3.Service.CloudFilter\TP3.Service.CloudFilter.csproj" />
+      <ProjectReference Include="..\TP3.Service.Shell\TP3.Service.Shell.csproj" />
     </ItemGroup>
 
     <Target Name="CopyBlazorWebViewFrameworkFiles" AfterTargets="Build">
@@ -101,15 +102,9 @@
 
         <MakeDir Directories="$(_OutputFrameworkDir)" />
 
-        <Copy SourceFiles="$(_StaticWebAssetsRoot)\_framework\blazor.webview.js"
-              DestinationFiles="$(_OutputFrameworkDir)\blazor.webview.js"
-              SkipUnchangedFiles="true"
-              Condition="Exists('$(_StaticWebAssetsRoot)\\_framework\\blazor.webview.js')" />
+        <Copy SourceFiles="$(_StaticWebAssetsRoot)\_framework\blazor.webview.js" DestinationFiles="$(_OutputFrameworkDir)\blazor.webview.js" SkipUnchangedFiles="true" Condition="Exists('$(_StaticWebAssetsRoot)\\_framework\\blazor.webview.js')" />
 
-        <Copy SourceFiles="$(_StaticWebAssetsRoot)\_framework\blazor.modules.json"
-              DestinationFiles="$(_OutputFrameworkDir)\blazor.modules.json"
-              SkipUnchangedFiles="true"
-              Condition="Exists('$(_StaticWebAssetsRoot)\\_framework\\blazor.modules.json')" />
+        <Copy SourceFiles="$(_StaticWebAssetsRoot)\_framework\blazor.modules.json" DestinationFiles="$(_OutputFrameworkDir)\blazor.modules.json" SkipUnchangedFiles="true" Condition="Exists('$(_StaticWebAssetsRoot)\\_framework\\blazor.modules.json')" />
     </Target>
 
 </Project>
