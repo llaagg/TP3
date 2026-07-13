@@ -5,6 +5,7 @@ using TP3.Agent.Logic.Transport;
 using TP3.Service.Attached;
 using TP3.Service.FileSystem;
 using TP3.Service.IPC;
+using TP3.Service.Shell;
 
 namespace TP3.CLI;
 
@@ -45,7 +46,8 @@ public static class CommandLineApplication
                     {
                         new FileSystemService(),
                         new IpcService(ipcPort, logger),
-                        new AttachedService(port, logger)
+                        new AttachedService(port, logger),
+                        new ShellService()
                     }
         );
 

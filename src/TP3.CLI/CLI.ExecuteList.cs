@@ -65,30 +65,7 @@ public static partial class CLI
         await ipcClient.DisconnectAsync().ConfigureAwait(false);
     }
     
-    public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ILogger logger)
-    {
-        var attachRequest = new TP3Message()
-        {
-            Tag = Guid.NewGuid().ToString("N").Substring(0, 8),
-            AttachRequest = new TP3AttachRequest()
-        };
-        var attachResponse = await ipcClient.SendAndWaitOne(attachRequest, logger).ConfigureAwait(false);
-
-        return attachResponse;
-    }
-
-
-    public static void ThrowIfError(this TP3Message? message)
-    {
-        if (message is null)
-        {
-            throw new InvalidOperationException("Received null response from IPC server.");
-        }
-        if (message.Error is not null)
-        {
-            throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
-        }
-    }
+    
 
     
 

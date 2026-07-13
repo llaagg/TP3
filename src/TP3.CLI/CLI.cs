@@ -34,14 +34,14 @@ public static partial class CLI
 
     private static Command TermCommand(Option<int> ipcPortOption, Option<int> bePatientAndWaitForServer, Option<LogLevel> logLevel)
     {
-        var termCommand = new Command("term", "Start a terminal session with the IPC server")
+        var termCommand = new Command("shell", "Start a terminal session with the IPC server")
         {
             ipcPortOption,
             bePatientAndWaitForServer,
             logLevel
         };
 
-        termCommand.SetHandler(ExecuteTerm, ipcPortOption, bePatientAndWaitForServer, logLevel);
+        termCommand.SetHandler(ExecuteShell, ipcPortOption, bePatientAndWaitForServer, logLevel);
 
         return termCommand;
     }
