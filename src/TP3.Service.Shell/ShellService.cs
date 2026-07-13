@@ -49,7 +49,8 @@ public class ShellService : BaseDirectoryNode, IService
         // we can connect to those streams and use tham as cli terminal
         // we will have some screen buffer and all the nice things
 
-        var terminalName = $"terminal-{Guid.NewGuid()}";
+        string shortGuid = Guid.NewGuid().ToString().Substring(0, 8);
+        var terminalName = $"terminal-{shortGuid}";
         var terminalNode = new Shell(terminalName);
         this.stateNode.AddChild(terminalNode);
         return terminalName;
