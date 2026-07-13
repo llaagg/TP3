@@ -22,51 +22,60 @@ public static partial class CLI
         var client = new TP3Client(ipcPort, logger);
         var ipcClient = new TP3Client(ipcPort, logger, bePatientAndWaitForServer);
         await ipcClient.ConnectAsync();
-        var attachResponse = await ipcClient.Attach(logger).ConfigureAwait(false);
+
+        var attachResponse = await ipcClient.Attach(logger);
         attachResponse.ThrowIfError();
-        var tag = attachResponse?.Tag;
-        
+        var roooTag = attachResponse?.Tag;
 
         // we are connected with tag
-        logger.LogInformation("Connected to IPC server with tag {Tag}", tag);
+        logger.LogInformation("Connected to IPC server with tag {Tag}", roooTag);
 
-        // Context context = new Context()
-        // {
-        //     RootTag = tag,
-        //     ipcClient = ipcClient,
-        //     logger = logger,
-        //     nfo = attachResponse?.AttachResponse.Info
-        // };
-    
         // go to service folder:
         // shell/control/sh
         // run the command and get the output
-
-        var walk = await ipcClient.Walk(new string[] { "shell", "control", "sh" }, logger);
+        var shPath = new string[] { "services", "shell", "control", "sh" };
+        var walk = await ipcClient.Walk(roooTag, shPath, logger);
         walk.ThrowIfError();
-        if(walk.WalkResponse?.Infos?.Count() != 3)
+        if( walk.WalkResponse?.Infos?.Count() != shPath.Length
+            && walk.WalkResponse?.Infos?.LastOrDefault()?.NodeType != NodeType.Command
+            )
         {
-            throw new InvalidOperationException("Failed to walk to shell/control/sh");
+            throw new InvalidOperationException($"Failed to find shell command in {string.Join("/", shPath)}");
         }
+        var tag = walk.Tag;
+
+        // let's open the command stream
+        var openResponse = await ipcClient.Open(tag, logger);
+        openResponse.ThrowIfError();
+
+        // command expects to write to them, and then to read from them
+        var writeResponse = await ipcClient.Write(tag, System.Text.Encoding.UTF8.GetBytes(""), logger);
+        writeResponse.ThrowIfError();
 
         while (true)
         {
-            var line = Console.ReadLine();
-
-            if (line == null || line.Trim().Length == 0)
-            {
-                continue;
-            }
-
+            string line = "";
             try
             {
-                ///
+                // let's read a line from the console 
+                var readResponse = await ipcClient.Read(tag, logger);
+                readResponse.ThrowIfError();
+                Console.Write(readResponse.ReadResponse?.Data?.ToStringUtf8());
+
+                line = Console.ReadLine();
+
+                if (line == null || line.Trim().Length == 0)
+                {
+                    continue;
+                }
+
+                var terminalSendWrite = await ipcClient.Write(tag, System.Text.Encoding.UTF8.GetBytes(line), logger);
+                terminalSendWrite.ThrowIfError();
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error while processing command: {Command}", line);
             }
-
         }
     }
 }

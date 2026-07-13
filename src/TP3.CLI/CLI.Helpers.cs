@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using TP3.Messages;
 using TP3.Protocol.Client;
@@ -35,13 +36,14 @@ public static partial class CLI
 
         return attachResponse;
     }
-    public static async Task<TP3Message?> Walk(this TP3Client ipcClient, string[] path, ILogger logger)
+    public static async Task<TP3Message?> Walk(this TP3Client ipcClient, string? tag, string[] path, ILogger logger)
     {
         var walkRequest = new TP3Message()
         {
-            Tag = Guid.NewGuid().ToString("N").Substring(0, 8),
+            Tag = tag ,
             WalkRequest = new TP3WalkRequest()
             {
+                NewTag = Guid.NewGuid().ToString("N").Substring(0, 8),
                 Path = { path }
             }
         };
@@ -49,7 +51,55 @@ public static partial class CLI
 
         return walkResponse;
     }
+    
+    public static async Task<TP3Message?> Write(this TP3Client ipcClient, string? tag, byte[] data, ILogger logger)
+    {
+        var writeRequest = new TP3Message()
+        {
+            Tag = tag ,
+            WriteRequest = new TP3WriteRequest()
+            {
+                Data =  Google.Protobuf.ByteString.CopyFrom(data)
+            }
+        };
+        var writeResponse = await ipcClient.SendAndWaitOne(writeRequest, logger).ConfigureAwait(false);
 
+        return writeResponse;
+    }
+
+    public static async Task<TP3Message?> Open(this TP3Client ipcClient, string? tag, ILogger logger)
+    {
+        var openRequest = new TP3Message()
+        {
+            Tag = tag ,
+            OpenRequest = new TP3OpenRequest()         
+        };
+        var openResponse = await ipcClient.SendAndWaitOne(openRequest, logger).ConfigureAwait(false);
+
+        return openResponse;
+    }
+
+
+    public static async Task<TP3Message?> Read(this TP3Client ipcClient, string? tag, ILogger logger)
+    {
+        var readRequest = new TP3Message()
+        {
+            Tag = tag,
+            ReadRequest = new TP3ReadRequest()
+        };
+        var readResponse = await ipcClient.SendAndWaitOne(readRequest, logger).ConfigureAwait(false);
+
+        if (readResponse is null)
+        {
+            throw new InvalidOperationException("Received null response from IPC server.");
+        }
+        if (readResponse.Error is not null)
+        {
+            throw new InvalidOperationException($"Error received from IPC server: {readResponse.Error?.Message}");
+        }
+
+        return readResponse;
+    }
 
     public static void ThrowIfError(this TP3Message? message)
     {
@@ -59,7 +109,7 @@ public static partial class CLI
         }
         if (message.Error is not null)
         {
-            throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message}");
+            throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message} {message.Error?.Args}");
         }
     }
 }

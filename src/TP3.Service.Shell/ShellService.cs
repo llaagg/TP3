@@ -11,7 +11,8 @@ public class ShellService : BaseDirectoryNode, IService
             {
                 new Ls(),
                 new Cd(),
-                new Sh()
+                new Sh(),
+                new Create(),
             })
         })
     {
@@ -23,6 +24,20 @@ public class ShellService : BaseDirectoryNode, IService
 
     public async Task Init(IAgent me)
     {
+        foreach (var child in Children)
+        {
+            if (child.Name == "control" )
+            {
+                var controlNode = child as BaseDirectoryNode;
+                foreach (var service in controlNode.Children)
+                {
+                    if (service is Create c)
+                    {
+                        c.Init(me);
+                    }
+                }
+            }
+        }
     }
 
     public async Task Start()
@@ -34,6 +49,20 @@ public class ShellService : BaseDirectoryNode, IService
     }
 
 
+}
+
+public class Create : BaseControlCommand
+{
+    private ShellService shellService;
+
+    public Create()
+    {
+    }
+
+    internal void Init(IAgent me)
+    {
+        
+    }
 }
 
 internal class Sh : BaseControlCommand
@@ -48,32 +77,39 @@ internal class Sh : BaseControlCommand
     protected override async Task HandleStreamCommand(Stream input, Stream output)
     {
         // say hi
-        
-        // show prompt
+        // read whatever they are saying
+        using var reader = new StreamReader(input, leaveOpen: true);
         using var writer = new StreamWriter(output, leaveOpen: true);
-        await writer.WriteLineAsync("Welcome to the shell!");
+        var line = await reader.ReadLineAsync();
+
+        // show prompt
+        // let' show nice prompt moth with frames using ascci and info about tp3 (three plus 3 using empotes)
+        var motd = @"
+          ╭──────────────────────────────────────────────────────────╮
+          │                                                          │
+          │                   ░▒▓  🌳+3  ▓▒░                         │
+          │                                                          │
+          │                     *** TP3 Bash ***                     │
+          │                                                          │
+          ╰──────────────────────────────────────────────────────────╯
+
+        ";
+        await writer.WriteLineAsync(motd);
+        await writer.FlushAsync();
 
         while (true)
         {
             await writer.WriteAsync("$ ");
             await writer.FlushAsync();
-            // wait for command and enter
-            using var reader = new StreamReader(input, leaveOpen: true);
-            var command = await reader.ReadLineAsync();
-            
-            
 
-            // wait for some commands
-            // behave like bash
-            // execute actons
-            // show prompt again
+
+            // wait for some data comming in to the steam
+            line = await reader.ReadLineAsync();
+            if (line is null)
+            {
+                break;
+            }            
         }
-        // wait for some commands
-        // behave like bash
-        // execute actons
-        // show prompt again
-
-        
     }
 }
 
