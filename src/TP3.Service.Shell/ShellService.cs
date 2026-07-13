@@ -57,6 +57,10 @@ public class Create : BaseControlCommand
 
     public Create()
     {
+        #warning it could create session in state with 2 stream
+        #warning and maybe consume stuff from it
+
+        #warning but if we need databases... than hmm
     }
 
     internal void Init(IAgent me)
