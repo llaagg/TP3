@@ -39,8 +39,11 @@ internal class ServiceManager
 
     public async Task Start()
     {
-        var startTasks = this.services.Select(s => s.Start()).ToList();
-        await Task.WhenAll(startTasks);
+        foreach (var service in this.services)
+        {
+            this.logger?.LogInformation("Starting service: {ServiceName}", service.GetType().Name);
+            await service.Start();
+        }
     }
 
     public async Task Stop()

@@ -1,9 +1,13 @@
 ﻿using TP3.Interfaces;
+using TP3.Protocol;
+using System.Text;
 namespace TP3.Service.Shell;
 
 public class ShellService : BaseDirectoryNode, IService
 {
     private State stateNode;
+    private BaseDirectoryNode controlNode;
+    private readonly Dictionary<string, BaseControlCommand> controlCommands;
     private CancellationTokenSource? lifecycleCts;
     private readonly object listenerTasksLock = new();
     private readonly List<Task> listenerTasks = [];
@@ -12,6 +16,17 @@ public class ShellService : BaseDirectoryNode, IService
         : base("shell")
     {
         this.stateNode = new State("state");
+
+        var commands = new BaseControlCommand[]
+        {
+            new Ls(),
+            new Cd(),
+            new Sh(),
+            new Create(this)
+        };
+
+        this.controlNode = new BaseDirectoryNode("control", null, commands.Cast<INode>().ToList());
+        this.controlCommands = commands.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
     }
 
     override public IEnumerable<INode>? Children => GetChildren();
@@ -19,13 +34,7 @@ public class ShellService : BaseDirectoryNode, IService
     private List<INode> GetChildren() =>
     [
         this.stateNode,
-        new BaseDirectoryNode("control", null,
-        [
-            new Ls(),
-            new Cd(),
-            new Sh(),
-            new Create(this)
-        ]),
+        this.controlNode,
     ];
 
     public void Dispose()
@@ -91,6 +100,56 @@ public class ShellService : BaseDirectoryNode, IService
             cts.Dispose();
             this.lifecycleCts = null;
         }
+    }
+
+    public async Task<int> ExecuteCommandAsync(string command, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(command))
+        {
+            return 0;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var tokens = command
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (tokens.Length == 0)
+        {
+            return 0;
+        }
+
+        var commandKey = NormalizeCommandName(tokens[0]);
+        if (!this.controlCommands.TryGetValue(commandKey, out var tp3Command))
+        {
+            return 127;
+        }
+
+        var payload = string.Join(' ', tokens.Skip(1));
+        await using var input = new MemoryStream(Encoding.UTF8.GetBytes(payload));
+        await using var output = new MemoryStream();
+        await tp3Command.Command(input, output);
+        return 0;
+    }
+
+    private static string NormalizeCommandName(string raw)
+    {
+        var command = raw.Trim();
+        if (command.StartsWith('/'))
+        {
+            var segments = command.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (segments.Length > 0)
+            {
+                command = segments[^1];
+            }
+        }
+
+        var dotIndex = command.LastIndexOf('.');
+        if (dotIndex >= 0 && dotIndex < command.Length - 1)
+        {
+            command = command[(dotIndex + 1)..];
+        }
+
+        return command;
     }
 
     public Task<string> AddNewShell()

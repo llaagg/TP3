@@ -19,11 +19,11 @@ public class WebDavService : BaseDirectoryNode, IService
     private readonly string driveLetter;
     private bool mountedByService;
 
-    public WebDavService() : base("webdav")
+    public WebDavService(string? prefix = null, bool autoMountWindows = true, string driveLetter = "T:") : base("webdav")
     {
-        this.prefix = NormalizePrefix(Environment.GetEnvironmentVariable("TP3_WEBDAV_PREFIX") ?? DefaultPrefix);
-        this.autoMountWindows = ParseBooleanOrDefault(Environment.GetEnvironmentVariable("TP3_WEBDAV_AUTOMOUNT"), defaultValue: true);
-        this.driveLetter = NormalizeDriveLetter(Environment.GetEnvironmentVariable("TP3_WEBDAV_DRIVE") ?? "T:");
+        this.prefix = NormalizePrefix(prefix ?? DefaultPrefix);
+        this.autoMountWindows = autoMountWindows;
+        this.driveLetter = NormalizeDriveLetter(driveLetter);
     }
 
     public void Dispose()
@@ -189,21 +189,6 @@ public class WebDavService : BaseDirectoryNode, IService
             : basePath + "\\" + string.Join("\\", nodeSegments);
 
         return true;
-    }
-
-    private static bool ParseBooleanOrDefault(string? value, bool defaultValue)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return defaultValue;
-        }
-
-        if (bool.TryParse(value, out var parsed))
-        {
-            return parsed;
-        }
-
-        return defaultValue;
     }
 
     private static string NormalizeDriveLetter(string configured)

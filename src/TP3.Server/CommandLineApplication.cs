@@ -41,13 +41,29 @@ public static class CommandLineApplication
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
 
+        var shellService = new ShellService();
+        var bootFilePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "TP3",
+            "etc",
+            "boot.tp3");
+        var bootService = new BootScriptService(shellService, bootFilePath);
+
         var ah = new TP3.Agent.Logic.Agent.Agent(logger,
                     new IService[]
                     {
+                        // 1) mount/prepare filesystem-related surfaces
                         new FileSystemService(),
+
+                        // 2) run init script commands through shell service
+                        bootService,
+
+                        // 3) keep shell service available as command runtime/control service
+                        shellService,
+
+                        // 4) start remaining services
                         new IpcService(ipcPort, logger),
                         new AttachedService(port, logger),
-                        new ShellService()
                     }
         );
 
