@@ -12,8 +12,7 @@
     <ProjectReference Include="..\TP3.Service.FileSystem\TP3.Service.FileSystem.csproj" />
     <ProjectReference Include="..\TP3.Service.IPC\TP3.Service.IPC.csproj" />
     <ProjectReference Include="..\TP3.Service.Attached\TP3.Service.Attached.csproj" />
-    <ProjectReference Include="..\TP3.Service.Shell\TP3.Service.Shell.csproj" />
-  </ItemGroup>
+    </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />

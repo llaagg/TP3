@@ -2,6 +2,8 @@
 using Microsoft.Maui.LifecycleEvents;
 #if WINDOWS
 using H.NotifyIcon;
+using TP3.Service.Shell;
+
 #endif
 #if WINDOWS
 using Microsoft.UI.Xaml;
@@ -54,17 +56,14 @@ public static class MauiProgram
 			new TP3.Service.Shell.BootScriptService(
 				serviceProvider.GetRequiredService<TP3.Service.Shell.ShellService>(),
 				bootFilePath));
-
 		builder.Services.AddSingleton<IService, TP3.Service.FileSystem.FileSystemService>();
-		builder.Services.AddSingleton<IService>(serviceProvider => serviceProvider.GetRequiredService<TP3.Service.Shell.BootScriptService>());
-		builder.Services.AddSingleton<IService>(serviceProvider => serviceProvider.GetRequiredService<TP3.Service.Shell.ShellService>());
+		builder.Services.AddSingleton<IService, BootScriptService>();
+		builder.Services.AddSingleton<IService, TP3.Service.Shell.ShellService>();
 		builder.Services.AddSingleton<IService, TP3.Service.Remote.RemotesService>();
-		builder.Services.AddSingleton<IService, TP3.Service.CloudFilter.FoldersService>();
 		builder.Services.AddSingleton<IService>(_ => new TP3.Service.WebDav.WebDavService(
 			prefix: "http://localhost:19080/",
 			autoMountWindows: true,
 			driveLetter: "T:"));
-		
 		builder.Services.AddSingleton<IService>(serviceProvider =>
 		{
 			return new TP3.Service.IPC.IpcService(5001, serviceProvider.GetRequiredService<ILogger<TP3.Service.IPC.IpcService>>());
