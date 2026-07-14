@@ -13,7 +13,8 @@
       "cwd": "${workspaceFolder}/src/TP3.Server",
       "console": "externalTerminal",
       "stopAtEntry": false
-    },{
+    },
+    {
       "name": "Server 6000",
       "type": "coreclr",
       "request": "launch",
@@ -61,14 +62,8 @@
       "type": "coreclr",
       "request": "launch",
       "cwd": "${workspaceFolder}/src/TP3.GUI.Maui",
-      "program": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "${workspaceFolder}/src/TP3.GUI.Maui/TP3.GUI.Maui.csproj",
-        "-f",
-        "net10.0-windows10.0.19041.0"
-      ],
+      "preLaunchTask": "build GUI",
+      "program": "${workspaceFolder}/src/TP3.GUI.Maui/bin/Debug/net10.0-windows10.0.19041.0/win-x64/TP3.GUI.Maui.exe",
     },
     {
       "name": "GUI Packaged",
@@ -90,7 +85,10 @@
   "compounds": [
     {
       "name": "Server & GUI",
-      "configurations": [ "Server 6000", "GUI"],
+      "configurations": [
+        "Server 6000",
+        "GUI"
+      ],
       "stopAll": true,
       "preLaunchTask": "build solution",
       "presentation": {
@@ -101,7 +99,10 @@
     },
     {
       "name": "Server & GUI Packaged",
-      "configurations": [ "Server 6000", "GUI Packaged"],
+      "configurations": [
+        "Server 6000",
+        "GUI Packaged"
+      ],
       "stopAll": true,
       "preLaunchTask": "build solution",
       "presentation": {
@@ -112,7 +113,10 @@
     },
     {
       "name": "Server & List",
-      "configurations": [ "Server", "CLI - LIST"],
+      "configurations": [
+        "Server",
+        "CLI - LIST"
+      ],
       "stopAll": true,
       "preLaunchTask": "build solution",
       "presentation": {
@@ -123,7 +127,10 @@
     },
     {
       "name": "Server & TERM",
-      "configurations": [ "Server", "CLI - SHELL"],
+      "configurations": [
+        "Server",
+        "CLI - SHELL"
+      ],
       "stopAll": true,
       "preLaunchTask": "build solution",
       "presentation": {

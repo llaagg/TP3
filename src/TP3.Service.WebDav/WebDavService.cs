@@ -412,7 +412,8 @@ public class WebDavService : BaseDirectoryNode, IService
         foreach (var segment in segments)
         {
             var next = current.Children?.FirstOrDefault(child =>
-                string.Equals(child.Name, segment, StringComparison.OrdinalIgnoreCase));
+                string.Equals(child.Name, segment, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(NormalizeClientNodeName(child.Name), segment, StringComparison.OrdinalIgnoreCase));
 
             if (next is null)
             {
@@ -473,6 +474,9 @@ public class WebDavService : BaseDirectoryNode, IService
 
             var href = isDirectory ? EnsureEndsWithSlash(item.href) : item.href;
 
+            var nodeName = NormalizeClientNodeName(item.node.Name);
+                   
+
             responses.Add(new XElement(
                 dav + "response",
                 new XElement(dav + "href", href),
@@ -480,7 +484,7 @@ public class WebDavService : BaseDirectoryNode, IService
                     dav + "propstat",
                     new XElement(
                         dav + "prop",
-                        new XElement(dav + "displayname", item.node.Name),
+                        new XElement(dav + "displayname", nodeName),
                         resourceType,
                         new XElement(dav + "getcontenttype", isDirectory ? "httpd/unix-directory" : "application/octet-stream")
                     ),
@@ -553,7 +557,7 @@ public class WebDavService : BaseDirectoryNode, IService
     private static string CombinePath(string basePath, string nodeName)
     {
         var normalized = EnsureStartsWithSlash(basePath).TrimEnd('/');
-        var escapedName = Uri.EscapeDataString(nodeName);
+        var escapedName = Uri.EscapeDataString(NormalizeClientNodeName(nodeName));
 
         if (normalized == string.Empty)
         {
@@ -561,6 +565,16 @@ public class WebDavService : BaseDirectoryNode, IService
         }
 
         return normalized + "/" + escapedName;
+    }
+
+    private static string NormalizeClientNodeName(string nodeName)
+    {
+        if (nodeName.Length > 2 && nodeName[1] == ':')
+        {
+            return nodeName[0] + "_drive";
+        }
+
+        return nodeName;
     }
 
     private static string EnsureStartsWithSlash(string path)
