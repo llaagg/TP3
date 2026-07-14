@@ -1,4 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
+#if WINDOWS
+using H.NotifyIcon;
+#endif
+#if WINDOWS
+using Microsoft.UI.Xaml;
+#endif
 
 namespace TP3.GUI.Maui;
 
@@ -9,6 +16,7 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseNotifyIcon()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -21,6 +29,22 @@ public static class MauiProgram
 		builder.Services.AddMauiBlazorWebView();
 		builder.Services.RegisterTP3();
         builder.Services.AddSingleton<IServerManager, ServerManager>();
+        builder.Services.AddSingleton<ITrayWindowService, NullTrayWindowService>();
+#if WINDOWS
+		builder.Services.AddSingleton<WindowsTrayService>();
+		builder.Services.AddSingleton<ITrayWindowService>(serviceProvider => serviceProvider.GetRequiredService<WindowsTrayService>());
+		builder.ConfigureLifecycleEvents(events =>
+		{
+			events.AddWindows(windows =>
+			{
+				windows.OnWindowCreated(window =>
+				{
+					var trayService = IPlatformApplication.Current?.Services?.GetService<WindowsTrayService>();
+					trayService?.Initialize(window);
+				});
+			});
+		});
+#endif
 
 		var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 		var bootFilePath = Path.Combine(localAppData, "TP3", "etc", "boot.tp3");
