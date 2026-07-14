@@ -15,8 +15,9 @@ internal sealed class NullTrayWindowService : ITrayWindowService
 {
 	public static readonly NullTrayWindowService Instance = new();
 
-	private NullTrayWindowService()
+	public NullTrayWindowService()
 	{
+		
 	}
 
 	public void ToggleWindow()
