@@ -42,7 +42,9 @@ public class BaseDirectoryNode : INode
     public NodeType NodeType => NodeType.Directory;
 
     public virtual IEnumerable<INode>? Children => _children;
-    
+
+    public ulong Length => 0;
+
     public Task<ITP3DataStream?> Get()
     {
         return Task.FromResult<ITP3DataStream?>(null);

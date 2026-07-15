@@ -41,6 +41,8 @@ public class StreamNode : INode
 
     public IEnumerable<INode>? Children => new List<INode>();
 
+    public ulong Length => 0;
+
     public virtual Task<ITP3DataStream?> Get()
     {
         return Task.FromResult<ITP3DataStream?>(new TP3Stream(streamProvider()));

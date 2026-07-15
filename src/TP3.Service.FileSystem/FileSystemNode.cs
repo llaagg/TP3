@@ -51,6 +51,20 @@ public class FileSystemNode : INode
         }
     }
 
+    public ulong Length
+    {
+        get
+        {
+            if (IsDirectory)
+            {
+                return 0;
+            }
+
+            var fileInfo = new FileInfo(this.AbsolutePath);
+            return (ulong)fileInfo.Length;
+        }
+    };
+
     public Task<ITP3DataStream?> Get()
     {
         if(this.NodeType == NodeType.Directory)

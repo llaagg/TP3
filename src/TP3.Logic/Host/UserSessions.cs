@@ -41,6 +41,8 @@ class SessionNode : INode
         }
     }
 
+    public ulong Length => 0;
+
     public async Task<ITP3DataStream?> Get()
     {
         return null;
@@ -65,6 +67,8 @@ internal class PointerNode : INode
     public NodeType NodeType => NodeType.File;
 
     public IEnumerable<INode>? Children => null;
+
+    public ulong Length => 0;
 
     public Task<ITP3DataStream?> Get()
     {

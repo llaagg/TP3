@@ -37,6 +37,8 @@ public class Trunk : INode
         }
     }
 
+    public ulong Length => throw new NotImplementedException();
+
     public async Task<ITP3DataStream?> Get()
     {
         return null;

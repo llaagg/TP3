@@ -80,13 +80,13 @@ public class TP3ClientWrapper
 
         walkReqeust.Path.AddRange(path);
 
-        await ipcClient.SendAndWaitOne(new TP3Message()
+        var result = await ipcClient.SendAndWaitOne(new TP3Message()
         {
             Tag = this.rootTag,
             WalkRequest = walkReqeust
         }, logger);
-
-        return tag;
+        
+        return result!.Tag;
     }
     public async Task CloseSession(string tag)
     {

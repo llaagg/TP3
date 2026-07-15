@@ -23,6 +23,8 @@ public class BaseControlCommand : INode
 
     public IEnumerable<INode>? Children => null;
 
+    public ulong Length => 0;
+
     public Task<ITP3DataStream?> Get()
     {
         return Task.FromResult<ITP3DataStream?>(new MemeoryCachedCommandDataStream(this));
