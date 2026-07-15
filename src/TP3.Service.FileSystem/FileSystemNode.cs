@@ -61,7 +61,16 @@ public class FileSystemNode : INode
             }
 
             var fileInfo = new FileInfo(this.AbsolutePath);
-            return (ulong)fileInfo.Length;
+            ulong length = 0;
+            try
+            {
+                length = Convert.ToUInt64(fileInfo.Length);
+            }catch (Exception ex)
+            {
+                // Handle the exception (e.g., log it) if needed
+                length = 0;
+            }
+            return length;
         }
     }
 

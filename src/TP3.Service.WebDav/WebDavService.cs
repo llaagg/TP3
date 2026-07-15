@@ -309,6 +309,7 @@ public class WebDavService : BaseDirectoryNode, IService
             return;
         }
 
+        var contentLength = (long)node.Length;
         await using var buffer = new MemoryStream();
         var stream = await node.Get().ConfigureAwait(false);
         if (stream is null)
@@ -333,6 +334,11 @@ public class WebDavService : BaseDirectoryNode, IService
                 await buffer.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
                 offset += (ulong)chunk.Length;
             }
+
+            if (contentLength == 0)
+            {
+                contentLength = buffer.Length;
+            }
         }
         finally
         {
@@ -341,7 +347,7 @@ public class WebDavService : BaseDirectoryNode, IService
 
         response.StatusCode = (int)HttpStatusCode.OK;
         response.ContentType = "application/octet-stream";
-        response.ContentLength64 = buffer.Length;
+        response.ContentLength64 = contentLength;
 
         if (request.HttpMethod.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
         {
@@ -477,6 +483,18 @@ public class WebDavService : BaseDirectoryNode, IService
             var nodeName = NormalizeClientNodeName(item.node.Name);
                    
 
+            var propElements = new List<XElement>
+            {
+                new XElement(dav + "displayname", nodeName),
+                resourceType,
+                new XElement(dav + "getcontenttype", isDirectory ? "httpd/unix-directory" : "application/octet-stream")
+            };
+
+            if (!isDirectory)
+            {
+                propElements.Add(new XElement(dav + "getcontentlength", item.node.Length.ToString()));
+            }
+
             responses.Add(new XElement(
                 dav + "response",
                 new XElement(dav + "href", href),
@@ -484,9 +502,7 @@ public class WebDavService : BaseDirectoryNode, IService
                     dav + "propstat",
                     new XElement(
                         dav + "prop",
-                        new XElement(dav + "displayname", nodeName),
-                        resourceType,
-                        new XElement(dav + "getcontenttype", isDirectory ? "httpd/unix-directory" : "application/octet-stream")
+                        propElements
                     ),
                     new XElement(dav + "status", "HTTP/1.1 200 OK")
                 )

@@ -23,6 +23,7 @@ public class WindowsScreenCaptureStream : BaseReadableStream
         var position = this.Position;
         if(position >= this.Length)
         {
+            this.Position = 0;
             return 0;
         }
 

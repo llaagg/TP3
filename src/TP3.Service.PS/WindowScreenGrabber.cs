@@ -8,11 +8,18 @@ public static class WG
     /// </summary>
     public static Image CaptureWindow(IntPtr? handle = null)
     {
-        // get te hDC of the target window
-        IntPtr hdcSrc = User32.GetWindowDC(handle ?? IntPtr.Zero);
+        // get the hDC of the target window
+        IntPtr hWnd = handle ?? IntPtr.Zero;
+        IntPtr hdcSrc = User32.GetWindowDC(hWnd);
+
         // get the size
+        var rectTarget = handle.HasValue ? hWnd : User32.GetDesktopWindow();
         RECT windowRect = new RECT();
-        User32.GetWindowRect(handle ?? IntPtr.Zero, ref windowRect);
+        if (!User32.GetWindowRect(rectTarget, ref windowRect))
+        {
+            throw new InvalidOperationException("Failed to get window rectangle.");
+        }
+
         int width = windowRect.right - windowRect.left;
         int height = windowRect.bottom - windowRect.top;
         // create a device context we can copy to

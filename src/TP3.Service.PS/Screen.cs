@@ -6,10 +6,11 @@ namespace TP3.Service.PS;
 
 public class Screen : INode
 {
-    private readonly WindowsScreenCaptureStream stream;
+    private readonly Lazy<WindowsScreenCaptureStream> stream;
     public Screen()
     {
-        this.stream = new WindowsScreenCaptureStream();
+        this.stream = new Lazy<WindowsScreenCaptureStream>(
+            () => new WindowsScreenCaptureStream());
     }
 
     public string Id => "0";
@@ -24,12 +25,12 @@ public class Screen : INode
     {
         get
         {            
-            return (ulong)this.stream.Length;
+            return (ulong)this.stream.Value.Length;
         }
     }
 
     public async Task<ITP3DataStream?> Get()
     {
-        return new TP3Stream(this.stream);
+        return new TP3Stream(this.stream.Value);
     }
 }
