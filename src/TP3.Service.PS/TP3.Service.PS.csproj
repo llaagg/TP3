@@ -3,13 +3,15 @@
   <ItemGroup>
     <ProjectReference Include="..\TP3.Interfaces\TP3.Interfaces.csproj" />
     <ProjectReference Include="..\TP3.Protocol\TP3.Protocol.csproj" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
   </ItemGroup>
 
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
 </Project>
