@@ -42,6 +42,7 @@ public static class MauiProgram
 					port: TP3Consts.DefaultIPCPort,
 					serviceProvider.GetRequiredService<ILogger>());
 			});
+		builder.Services.AddSingleton<IService, TP3.Service.PS.PersonalSystem>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

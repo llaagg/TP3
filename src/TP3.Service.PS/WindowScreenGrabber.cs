@@ -1,12 +1,12 @@
 using System.Drawing;
 
-public class WG
+public static class WG
 {
     /// <summary>
     /// Captures a window and returns it as an Image.
     /// If handle is null, it will capture the entire screen.
     /// </summary>
-    public Image CaptureWindow(IntPtr? handle = null)
+    public static Image CaptureWindow(IntPtr? handle = null)
     {
         // get te hDC of the target window
         IntPtr hdcSrc = User32.GetWindowDC(handle ?? IntPtr.Zero);

@@ -47,4 +47,9 @@ public class BaseDirectoryNode : INode
     {
         return Task.FromResult<ITP3DataStream?>(null);
     }
+
+    public void AddChild(INode state)
+    {
+        _children.Add(state);
+    }
 }

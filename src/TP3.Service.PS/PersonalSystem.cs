@@ -6,10 +6,10 @@ public class PersonalSystem : BaseDirectoryNode, IService
 {
     public PersonalSystem() : base()
     {
-        
+        base.AddChild(state);
     }
 
-    INode state = new BaseDirectoryNode(
+    INode state = new BaseDirectoryNode("state", null,
         new List<INode>
         {
             new Screen()
