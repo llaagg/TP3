@@ -39,11 +39,28 @@ internal class ServiceManager
 
     public async Task Start()
     {
+        List<Task> startTasks = new List<Task>();
         foreach (var service in this.services)
         {
             this.logger?.LogInformation("Starting service: {ServiceName}", service.GetType().Name);
-            await service.Start();
+            startTasks.Add(service.Start());
         }
+        try
+        {
+            await Task.WhenAll(startTasks);
+        }
+        catch (AggregateException aggEx)
+        {
+            foreach (var ex in aggEx.InnerExceptions)
+            {
+                this.logger?.LogError(ex, "Error occurred while starting services.");
+            }
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Error occurred while starting services.");
+        }
+        
     }
 
     public async Task Stop()

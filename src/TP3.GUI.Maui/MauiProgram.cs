@@ -11,8 +11,6 @@ public static class MauiProgram
 		var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 		var bootFilePath = Path.Combine(localAppData, "TP3", "etc", "boot.tp3");
 
-
-
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
@@ -31,7 +29,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IService, TP3.Service.FileSystem.FileSystemService>();
 		builder.Services.AddSingleton<IService, TP3.Service.Remote.RemotesService>();
 		builder.Services.AddSingleton<IService>(_ => new TP3.Service.Attached.AttachedService(
-			port: 5000,
+			port: TP3Consts.DefaultServerPort,
 			logger: _.GetRequiredService<ILogger>()
 		));
 		builder.Services.AddSingleton<IService>(_ => new TP3.Service.WebDav.WebDavService(
@@ -40,7 +38,8 @@ public static class MauiProgram
 			driveLetter: "T:"));
 		builder.Services.AddSingleton<IService>(serviceProvider =>
 			{
-				return new TP3.Service.IPC.IpcService(5001, 
+				return new TP3.Service.IPC.IpcService(
+					port: TP3Consts.DefaultIPCPort,
 					serviceProvider.GetRequiredService<ILogger>());
 			});
 
