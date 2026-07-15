@@ -63,7 +63,7 @@ public class FileSystemNode : INode
             var fileInfo = new FileInfo(this.AbsolutePath);
             return (ulong)fileInfo.Length;
         }
-    };
+    }
 
     public Task<ITP3DataStream?> Get()
     {

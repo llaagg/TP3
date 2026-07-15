@@ -3,16 +3,37 @@ using TP3.Protocol;
 
 public class WindowsScreenCaptureStream : BaseReadableStream
 {
-    
+    private long _length;
 
-    public override int Read(byte[] buffer, int offset, int count)
+    public WindowsScreenCaptureStream()
     {
         using var image = WG.CaptureWindow();
         using var ms = new MemoryStream();
         image.Save(ms, System.Drawing.Imaging.ImageFormat.Png); 
+        this._length = ms.Length;
+    }
+
+    override public long OnGetLength()
+    {
+        return this._length;
+    }
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        var position = this.Position;
+        if(position >= this.Length)
+        {
+            return 0;
+        }
+
+        using var image = WG.CaptureWindow();
+        using var ms = new MemoryStream();
+        image.Save(ms, System.Drawing.Imaging.ImageFormat.Png); 
         var bytes = ms.ToArray();
-        Array.Copy(bytes, 0, buffer, offset, Math.Min(count, bytes.Length));
+        var howmany = Math.Min(count, bytes.Length);
+        Array.Copy(bytes, 0, buffer, offset, howmany);
         
-        return Math.Min(count, bytes.Length);
+        this.Position += howmany;
+        return howmany;
     }
 }

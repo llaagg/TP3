@@ -147,6 +147,8 @@ internal sealed class RemoteFileNode : INode
 
     public IEnumerable<INode>? Children => null;
 
+    public ulong Length => 0;
+
     public async Task<ITP3DataStream?> Get()
     {
         var fileStream = new RemoteFileDataStream(client, rootTag, path);

@@ -6,22 +6,30 @@ namespace TP3.Service.PS;
 
 public class Screen : INode
 {
+    private readonly WindowsScreenCaptureStream stream;
     public Screen()
     {
-        
+        this.stream = new WindowsScreenCaptureStream();
     }
 
     public string Id => "0";
 
-    public string Name => "screen";
+    public string Name => "screen.png";
 
     public NodeType NodeType => NodeType.File;
 
     public IEnumerable<INode>? Children => null;
 
+    public ulong Length
+    {
+        get
+        {            
+            return (ulong)this.stream.Length;
+        }
+    }
+
     public async Task<ITP3DataStream?> Get()
     {
-        var stream = new WindowsScreenCaptureStream();
-        return new TP3Stream(stream);
+        return new TP3Stream(this.stream);
     }
 }

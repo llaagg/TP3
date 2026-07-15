@@ -35,6 +35,7 @@ public class ConnectionsNode : INode
 
     public IEnumerable<INode>? Children => GetChildern();
 
+    public ulong Length => 0;
     private IEnumerable<INode>? GetChildern()
     {
         var userSessions = this.userSessions as NetworkSessions;

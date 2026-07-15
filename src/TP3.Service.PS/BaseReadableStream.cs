@@ -8,9 +8,20 @@ public abstract class BaseReadableStream : Stream
 
     public override bool CanWrite => false;
 
-    public override long Length => 0;
+    public override long Length
+    {
+        get
+        {
+            return this.OnGetLength();
+        }
+    }
 
-    public override long Position { get;set; } = 0;
+    public override long Position { get; set; } = 0;
+
+    public virtual long OnGetLength()
+    {
+        return 0;
+    }
 
     public override void Flush()
     {
@@ -28,12 +39,12 @@ public abstract class BaseReadableStream : Stream
 
     public override void SetLength(long value)
     {
-        
+
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        
+
     }
 }
 
@@ -46,17 +57,17 @@ public class ScreenStream : ITP3DataStream
 
     public void Close()
     {
-        
+
     }
 
     public async Task Open()
     {
-        
+
     }
 
     public async Task<byte[]> Read(ulong offset, ulong maxCount)
     {
-        return new byte[]{};
+        return new byte[] { };
     }
 
     public async Task<ulong> Write(ulong offset, byte[] data)
