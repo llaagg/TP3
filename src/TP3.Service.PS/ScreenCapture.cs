@@ -1,6 +1,5 @@
 using TP3.Interfaces;
 using TP3.Protocol;
-using Windows.Graphics.Capture;
 
 public class WindowsScreenCaptureStream : BaseReadableStream
 {
