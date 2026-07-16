@@ -12,7 +12,7 @@ public class PersonalSystem : BaseDirectoryNode, IService
     INode state = new BaseDirectoryNode("state", null,
         new List<INode>
         {
-            new Screen()
+            new Displays(),
         }
     );
 
@@ -30,5 +30,24 @@ public class PersonalSystem : BaseDirectoryNode, IService
 
     public async Task Stop()
     {
+    }
+}
+
+internal class Displays : BaseDirectoryNode, INode
+{
+    public Displays() : base("displays")
+    {
+    }
+
+    public override IEnumerable<INode>? Children
+    {
+        get
+        {
+            var screensList = WindowsScreenCapture.GetScreens();
+            foreach (var screen in screensList)
+            {
+                yield return new Screen(screen.Handle, screen.IsPrimary, screen.Width, screen.Height);
+            }
+        }
     }
 }

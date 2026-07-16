@@ -6,13 +6,22 @@ namespace TP3.Service.PS;
 
 public class Screen : INode
 {
-    public Screen()
+    public Screen(nint handle, bool isPrimary, int width, int height)
     {
+        Handle = handle;
+        IsPrimary = isPrimary;
+        Width = width;
+        Height = height;
     }
+
+    public nint Handle { get; }
+    public bool IsPrimary { get; }
+    public int Width { get; }
+    public int Height { get; }
 
     public string Id => "0";
 
-    public string Name => "screen.png";
+    public string Name => $"{Handle}.png";
 
     public NodeType NodeType => NodeType.File;
 
@@ -28,15 +37,19 @@ public class Screen : INode
 
     public async Task<ITP3DataStream?> Get()
     {
-        // var bytes = WindowsScreenCapture.GetPng();
-        // return TP3Stream.CreateFromBytes(bytes);
-        return new TP3LiveStream();
+        return new TP3LiveStream(this.Handle);
     }
 }
 
 
 public class TP3LiveStream : ITP3DataStream
 {
+    private nint _handle;
+
+    public TP3LiveStream(nint handle)
+    {
+        _handle = handle;
+    }
     public uint Iounit => 0;
 
     public ulong Position => _position;
@@ -56,7 +69,7 @@ public class TP3LiveStream : ITP3DataStream
     {
         if(_position == 0)
         {
-            var bytes = WindowsScreenCapture.GetPng();
+            var bytes = WindowsScreenCapture.GetPng(_handle);
             _position += (ulong)bytes.Length;
             return Task.FromResult(bytes);
         }
