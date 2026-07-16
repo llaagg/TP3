@@ -2,7 +2,6 @@ using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
 using TP3.Messages;
-using static TP3.Messages.TP3Message;
 
 namespace TP3.Agent.Logic.Agent;
 
@@ -245,11 +244,13 @@ public class MessageHandler
         // check auth
 #warning TODO: auth
 
+        var trunk = this.agent.GetTrunk();
+
         // register Tag
-        incomingNetworkSession.TP3Transport.AttachTag(tag, this.agent.T, incomingNetworkSession);
+        incomingNetworkSession.TP3Transport.AttachTag(tag, trunk, incomingNetworkSession);
 
         // get quid
-        result.Info = ToNodeInfo(this.agent.T);
+        result.Info = ToNodeInfo(trunk);
 
         return result;
     }

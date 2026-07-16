@@ -48,7 +48,7 @@ public class Agent : IAgent
         await ServiceManager.Stop();
     }
 
-    public INode T
+    private INode T
     {
         get
         {
@@ -87,5 +87,10 @@ public class Agent : IAgent
     public async Task<ITP3Transport> AddTransport(INetworkTransport transport)
     {
         return await this.NetworkManager.AddTransport(transport);
+    }
+
+    public INode GetTrunk()
+    {
+        return this.T;
     }
 }

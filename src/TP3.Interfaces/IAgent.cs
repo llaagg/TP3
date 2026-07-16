@@ -4,7 +4,7 @@ namespace TP3.Interfaces;
 
 public interface IAgent : IDisposable
 {    
-    INode T { get; }
+    INode GetTrunk();
     Task<ITP3Transport> AddTransport(INetworkTransport transport);
     Task Handle(INetworkPipe incomingTransport, TP3Message request);
     Task Init();

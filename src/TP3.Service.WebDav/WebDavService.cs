@@ -42,7 +42,7 @@ public class WebDavService : BaseDirectoryNode, IService
 
     public Task Init(IAgent me)
     {
-        this.root = me.T;
+        this.root = me.GetTrunk();
 
         if (!this.listener.Prefixes.Contains(this.prefix, StringComparer.OrdinalIgnoreCase))
         {
