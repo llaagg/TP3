@@ -28,6 +28,46 @@ public class Screen : INode
 
     public async Task<ITP3DataStream?> Get()
     {
-        return TP3Stream.CreateFromBytes(WindowsScreenCapture.GetPng());
+        // var bytes = WindowsScreenCapture.GetPng();
+        // return TP3Stream.CreateFromBytes(bytes);
+        return new TP3LiveStream();
+    }
+}
+
+
+public class TP3LiveStream : ITP3DataStream
+{
+    public uint Iounit => 0;
+
+    public ulong Position => _position;
+
+    private ulong _position;
+
+    public void Close()
+    {
+    }
+
+    public async Task Open()
+    {
+        this._position = 0;
+    }
+
+    public Task<byte[]> Read(ulong offset, ulong maxCount)
+    {
+        if(_position == 0)
+        {
+            var bytes = WindowsScreenCapture.GetPng();
+            _position += (ulong)bytes.Length;
+            return Task.FromResult(bytes);
+        }
+        else
+        {
+            return Task.FromResult(Array.Empty<byte>());
+        }
+    }
+
+    public async Task<ulong> Write(ulong offset, byte[] data)
+    {
+        return 0UL;
     }
 }
