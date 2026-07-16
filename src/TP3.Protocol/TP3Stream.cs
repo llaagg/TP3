@@ -79,4 +79,11 @@ public class TP3Stream: ITP3DataStream
         this.logicalPosition += (ulong)data.Length;
         return (ulong)data.Length;
     }
+
+    public static TP3Stream CreateFromBytes(byte[] data)
+    {
+        var memoryStream = new MemoryStream(data);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        return new TP3Stream(memoryStream);
+    }
 }
