@@ -1,9 +1,4 @@
-﻿public class Identity : IIdentity
+﻿public class BaseIdentity : IIdentity
 {
     public string Name { get; set; } = string.Empty;
-}
-
-public interface IIdentity
-{
-    string Name { get; set; }
 }
