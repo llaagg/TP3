@@ -31,8 +31,9 @@
 
                     @if (frame.Type == FrameType.FilePreview)
                     {
-                        <label class="form-label">Preview</label>
-                        <textarea class="form-control" rows="10" @bind="frame.OutputPreview"></textarea>
+                        <FilePreviewControl>
+
+                        </FilePreviewControl>
                     }
                     else
                     {

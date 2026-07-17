@@ -1,0 +1,10 @@
+@using TP3.GUI.Common.Pages
+<label class="form-label">Preview</label>
+
+<textarea class="form-control" rows="10" @bind="Content"></textarea>
+
+
+@code{
+    [Parameter]
+    public string Content { get; set; } = String.Empty;
+}

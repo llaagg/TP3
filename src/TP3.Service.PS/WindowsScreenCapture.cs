@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Drawing;
+using TP3.Service.PS.WindowsAPI;
 
 namespace TP3.Service.PS
 {
@@ -8,7 +9,7 @@ namespace TP3.Service.PS
     {
         public static byte[] GetPng(nint handle)
         {
-            using var image = WG.CaptureMonitor(handle);
+            using var image = WindowsAPI.WebApiWrapper.CaptureMonitor(handle);
 
             using var ms = new MemoryStream();
             image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
@@ -19,7 +20,7 @@ namespace TP3.Service.PS
 
         internal static IEnumerable<ScreenInfo> GetScreens()
         {
-            var screens = WG.GetScreens();
+            var screens = WindowsAPI.WebApiWrapper.GetScreens();
             foreach (var screen in screens)
             {
                 yield return screen;
