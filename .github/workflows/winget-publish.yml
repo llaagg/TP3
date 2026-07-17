@@ -1,0 +1,131 @@
+name: Publish to WinGet
+
+# Triggered by version tags (e.g. v1.2.3) or manually.
+# Requires a repository secret named WINGET_TOKEN — a GitHub PAT with
+# public_repo scope, used by wingetcreate to open PRs against
+# microsoft/winget-pkgs on your behalf.
+#
+# Package identifiers published:
+#   llaagg.TP3.CLI    — TP3.CLI.exe
+#   llaagg.TP3.Server — TP3.Server.exe
+#   llaagg.TP3.GUI    — TP3.GUI.Maui.exe
+#
+# Note: for a brand-new package that has never been submitted to WinGet,
+# run `wingetcreate new` locally to create the initial manifest PR.
+# After that, this workflow keeps every release up to date automatically.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (without the v prefix, e.g. 1.0.0)'
+        required: true
+
+env:
+  DOTNET_VERSION: 10.0.x
+
+jobs:
+  publish:
+    name: Build and Publish CLI, Server, GUI to WinGet
+    runs-on: windows-latest
+    permissions:
+      contents: write   # needed to create/update the GitHub Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "TAG=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install MAUI Windows workload
+        run: dotnet workload install maui-windows
+
+      - name: Restore solution
+        run: dotnet restore src/TP3.slnx
+
+      - name: Restore MAUI (Windows target)
+        run: dotnet restore src/TP3.GUI.Maui/TP3.GUI.Maui.csproj -p:TargetFramework=net10.0-windows10.0.19041.0
+
+      - name: Publish TP3.CLI (win-x64, self-contained)
+        run: >
+          dotnet publish src/TP3.CLI/TP3.CLI.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o artifacts/cli
+
+      - name: Publish TP3.Server (win-x64, self-contained)
+        run: >
+          dotnet publish src/TP3.Server/TP3.Server.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o artifacts/server
+
+      - name: Publish TP3.GUI.Maui Desktop (win-x64, self-contained)
+        run: >
+          dotnet publish src/TP3.GUI.Maui/TP3.GUI.Maui.csproj
+          -f net10.0-windows10.0.19041.0
+          -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o artifacts/gui
+
+      - name: Create GitHub Release and upload installers
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.TAG }}
+          generate_release_notes: true
+          files: |
+            artifacts/cli/TP3.CLI.exe
+            artifacts/server/TP3.Server.exe
+            artifacts/gui/TP3.GUI.Maui.exe
+
+      - name: Download wingetcreate
+        shell: pwsh
+        run: Invoke-WebRequest -Uri https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+
+      - name: Submit llaagg.TP3.CLI to WinGet
+        shell: pwsh
+        run: |
+          .\wingetcreate.exe update llaagg.TP3.CLI `
+            --version "${{ steps.version.outputs.VERSION }}" `
+            --urls "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG }}/TP3.CLI.exe" `
+            --token "${{ secrets.WINGET_TOKEN }}" `
+            --submit
+
+      - name: Submit llaagg.TP3.Server to WinGet
+        shell: pwsh
+        run: |
+          .\wingetcreate.exe update llaagg.TP3.Server `
+            --version "${{ steps.version.outputs.VERSION }}" `
+            --urls "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG }}/TP3.Server.exe" `
+            --token "${{ secrets.WINGET_TOKEN }}" `
+            --submit
+
+      - name: Submit llaagg.TP3.GUI to WinGet
+        shell: pwsh
+        run: |
+          .\wingetcreate.exe update llaagg.TP3.GUI `
+            --version "${{ steps.version.outputs.VERSION }}" `
+            --urls "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG }}/TP3.GUI.Maui.exe" `
+            --token "${{ secrets.WINGET_TOKEN }}" `
+            --submit
