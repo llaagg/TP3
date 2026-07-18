@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace TP3.CLI;
@@ -24,16 +25,10 @@ public static partial class CLI
         string[] args,
         LogLevel logLevel)
     {
-        using var fs = File.Open(commandFile, FileMode.Open, FileAccess.ReadWrite);
+        var commandText = string.Join(" ", args) + Environment.NewLine;
+        File.WriteAllText(commandFile, commandText, Encoding.UTF8);
 
-        using var writer = new StreamWriter(fs, leaveOpen: true);
-        writer.WriteLine(string.Join(" ", args));
-        writer.Flush();
-
-        fs.Position = 0;
-
-        using var reader = new StreamReader(fs);
-        Console.Write(reader.ReadToEnd());
-        fs.Close();
+        var responseText = File.ReadAllText(commandFile, Encoding.UTF8);
+        Console.Write(responseText);
     }
 }
