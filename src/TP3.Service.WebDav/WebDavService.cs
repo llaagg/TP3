@@ -255,6 +255,9 @@ public class WebDavService : BaseDirectoryNode, IService
                 case "HEAD":
                     await this.HandleGetOrHead(request, response).ConfigureAwait(false);
                     break;
+                case "PUT":
+                    await this.HandlePut(request, response).ConfigureAwait(false);
+                    break;
                 default:
                     response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
                     response.Headers["Allow"] = "OPTIONS, PROPFIND, GET, HEAD";
@@ -268,6 +271,86 @@ public class WebDavService : BaseDirectoryNode, IService
         finally
         {
             response.OutputStream.Close();
+        }
+    }
+
+    private async Task HandlePut(HttpListenerRequest request, HttpListenerResponse response)
+    {
+        if (this.root is null)
+        {
+            response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+            return;
+        }
+
+        var path = request.Url?.AbsolutePath ?? "/";
+        if (!TryResolveNode(this.root, path, out var node))
+        {
+            response.StatusCode = (int)HttpStatusCode.NotFound;
+            return;
+        }
+
+        if (node.NodeType == NodeType.Directory)
+        {
+            response.StatusCode = (int)HttpStatusCode.NotAcceptable;
+            return;
+        }
+
+
+        var contentLength = (long)node.Length;
+        await using var buffer = new MemoryStream();
+        var stream = await node.Get().ConfigureAwait(false);
+        try
+        {
+            await stream.Open().ConfigureAwait(false);
+            
+            await WriteToNode(request.InputStream, stream).ConfigureAwait(false);
+
+            contentLength = await ReadFromNode(contentLength, buffer, stream).ConfigureAwait(false);
+        }
+        finally
+        {
+            stream.Close();
+        }
+        response.StatusCode = (int)HttpStatusCode.OK;
+        response.ContentType = "application/octet-stream";
+        response.ContentLength64 = contentLength;
+
+        if (request.HttpMethod.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        response.StatusCode = (int)HttpStatusCode.OK;
+        response.ContentType = "application/octet-stream";
+        response.ContentLength64 = contentLength;
+
+        if (request.HttpMethod.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        buffer.Position = 0;
+        await buffer.CopyToAsync(response.OutputStream).ConfigureAwait(false);
+    }
+
+    private async Task WriteToNode(Stream inputStream, ITP3DataStream stream)
+    {
+        ulong offset = 0;
+
+        var buffer = new byte[16 * 1024];
+        while (true)
+        {
+            var bytesRead = await inputStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+            if (bytesRead == 0)
+            {
+                break;
+            }
+
+            var chunk = new byte[bytesRead];
+            Array.Copy(buffer, chunk, bytesRead);
+
+            await stream.Write(offset, chunk).ConfigureAwait(false);
+            offset += (ulong)bytesRead;
         }
     }
 
@@ -321,30 +404,13 @@ public class WebDavService : BaseDirectoryNode, IService
         try
         {
             await stream.Open().ConfigureAwait(false);
-            ulong offset = 0;
 
-            while (true)
-            {
-                var chunk = await stream.Read(offset, 16 * 1024).ConfigureAwait(false);
-                if (chunk.Length == 0)
-                {
-                    break;
-                }
-
-                await buffer.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
-                offset += (ulong)chunk.Length;
-            }
-
-            if (contentLength == 0)
-            {
-                contentLength = buffer.Length;
-            }
+            contentLength = await ReadFromNode(contentLength, buffer, stream).ConfigureAwait(false);
         }
         finally
         {
             stream.Close();
         }
-
         response.StatusCode = (int)HttpStatusCode.OK;
         response.ContentType = "application/octet-stream";
         response.ContentLength64 = contentLength;
@@ -356,6 +422,31 @@ public class WebDavService : BaseDirectoryNode, IService
 
         buffer.Position = 0;
         await buffer.CopyToAsync(response.OutputStream).ConfigureAwait(false);
+    }
+
+    private static async Task<long> ReadFromNode(long contentLength, MemoryStream buffer, ITP3DataStream stream)
+    {
+        ulong offset = 0;
+
+        while (true)
+        {
+            var chunk = await stream.Read(offset, 16 * 1024).ConfigureAwait(false);
+            if (chunk.Length == 0)
+            {
+                break;
+            }
+
+            await buffer.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
+            offset += (ulong)chunk.Length;
+        }
+
+        if (contentLength == 0)
+        {
+            contentLength = buffer.Length;
+        }
+
+
+        return contentLength;
     }
 
     private async Task HandlePropFind(HttpListenerRequest request, HttpListenerResponse response)
@@ -481,7 +572,7 @@ public class WebDavService : BaseDirectoryNode, IService
             var href = isDirectory ? EnsureEndsWithSlash(item.href) : item.href;
 
             var nodeName = NormalizeClientNodeName(item.node.Name);
-                   
+
 
             var propElements = new List<XElement>
             {
