@@ -44,10 +44,16 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Display version
+        shell: pwsh
+        run: |
+          echo "Version: $env:GITHUB_REF_NAME"
+
       - name: Determine version
         id: version
         shell: pwsh
         run: |
+          echo "GITHUB_REF_NAME: $env:GITHUB_REF_NAME"
           if ("${{ github.event_name }}" -eq "workflow_dispatch") {
             "VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_OUTPUT
             "TAG=v${{ github.event.inputs.version }}" >> $env:GITHUB_OUTPUT
