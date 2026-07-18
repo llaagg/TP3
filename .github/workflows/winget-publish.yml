@@ -47,7 +47,7 @@ jobs:
       - name: Display version
         shell: pwsh
         run: |
-          echo "Version: $env:GITHUB_REF_NAME"
+          echo "Hi man"
 
       - name: Determine version
         id: version
