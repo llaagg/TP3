@@ -17,12 +17,15 @@ public static partial class CLI
         var path = new Argument<string[]?>("path", () => null, "Path to walk in the IPC server");
         var enableEmoted = new Option<bool>(new[] { "--enable-emoted", "-e" }, () => true, "Enable emoted output for file and directory types");
         var logLevel = new Option<LogLevel>("log-level", () => LogLevel.Error, "Log level for the CLI");
-
+        var argsArgument = new Argument<string[]>("args", "Arguments to pass to the command being executed");
+        var commndFile = new Argument<string>("command-file", "File containing the command to execute in the webdav mounted folder");
         var rootCommand = new RootCommand("TP3 CLI")
         {
             ListCommand(ipcPortOption, bePatientAndWaitForServer, path, enableEmoted, logLevel),
-            TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel)
+            TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel),
+            ExecCommand(commndFile, argsArgument, logLevel)
         };
+
 
         rootCommand.SetHandler(() =>
         {

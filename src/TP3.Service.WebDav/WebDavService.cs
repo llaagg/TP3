@@ -10,6 +10,7 @@ namespace TP3.Service.WebDav;
 public class WebDavService : BaseDirectoryNode, IService
 {
     private const string DefaultPrefix = "http://localhost:19080/";
+    private const string AllowedMethods = "OPTIONS, PROPFIND, GET, HEAD, PUT";
     private readonly HttpListener listener = new();
     private CancellationTokenSource? cts;
     private Task? acceptLoopTask;
@@ -260,7 +261,7 @@ public class WebDavService : BaseDirectoryNode, IService
                     break;
                 default:
                     response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                    response.Headers["Allow"] = "OPTIONS, PROPFIND, GET, HEAD";
+                    response.Headers["Allow"] = AllowedMethods;
                     break;
             }
         }
@@ -295,42 +296,26 @@ public class WebDavService : BaseDirectoryNode, IService
             return;
         }
 
-
-        var contentLength = (long)node.Length;
-        await using var buffer = new MemoryStream();
         var stream = await node.Get().ConfigureAwait(false);
+        if (stream is null)
+        {
+            response.StatusCode = (int)HttpStatusCode.NotFound;
+            return;
+        }
+
         try
         {
             await stream.Open().ConfigureAwait(false);
-            
-            await WriteToNode(request.InputStream, stream).ConfigureAwait(false);
 
-            contentLength = await ReadFromNode(contentLength, buffer, stream).ConfigureAwait(false);
+            await WriteToNode(request.InputStream, stream).ConfigureAwait(false);
         }
         finally
         {
             stream.Close();
         }
-        response.StatusCode = (int)HttpStatusCode.OK;
-        response.ContentType = "application/octet-stream";
-        response.ContentLength64 = contentLength;
 
-        if (request.HttpMethod.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        response.StatusCode = (int)HttpStatusCode.OK;
-        response.ContentType = "application/octet-stream";
-        response.ContentLength64 = contentLength;
-
-        if (request.HttpMethod.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        buffer.Position = 0;
-        await buffer.CopyToAsync(response.OutputStream).ConfigureAwait(false);
+        response.StatusCode = (int)HttpStatusCode.NoContent;
+        response.ContentLength64 = 0;
     }
 
     private async Task WriteToNode(Stream inputStream, ITP3DataStream stream)
@@ -357,7 +342,7 @@ public class WebDavService : BaseDirectoryNode, IService
     private static void HandleOptions(HttpListenerResponse response)
     {
         response.StatusCode = (int)HttpStatusCode.OK;
-        response.Headers["Allow"] = "OPTIONS, PROPFIND, GET, HEAD";
+        response.Headers["Allow"] = AllowedMethods;
     }
 
     private async Task HandleGetOrHead(HttpListenerRequest request, HttpListenerResponse response)
