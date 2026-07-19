@@ -54,4 +54,9 @@ public class BaseDirectoryNode : INode
     {
         _children.Add(state);
     }
+
+    public IMeta? GetMeta()
+    {
+        return null;
+    }
 }
