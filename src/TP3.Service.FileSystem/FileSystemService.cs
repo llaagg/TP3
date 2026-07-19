@@ -13,15 +13,19 @@ public class FileSystemService : BaseDirectoryNode, IService
         : base("filesystem")
     {
         this.State = new StateNode("state");
-        this.Meta = new MetaDataProvider(this);
+        this.Control = new BaseDirectoryNode(
+            "control", null,
+            new List<INode>
+            {
+                new MetaLs(this), new MetaCommand(this)
+            });
     }
 
     public INode State { get; private set; } = null!;
 
-    #warning TODO: We need: Create, Delete
+#warning TODO: We need: Create, Delete
     public INode Control { get; private set; } = null!;
-    
-    public INode Meta { get; private set; } = null!;
+
 
     public INode Events { get; private set; } = null!;
 
@@ -41,5 +45,5 @@ public class FileSystemService : BaseDirectoryNode, IService
     {
     }
 
-    override public IEnumerable<INode>? Children => new INode[] { State, Meta };
+    override public IEnumerable<INode>? Children => new INode[] { State, Control };
 }
