@@ -11,7 +11,7 @@
                         ToolTipText="TP3"
                         LeftClickCommand="{Binding ToggleWindowCommand}"
                         NoLeftClickDelay="True"
-                        IconSource="icon.png">
+                        IconSource="Resources/AppIcon/icon.ico">
             <FlyoutBase.ContextFlyout>
                 <MenuFlyout>
                     <MenuFlyoutItem Text="Open / Hide"
