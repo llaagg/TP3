@@ -49,12 +49,13 @@
 @code {
 
     [Parameter]
-    public EventCallback<(string Tag, string Name, string Content)> OnFileSelected { get; set; }
+    public EventCallback<(string Tag, string Name,string[] Path)> OnFileSelected { get; set; }
 
     [Parameter]
     public EventCallback<(string Name, string[] Path)> OnCommandSelected { get; set; }
 
-    private Task HandleFileSelected((string Tag, string Name, string Content) item)
+
+    private Task HandleFileSelected((string Tag, string Name, string[] Path) item)
     {
         return OnFileSelected.InvokeAsync(item);
     }

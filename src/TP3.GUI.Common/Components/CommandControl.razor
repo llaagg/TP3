@@ -1,3 +1,6 @@
+@inject TP3ClientWrapper TP3Client
+
+
 <label class="form-label">Arguments</label>
 <div class="input-group mb-2">
     <input class="form-control" value="@CommandArgs" @oninput="OnArgsInput" placeholder="arg1 arg2 arg3" />
@@ -23,9 +26,16 @@
     [Parameter]
     public EventCallback OnRun { get; set; }
 
-    private Task Run()
+    [Parameter]
+    public string[] Path { get; set; } = Array.Empty<string>();
+
+    private async Task Run()
     {
-        return OnRun.InvokeAsync();
+        var (tag, output) = await TP3Client.RunCommand(Path, CommandArgs);
+        OutputPreview = output;
+        await OutputPreviewChanged.InvokeAsync(output);
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private Task OnArgsInput(ChangeEventArgs e)
@@ -37,4 +47,6 @@
     {
         return OutputPreviewChanged.InvokeAsync(e.Value?.ToString() ?? string.Empty);
     }
+
+    
 }

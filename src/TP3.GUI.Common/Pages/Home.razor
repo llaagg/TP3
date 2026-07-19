@@ -3,7 +3,7 @@
 
 @inject TP3ClientWrapper TP3Client
 
-<div class"text-center">🌳✚3️⃣ <ConnectionStatus></ConnectionStatus></div>
+<div class="text-center">🌳✚3️⃣ <ConnectionStatus></ConnectionStatus></div>
 
 <Framed>
     @if(TP3Client.Status == "Attached")
@@ -23,7 +23,6 @@
                 <section class="border rounded-3 p-3 bg-body" style="flex: 1 1 24rem; min-width: 20rem; max-width: 34rem;">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <div>
-                            <strong>@frame.Tag</strong>
                             <div class="small text-body-secondary">@frame.Caption</div>
                         </div>
                         <button class="btn btn-sm btn-outline-secondary" @onclick="() => CloseFrame(frameId)">Close</button>
@@ -31,16 +30,11 @@
 
                     @if (frame.Type == FrameType.FilePreview)
                     {
-                        <FilePreviewControl>
-
-                        </FilePreviewControl>
+                        <FilePreviewControl CurrentPath="@frame.Path" ></FilePreviewControl>
                     }
                     else
                     {
-                        <CommandControl
-                            @bind-CommandArgs="frame.CommandArgs"
-                            @bind-OutputPreview="frame.OutputPreview"
-                            OnRun="() => RunCommand(frame)" />
+                        <CommandControl Path="@frame.Path" />
                     }
                 </section>
             }
@@ -56,14 +50,15 @@
 {
     private readonly List<DynamicFrame> frames = new();
 
-    private void OpenFileFrame((string Tag, string Name, string Content) file)
+    private string Tag=String.Empty;
+
+    private void OpenFileFrame((string Tag, string Name,  string[] Path) file)
     {
         frames.Add(new DynamicFrame
         {
-            Tag = file.Tag,
             Type = FrameType.FilePreview,
             Caption = $"File: {file.Name}",
-            OutputPreview = file.Content,
+            Path = file.Path,
         });
     }
 
@@ -71,35 +66,16 @@
     {
         frames.Add(new DynamicFrame
         {
-            Tag = NextTag(),
             Type = FrameType.Command,
             Caption = $"Command: {command.Name}",
-            CommandPath = command.Path,
-            CommandArgs = string.Empty,
-            OutputPreview = string.Empty,
+            Path = command.Path,
         });
     }
 
-    private async Task RunCommand(DynamicFrame frame)
-    {
-        if (frame.Type != FrameType.Command)
-        {
-            return;
-        }
-
-        var (tag, output) = await TP3Client.RunCommand(frame.CommandPath, frame.CommandArgs);
-        frame.Tag = tag;
-        frame.OutputPreview = output;
-    }
 
     private void CloseFrame(Guid id)
     {
         frames.RemoveAll(f => f.Id == id);
-    }
-
-    private static string NextTag()
-    {
-        return "tag-" + Guid.NewGuid().ToString("N")[..8];
     }
 
     protected override async Task OnInitializedAsync()
@@ -110,12 +86,9 @@
     private sealed class DynamicFrame
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string Tag { get; set; } = string.Empty;
         public FrameType Type { get; set; }
         public string Caption { get; set; } = string.Empty;
-        public string[] CommandPath { get; set; } = Array.Empty<string>();
-        public string CommandArgs { get; set; } = string.Empty;
-        public string OutputPreview { get; set; } = string.Empty;
+        public string[] Path { get; set; } = Array.Empty<string>();
     }
 
     private enum FrameType

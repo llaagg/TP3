@@ -16,7 +16,7 @@
     public string[] CurrentPath { get; set; } = Array.Empty<string>();
 
     [Parameter]
-    public EventCallback<(string Tag, string Name, string Content)> OnFileOpened { get; set; }
+    public EventCallback<(string Tag, string Name, string[]Path)> OnFileOpened { get; set; }
 
     private async Task OnClick()
     {
@@ -25,21 +25,6 @@
 
         var tag = await TP3Client.NewSession(pathList.ToArray());
 
-        try
-        {
-            
-            var stream = TP3Client.GetStream(tag);
-            string content;
-            using (var reader = new StreamReader(stream))
-            {
-                content = await reader.ReadToEndAsync();
-            }
-
-            await OnFileOpened.InvokeAsync((tag, Item.Name, content));
-        }
-        finally
-        {
-            await TP3Client.CloseSession(tag);
-        }
+        await OnFileOpened.InvokeAsync((tag, Item.Name, pathList.ToArray()));
     }
 }

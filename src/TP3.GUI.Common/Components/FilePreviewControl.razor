@@ -1,10 +1,84 @@
+@using System.IO
 @using TP3.GUI.Common.Pages
+@using TP3.Protocol.Client
+
+@inject TP3ClientWrapper TP3Client
+
 <label class="form-label">Preview</label>
+@($"{string.Join("/", this.CurrentPath ?? Array.Empty<string>())}")
 
-<textarea class="form-control" rows="10" @bind="Content"></textarea>
+<button @onclick="Load" 
+        class="btn btn-primary mb-3" 
+        disabled="@(CurrentPath.Length == 0)">
+    <span class="me-2">⟳</span>Reload
+</button>
 
+@if (IsImage)
+{
+    <div class="border rounded-3 p-2 bg-body-secondary mb-3" style="max-height: 60vh; overflow:auto;">
+        <img src="@ImageDataUri" class="img-fluid" alt="Image preview" />
+    </div>
+}
+else
+{
+    <textarea class="form-control" rows="10" @bind="Content"></textarea>
+}
 
 @code{
     [Parameter]
-    public string Content { get; set; } = String.Empty;
+    public string Content { get; set; } = string.Empty;
+
+    [Parameter]
+    public string[] CurrentPath { get; set; } = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private bool IsImage { get; set; }
+    private string ImageDataUri { get; set; } = string.Empty;
+
+    private static readonly Dictionary<string, string> ImageMimeTypes = new()
+    {
+        [".png"] = "image/png",
+        [".jpg"] = "image/jpeg",
+        [".jpeg"] = "image/jpeg",
+        [".gif"] = "image/gif",
+        [".bmp"] = "image/bmp",
+        [".webp"] = "image/webp",
+        [".svg"] = "image/svg+xml",
+    };
+
+    public async Task Load()
+    {
+        var tag = await TP3Client.NewSession(CurrentPath);
+        try
+        {
+            var dataStream = TP3Client.GetStream(tag);
+            var extension = Path.GetExtension(CurrentPath.LastOrDefault() ?? string.Empty).ToLowerInvariant();
+
+            if (ImageMimeTypes.TryGetValue(extension, out var mimeType))
+            {
+                using var memoryStream = new MemoryStream();
+                await dataStream.CopyToAsync(memoryStream);
+                var bytes = memoryStream.ToArray();
+                ImageDataUri = $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}";
+                IsImage = true;
+                Content = string.Empty;
+            }
+            else
+            {
+                using var reader = new StreamReader(dataStream);
+                Content = await reader.ReadToEndAsync();
+                IsImage = false;
+                ImageDataUri = string.Empty;
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+        finally
+        {
+            await TP3Client.CloseSession(tag);
+        }
+    }
 }
