@@ -15,7 +15,8 @@ public static class SysTrayWindows
 
     public static MauiAppBuilder AddSysTray(this MauiAppBuilder builder)
     {
-    
+		// no windows no systray
+		// windows will override this with a real implementation
         builder.Services.AddSingleton<ITrayWindowService, NullTrayWindowService>();
 
         #if WINDOWS
