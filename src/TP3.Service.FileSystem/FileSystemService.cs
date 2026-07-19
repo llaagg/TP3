@@ -13,7 +13,7 @@ public class FileSystemService : BaseDirectoryNode, IService
         : base("filesystem")
     {
         this.State = new StateNode("state");
-        this.Meta = new MetaDataProvider();
+        this.Meta = new MetaDataProvider(this);
     }
 
     public INode State { get; private set; } = null!;
@@ -40,6 +40,6 @@ public class FileSystemService : BaseDirectoryNode, IService
     public void Dispose()
     {
     }
-    
-    override public IEnumerable<INode>? Children => new INode[] { State };
+
+    override public IEnumerable<INode>? Children => new INode[] { State, Meta };
 }

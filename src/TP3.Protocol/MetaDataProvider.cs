@@ -1,14 +1,15 @@
 using TP3.Interfaces;
 
-namespace TP3.Service.FileSystem;
+namespace TP3.Protocol;
 
 public class MetaDataProvider : BaseDirectoryNode
 {
     public MetaDataProvider(IService service)
+        : base("meta")
     {
         this.service = service;
 
-        this.ByPath = new MetaDataByPathNode();
+        this.ByPath = new MetaDataByPathNode(service);
 
         this.AddChild(this.ByPath);
     }
@@ -19,17 +20,31 @@ public class MetaDataProvider : BaseDirectoryNode
 
 public class MetaDataByPathNode : BaseDirectoryNode
 {
-    public MetaDataByPathNode(INode? node)
-        : base("bypath")
-    {
-        //let's allow to go by this path
-        //and render
+    private INode mapping;
 
-        if(node.NodeType == Messages.NodeType.Directory)
+    public MetaDataByPathNode(INode node)
+        : base(node.Name)
+    {
+        mapping = node;
+
+    }
+
+    override public IEnumerable<INode>? Children
+    {
+        get
         {
-            foreach(var child in node.Children ?? new List<INode>())
+            if(this.mapping.NodeType == Messages.NodeType.Directory)
             {
-                this.AddChild(new MetaDataByPathNode(child));
+                return this.mapping.Children?.Select(child => new MetaDataByPathNode(child));
+            }
+            else
+            {
+                var md = this.mapping.GetMeta();
+                return new List<INode>()
+                {
+                    new MetaDataProperty("name", this.mapping.Name),
+                    new MetaDataProperty("type", this.mapping.NodeType.ToString()),
+                };
             }
         }
     }

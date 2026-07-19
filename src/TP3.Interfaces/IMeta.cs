@@ -1,7 +1,6 @@
-using TP3.Messages;
-
 namespace TP3.Interfaces;
 
-public interface IMeta : INode
+public interface IMeta
 {
+    public List<IMetaProperty> Properties { get; }
 }

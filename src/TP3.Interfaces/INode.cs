@@ -27,4 +27,6 @@ public interface INode
     /// If it is not null for a directory, a custom implementation compatible with directory semantics must be provided.
     /// </summary>
     Task<ITP3DataStream?> Get();
+
+    IMeta? GetMeta() {return null;}
 }
