@@ -2,6 +2,28 @@ using TP3.Messages;
 
 namespace TP3.Interfaces;
 
+public abstract class BaseNodeWIthMeta : INode
+{
+    public BaseNodeWIthMeta()
+    {
+        Properties = new Dictionary<string, IMetaProperty>();
+    }
+
+    public Dictionary<string, IMetaProperty> Properties { get; }
+
+
+    IMeta? GetMeta() {return null;}
+    
+    public IMeta? GetMeta()
+    {
+        if (Properties.Count == 0)
+        {
+            return null;
+        }
+        
+    }
+}
+
 public class BaseDirectoryNode : INode
 {
     public BaseDirectoryNode()

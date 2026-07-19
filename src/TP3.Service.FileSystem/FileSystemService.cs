@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using TP3.Interfaces;
 using TP3.Protocol;
+using TP3.Protocol.Base;
 
 namespace TP3.Service.FileSystem;
 
@@ -12,7 +13,16 @@ public class FileSystemService : BaseDirectoryNode, IService
     public FileSystemService()
         : base("filesystem")
     {
-        this.State = new StateNode("state");
+        this.State = 
+            new StateNode("state")
+                .Meta(MetaField.Desciption, 
+                    @"""
+This node provides access to the filesystem of the host machine. 
+
+It allows you to navigate through directories and access files. Uses access to files, and provides acces to files and folders on disk.
+                    """)
+                .Meta(MetaField.UTFSymbol, "&#128193;");
+
         this.Control = new BaseDirectoryNode(
             "control", null,
             new List<INode>
