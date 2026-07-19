@@ -3,7 +3,7 @@
 
 <label class="form-label">Arguments</label>
 <div class="input-group mb-2">
-    <input class="form-control" value="@CommandArgs" @oninput="OnArgsInput" placeholder="arg1 arg2 arg3" />
+    <input class="form-control" @bind="CommandArgs" @oninput="OnArgsInput" placeholder="arg1 arg2 arg3" />
     <button class="btn btn-outline-primary" @onclick="Run">Run</button>
 </div>
 

@@ -18,10 +18,11 @@ public class Meta : BaseControlParamsArgsCommand
         {
             AutoFlush = true
         };
-        if (args?.Length > 0)
+
+        if (args?.Length == 0)
         {
             // respond with descript of arguments that we need a path to node serpated with space
-            await writer.WriteLineAsync("Command requires a path to the node, separated by space.");
+            await writer.WriteLineAsync("Command requires a path to the node, separated by space. for ex.: state drives c:\\ ");
             // flush and close and return
             await writer.FlushAsync();
             return;
