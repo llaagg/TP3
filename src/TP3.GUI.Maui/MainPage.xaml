@@ -10,14 +10,8 @@
         <tb:TaskbarIcon x:Name="TrayIcon"
                         ToolTipText="TP3"
                         LeftClickCommand="{Binding ToggleWindowCommand}"
-                        NoLeftClickDelay="True">
-            <tb:TaskbarIcon.IconSource>
-                <tb:GeneratedIconSource Text="T"
-                                        FontSize="36"
-                                        FontWeight="Bold"
-                                        Background="Black"
-                                        Foreground="White" />
-            </tb:TaskbarIcon.IconSource>
+                        NoLeftClickDelay="True"
+                        IconSource="icon.png">
             <FlyoutBase.ContextFlyout>
                 <MenuFlyout>
                     <MenuFlyoutItem Text="Open / Hide"
