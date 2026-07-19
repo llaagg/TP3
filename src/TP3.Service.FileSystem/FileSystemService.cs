@@ -17,7 +17,7 @@ public class FileSystemService : BaseDirectoryNode, IService
             "control", null,
             new List<INode>
             {
-                new MetaLs(this), new MetaCommand(this)
+                new MetaLs(this), new Meta(this)
             });
     }
 
