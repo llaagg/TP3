@@ -2,6 +2,8 @@
 
 TP3 is a tree-oriented resource protocol with a small command surface and stateful session handles.
 
+It is best understood as a conceptual 9P-inspired runtime over a virtual tree namespace, not as a strict Plan 9 wire clone.
+
 ## Layer View
 
 1. Application clients (`TP3.CLI`, `TP3.Server`, GUI frontends)
@@ -13,8 +15,9 @@ TP3 is a tree-oriented resource protocol with a small command surface and statef
 ## Resource Model
 
 - Node is the core abstraction.
-- Node types: `Directory` and `File`.
+- Node types: `Directory`, `File`, and command-like nodes.
 - Services expose node trees under a unified namespace.
+- Nodes may be backed by real files or pure runtime/service state.
 
 ## Protocol Concepts
 
@@ -30,7 +33,7 @@ TP3 is a tree-oriented resource protocol with a small command surface and statef
 1. `ATTACH` -> bind handle to root.
 2. `WALK` -> move/rebind to target path.
 3. `OPEN` -> prepare node for read access.
-4. `READ` -> stream directory entries or file bytes.
+4. `READ` / `WRITE` -> stream directory entries, file bytes, or command I/O.
 5. `CLUNK` -> release handle.
 
 ## Behavior Notes
