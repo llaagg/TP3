@@ -9,6 +9,7 @@ The main idea is simple: expose a virtual tree of nodes and interact with those 
 - A protocol and runtime that treats resources as a navigable tree.
 - A virtual namespace where nodes can represent filesystem entries, service state, commands, or remote resources.
 - A tagged session model where `tag` identifies a client-side handle/pointer.
+- A metadata-aware control plane so identity, ownership, and capabilities stay consistent across device types.
 
 ## What TP3 Is Not
 

@@ -9,19 +9,28 @@ public static partial class CLI
 {
     public static Task<int> RunAsync(string[] args)
     {
-        var portOption = new Option<int>(new[] { "--port", "-p" }, () => 5000, "Port to listen on");
         var ipcPortOption = new Option<int>(new[] { "--ipc-port", "-i" }, () => 5001, "IPC port to connect to");
-        var consumeResponses = new Option<bool>(new[] { "--consume-responses", "-c" }, () => true, "Consume responses from the IPC server");
         var bePatientAndWaitForServer = new Option<int>(new[] { "--wait-for-server", "-w" }, () => 60, "Wait for the IPC server to be ready before sending messages");
-        var messageArgument = new Argument<string>("message", "Message to send to IPC server");
         var path = new Argument<string[]?>("path", () => null, "Path to walk in the IPC server");
+        var singlePath = new Argument<string>("path", "Absolute or relative TP3 path");
+        var commandPath = new Argument<string>("command-path", "TP3 command node path");
+        var commandArgs = new Argument<string[]>("args", () => Array.Empty<string>(), "Arguments passed to the command node");
         var enableEmoted = new Option<bool>(new[] { "--enable-emoted", "-e" }, () => true, "Enable emoted output for file and directory types");
         var logLevel = new Option<LogLevel>("log-level", () => LogLevel.Error, "Log level for the CLI");
         var argsArgument = new Argument<string[]>("args", "Arguments to pass to the command being executed");
         var commndFile = new Argument<string>("command-file", "File containing the command to execute in the webdav mounted folder");
+
+        var listCommand = ListCommand(ipcPortOption, bePatientAndWaitForServer, path, enableEmoted, logLevel);
+        listCommand.AddAlias("ls");
+
+        var readCommand = ReadCommand(ipcPortOption, bePatientAndWaitForServer, singlePath, logLevel);
+        var runCommand = RunCommand(ipcPortOption, bePatientAndWaitForServer, commandPath, commandArgs, logLevel);
+
         var rootCommand = new RootCommand("TP3 CLI")
         {
-            ListCommand(ipcPortOption, bePatientAndWaitForServer, path, enableEmoted, logLevel),
+            listCommand,
+            readCommand,
+            runCommand,
             TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel),
             ExecCommand(commndFile, argsArgument, logLevel)
         };

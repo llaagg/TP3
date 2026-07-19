@@ -112,4 +112,16 @@ public static partial class CLI
             throw new InvalidOperationException($"Error received from IPC server: {message.Error?.Message} {message.Error?.Args}");
         }
     }
+
+    public static string[] SplitPathSegments(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return Array.Empty<string>();
+        }
+
+        return path
+            .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToArray();
+    }
 }

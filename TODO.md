@@ -14,6 +14,24 @@
 - Define cross-device discovery and attach semantics for namespace roots.
 - Document how virtual nodes map to physical resources per platform (PC, Android/Android TV, iOS).
 
+## Metadata Layer
+
+- Define a dedicated metadata layer for node identity, ownership, capabilities, and lifecycle.
+- Standardize metadata schema for all node types:
+  - identity: `nodeId`, `parentId`, `path`, `version`
+  - ownership: `owner`, `tenant`, `visibility`
+  - capability flags: `read`, `write`, `execute`, `attach`, `share`
+  - sync fields: `createdAt`, `updatedAt`, `etag`, `lastSeen`
+- Separate data plane vs metadata plane operations.
+- Add metadata discovery endpoint/path (for example `/meta` and per-node metadata files).
+- Define metadata merge rules for cross-device conflicts (last-write-wins vs vector-clock style).
+- Add metadata cache and invalidation strategy for offline/mobile devices.
+- Add metadata permission checks tied to identity claims and scopes.
+- Add tests for metadata consistency across:
+  - local filesystem-backed nodes
+  - remote/device-backed nodes
+  - command/control nodes
+
 ## Authentication and Identity (Google Device Flow)
 
 - Implement authentication using Google OAuth 2.0 Device Authorization Grant (Device Flow).

@@ -8,9 +8,23 @@ It is best understood as a conceptual 9P-inspired runtime over a virtual tree na
 
 1. Application clients (`TP3.CLI`, `TP3.Server`, GUI frontends)
 2. TP3 logic (routing, sessions, agent host, transports)
-3. Service layer (filesystem and remote nodes)
-4. Protocol layer (message contracts, serialization, read stream helpers)
-5. OS/runtime resources (filesystem and process environment)
+3. Metadata layer (identity, ownership, capabilities, versioning)
+4. Service layer (filesystem and remote nodes)
+5. Protocol layer (message contracts, serialization, read stream helpers)
+6. OS/runtime resources (filesystem and process environment)
+
+## Metadata Layer
+
+The metadata layer is a logical control plane that describes nodes independently from their raw byte content.
+
+It should provide:
+
+- Stable identity and hierarchy metadata (`nodeId`, parent relation, canonical path).
+- Ownership and visibility metadata (user/device/service ownership, sharing mode).
+- Capability metadata (allowed operations such as read/write/execute/attach).
+- Version and sync metadata (`etag`/revision, timestamps, conflict hints).
+
+This layer enables consistent behavior across heterogeneous endpoints (PC, Android/Android TV, iOS), even when node data is backed by different local systems.
 
 ## Resource Model
 
