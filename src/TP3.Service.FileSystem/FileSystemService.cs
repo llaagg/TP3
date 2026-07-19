@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using TP3.Interfaces;
+using TP3.Protocol;
 
 namespace TP3.Service.FileSystem;
 
@@ -12,12 +13,15 @@ public class FileSystemService : BaseDirectoryNode, IService
         : base("filesystem")
     {
         this.State = new StateNode("state");
+        this.Meta = new MetaDataProvider();
     }
 
     public INode State { get; private set; } = null!;
 
     #warning TODO: We need: Create, Delete
     public INode Control { get; private set; } = null!;
+    
+    public INode Meta { get; private set; } = null!;
 
     public INode Events { get; private set; } = null!;
 
@@ -36,6 +40,6 @@ public class FileSystemService : BaseDirectoryNode, IService
     public void Dispose()
     {
     }
-
+    
     override public IEnumerable<INode>? Children => new INode[] { State };
 }

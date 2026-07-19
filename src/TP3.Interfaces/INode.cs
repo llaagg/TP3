@@ -10,6 +10,10 @@ public interface INode
 
     NodeType NodeType { get; }
 
+    /// <summary>
+    /// This property is only relevant for nodes of type directory. 
+    /// For other node types, it should return null.
+    /// </summary>
     IEnumerable<INode>? Children { get; }
 
     /// <summary>
@@ -23,9 +27,4 @@ public interface INode
     /// If it is not null for a directory, a custom implementation compatible with directory semantics must be provided.
     /// </summary>
     Task<ITP3DataStream?> Get();
-
-    /// <summary>
-    /// Allows to provide metadata for a node.
-    /// </summary>
-    IMeta? Meta => null;
 }
