@@ -1,30 +1,9 @@
+using TP3.Interfaces;
 using TP3.Messages;
 
-namespace TP3.Interfaces;
+namespace TP3.Protocol.Base;
 
-public abstract class BaseNodeWIthMeta : INode
-{
-    public BaseNodeWIthMeta()
-    {
-        Properties = new Dictionary<string, IMetaProperty>();
-    }
-
-    public Dictionary<string, IMetaProperty> Properties { get; }
-
-
-    IMeta? GetMeta() {return null;}
-    
-    public IMeta? GetMeta()
-    {
-        if (Properties.Count == 0)
-        {
-            return null;
-        }
-        
-    }
-}
-
-public class BaseDirectoryNode : INode
+public class BaseDirectoryNode : BaseNodeWithMeta
 {
     public BaseDirectoryNode()
         : this(null, null, null)
@@ -55,19 +34,20 @@ public class BaseDirectoryNode : INode
         ).ToLower().Trim('-');
     }
 
-    public string Id { get; protected set; } = null!;
+    public override string Id { get; } = null!;
 
-    public string Name { get; protected set; } = null!;
+    public override string Name { get; } = null!;
 
     private IList<INode> _children;
 
-    public NodeType NodeType => NodeType.Directory;
+    public override NodeType NodeType => NodeType.Directory;
 
-    public virtual IEnumerable<INode>? Children => _children;
+    public override IEnumerable<INode>? Children => _children;
 
-    public ulong Length => 0;
+    public override ulong Length => 0;
 
-    public Task<ITP3DataStream?> Get()
+
+    public override Task<ITP3DataStream?> Get()
     {
         return Task.FromResult<ITP3DataStream?>(null);
     }
@@ -75,10 +55,5 @@ public class BaseDirectoryNode : INode
     public void AddChild(INode state)
     {
         _children.Add(state);
-    }
-
-    public IMeta? GetMeta()
-    {
-        return null;
     }
 }

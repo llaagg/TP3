@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
 using TP3.Messages;
+using TP3.Protocol.Base;
 
 namespace TP3.Service.Remote;
 

@@ -16,11 +16,9 @@ public class FileSystemService : BaseDirectoryNode, IService
         this.State = 
             new StateNode("state")
                 .Meta(MetaField.Desciption, 
-                    @"""
-This node provides access to the filesystem of the host machine. 
+@"This node provides access to the filesystem of the host machine. 
 
-It allows you to navigate through directories and access files. Uses access to files, and provides acces to files and folders on disk.
-                    """)
+It allows you to navigate through directories and access files. Uses access to files, and provides acces to files and folders on disk.")
                 .Meta(MetaField.UTFSymbol, "&#128193;");
 
         this.Control = new BaseDirectoryNode(

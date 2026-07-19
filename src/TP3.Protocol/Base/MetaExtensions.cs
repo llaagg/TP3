@@ -6,7 +6,7 @@ public enum MetaField
 {
     Desciption,
     UTFSymbol,
-    
+
 }
 
 public static class MetaExtensions
@@ -14,18 +14,40 @@ public static class MetaExtensions
     public static INode Meta(this INode node, MetaField field, string value, string langue = "en")
     {
         var metadata = node.GetMeta();
-        if(metadata == null)
+
+        MetaData? m = metadata as MetaData;
+        if(m==null)
         {
-            // if this is canooncal node, we need to create a new meta node and add it to the parent
-            if(node is )
+            throw new InvalidOperationException(
+                $"Cannot add meta to a node that does not support meta. "+
+                $"(Meta type: {m.GetType().Name} expected: {nameof(MetaData)})");
         }
 
 
-        if (node. is IMeta metaNode)
+        m.Properties.Add(new MetaProperty(field.ToString())
         {
-            metaNode.Properties.Add(new MetaProperty(field.ToString(), value, langue));
-            return metaNode;
-        }
+            Values = new Dictionary<string, string>()
+            {
+                {langue, value}
+            }
+        });
         return node;
+        
+    }
+}
+
+public class MetaProperty : IMetaProperty
+{
+    public MetaProperty(string name)
+    {
+        Name = name;    }
+
+    public string Name { get; set; }
+
+    public Dictionary<string, string> Values { get; set; } = new Dictionary<string, string>();
+
+    public string GetValue(string langue = "en")
+    {
+        return Values.TryGetValue(langue, out var value) ? value : string.Empty;
     }
 }

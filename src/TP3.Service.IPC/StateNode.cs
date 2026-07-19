@@ -1,5 +1,6 @@
 using TP3.Interfaces;
 using TP3.Protocol;
+using TP3.Protocol.Base;
 
 namespace TP3.Service.IPC;
 

@@ -1,9 +1,10 @@
 using TP3.Interfaces;
 using TP3.Messages;
+using TP3.Protocol.Base;
 
 namespace TP3.Service.FileSystem;
 
-public class StateNode : INode
+public class StateNode : BaseNodeWithMeta
 {
     public StateNode(string qid)
     {
@@ -11,13 +12,13 @@ public class StateNode : INode
         this.Name = "state";
     }
 
-    public string Id { get; }
+    public override string Id { get; }
 
-    public string Name { get; set; }
+    public override string Name { get; }
 
-    public NodeType NodeType => NodeType.Directory;
+    public override NodeType NodeType => NodeType.Directory;
 
-    public IEnumerable<INode>? Children
+    public override IEnumerable<INode>? Children
     {
         get
         {
@@ -31,9 +32,9 @@ public class StateNode : INode
         }
     }
 
-    public ulong Length => 0;
+    public override ulong Length => 0;
 
-    public Task<ITP3DataStream?> Get()
+    public override Task<ITP3DataStream?> Get()
     {
         return Task.FromResult<ITP3DataStream?>(null);
     }

@@ -42,7 +42,7 @@ public class Meta : BaseControlParamsArgsCommand
         {
             foreach (var m in meta.Properties)
             {
-                await writer.WriteLineAsync($"{m.GetValue()}");
+                await writer.WriteLineAsync($"{m.Name}: {m.GetValue()}");
             }
         }
     }

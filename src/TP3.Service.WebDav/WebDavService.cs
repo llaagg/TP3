@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Xml.Linq;
+using TP3.Protocol.Base;
 
 namespace TP3.Service.WebDav;
 
