@@ -32,7 +32,6 @@ public static partial class CLI
             readCommand,
             runCommand,
             TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel),
-            ExecCommand(commndFile, argsArgument, logLevel)
         };
 
 
