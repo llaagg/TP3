@@ -1,7 +1,5 @@
 using System.CommandLine;
-using System.Reflection;
 using Microsoft.Extensions.Logging;
-using TP3.Messages;
 
 namespace TP3.CLI;
 
@@ -28,10 +26,10 @@ public static partial class CLI
 
         var rootCommand = new RootCommand("TP3 CLI")
         {
-            listCommand,
-            readCommand,
-            runCommand,
-            TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel),
+            listCommand, // walk and open on dir
+            readCommand, // read 
+            runCommand,  // run command
+            TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel), // terminal
         };
 
 
