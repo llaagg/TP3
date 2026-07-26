@@ -29,9 +29,10 @@
 <ul class="list-group list-group-flush">
     @foreach (var item in folderContents)
     {
+        var elementPath = currentPath.Append(item.Name).ToList();
         if (item.Info.NodeType == TP3.Messages.NodeType.Directory)
         {
-            <WalkerDirectoryItem Item="item" OnDirectoryClick="Navigate" />
+            <WalkerDirectoryItem Item="item" Path="elementPath" OnDirectoryClick="Navigate" />
         }
         else if (item.Info.NodeType == TP3.Messages.NodeType.Command)
         {

@@ -1,8 +1,7 @@
 <li class="list-group-item d-flex align-items-center justify-content-between">
     <button class="btn" @onclick="OnClick">
-        <meta element="@CurrentPath" key="UTFSymbol" >
-            <span class="me-2">📁</span>
-        </meta>
+        
+        <MetaInfo Element="@Path" Key="UTFSymbol" >📁</MetaInfo>
         @Item.Name
     </button>
     <span class="badge text-bg-secondary">folder</span>
@@ -13,7 +12,7 @@
     public TP3.Protocol.TP3StatPayload Item { get; set; } = default!;
 
     [Parameter]
-    public List<string> CurrentPath { get; set; } = default!;
+    public List<string> Path { get; set; } = default!;
 
     [Parameter]
     public EventCallback<TP3.Protocol.TP3StatPayload> OnDirectoryClick { get; set; }

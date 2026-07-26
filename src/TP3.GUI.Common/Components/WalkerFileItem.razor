@@ -2,7 +2,7 @@
 
 <li class="list-group-item d-flex align-items-center justify-content-between">
     <button class="btn" @onclick="OnClick">
-        <span class="me-2">📄</span>
+        <MetaInfo Element="@CurrentPath.ToList()" Key="UTFSymbol" ><span class="me-2">📄</span></MetaInfo>
         @Item.Name
     </button>
     <span class="badge text-bg-primary">file</span>

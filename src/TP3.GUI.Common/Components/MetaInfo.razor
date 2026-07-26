@@ -1,0 +1,51 @@
+@inject TP3ClientWrapper TP3Client
+
+@if(Element?.Count == 0 || string.IsNullOrEmpty(Icon))
+{
+    @ChildContent
+}
+else
+{
+    @Icon
+}
+
+@code {
+    [Parameter]
+    public List<string> Element { get; set; } = Array.Empty<string>().ToList();
+
+    [Parameter]
+    public string Key { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    string Icon { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.Icon = await GetNfoAsync();
+    }
+
+    public async Task<string> GetNfoAsync()
+    {
+        if(Element?.Count > 2)
+        {
+            var metaCommand = 
+                Element.Take(2)
+                    .Append("meta")
+                    .Append("meta-get");
+            // call for meta
+            try
+            {
+                var r = await TP3Client.RunCommand(metaCommand.ToArray(), string.Join("/", Element));
+                return r.Output;
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        return "";
+    }
+}
