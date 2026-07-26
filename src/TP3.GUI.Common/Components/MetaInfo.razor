@@ -1,3 +1,4 @@
+@using TP3.Protocol.Base
 @inject TP3ClientWrapper TP3Client
 
 @if(Element?.Count == 0 || string.IsNullOrEmpty(Icon))
@@ -14,7 +15,7 @@ else
     public List<string> Element { get; set; } = Array.Empty<string>().ToList();
 
     [Parameter]
-    public string Key { get; set; } = string.Empty;
+    public MetaField Key { get; set; } = MetaField.Description;
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }

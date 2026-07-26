@@ -1,8 +1,9 @@
+@using TP3.Protocol.Base
 @inject TP3ClientWrapper TP3Client
 
 <li class="list-group-item d-flex align-items-center justify-content-between">
     <button class="btn" @onclick="OnClick">
-        <MetaInfo Element="@CurrentPath.ToList()" Key="UTFSymbol" ><span class="me-2">📄</span></MetaInfo>
+        <MetaInfo Element="@CurrentPath.ToList()" Key="MetaField.UTFSymbol"><span class="me-2">📄</span></MetaInfo>
         @Item.Name
     </button>
     <span class="badge text-bg-primary">file</span>
