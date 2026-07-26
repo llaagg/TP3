@@ -31,7 +31,7 @@
 
     private async Task Run()
     {
-        var (tag, output) = await TP3Client.RunCommand(Path, CommandArgs);
+        var (tag, output) = await TP3Client.RunCommand( Path, CommandArgs);
         OutputPreview = output;
         await OutputPreviewChanged.InvokeAsync(output);
 

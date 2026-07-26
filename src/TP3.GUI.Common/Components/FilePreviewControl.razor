@@ -52,7 +52,7 @@ else
 
     public async Task Load()
     {
-        var tag = await TP3Client.NewSession(CurrentPath);
+        var tag = await TP3Client.NewSessionAndWalk(CurrentPath);
         try
         {
             var dataStream = TP3Client.GetStream(tag);

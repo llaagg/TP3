@@ -33,12 +33,13 @@ else
         {
             var metaCommand = 
                 Element.Take(2)
-                    .Append("meta")
+                    .Append("control")
                     .Append("meta-get");
             // call for meta
             try
             {
-                var r = await TP3Client.RunCommand(metaCommand.ToArray(), string.Join("/", Element));
+                var r = 
+                    await TP3Client.RunCommand(metaCommand.ToArray(), string.Join("/", Element.Skip(2)) );
                 return r.Output;
             }
             catch

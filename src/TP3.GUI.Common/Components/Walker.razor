@@ -91,7 +91,7 @@
 
     async Task LoadFolder(IList<string> path)
     {
-        var tag = await TP3Client.NewSession(path.ToArray());
+        var tag = await TP3Client.NewSessionAndWalk(path.ToArray());
 
         await TP3Client.ListFolder(
             tag,

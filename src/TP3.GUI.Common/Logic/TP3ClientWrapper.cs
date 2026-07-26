@@ -68,7 +68,7 @@ public class TP3ClientWrapper
         }
     }
 
-    public async Task<string> NewSession(params string[] path)
+    public async Task<string> NewSessionAndWalk(params string[] path)
     {
         //random tag fynny sounds using mix of wowels and consonants
         string tag = GenerateRandomTag(8);
@@ -80,13 +80,25 @@ public class TP3ClientWrapper
 
         walkReqeust.Path.AddRange(path);
 
-        var result = await ipcClient.SendAndWaitOne(new TP3Message()
+        var walkResponse = await ipcClient.SendAndWaitOne(new TP3Message()
         {
             Tag = this.rootTag,
             WalkRequest = walkReqeust
         }, logger);
         
-        return result!.Tag;
+        if(walkResponse is null)
+        {
+            throw new InvalidOperationException("Received null response from IPC server.");
+        }
+        if(walkResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+        {
+            throw new InvalidOperationException($"Error received from IPC server: {walkResponse.Error?.Message}");
+        }
+        if(walkResponse.WalkResponse.Infos.Count != path.Length)
+        {
+            throw new InvalidOperationException($"Walk response count ({walkResponse.WalkResponse.Infos.Count}) does not match the provided path length ({path.Length}).");
+        }
+        return tag;
     }
     public async Task CloseSession(string tag)
     {
@@ -206,8 +218,8 @@ public class TP3ClientWrapper
     }
 
     public async Task<(string Tag, string Output)> RunCommand(string[] path, string arguments)
-    {
-        var tag = await NewSession(path);
+    {        
+        var tag = await NewSessionAndWalk(path);
 
         try
         {

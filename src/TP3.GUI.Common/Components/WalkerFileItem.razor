@@ -24,7 +24,7 @@
         List<string> pathList = CurrentPath.ToList();
         pathList.Add(Item.Name);
 
-        var tag = await TP3Client.NewSession(pathList.ToArray());
+        var tag = await TP3Client.NewSessionAndWalk(pathList.ToArray());
 
         await OnFileOpened.InvokeAsync((tag, Item.Name, pathList.ToArray()));
     }
