@@ -45,6 +45,12 @@ public static partial class CLI
             walkResponse.ThrowIfError();
             var runTag = walkResponse!.Tag;
 
+            if(segments.Length !=  walkResponse.WalkResponse?.Infos?.Count)
+            {
+                logger.LogError("Command path not found. Please provide a valid command path.");
+                return;
+            }
+
             var openResponse = await ipcClient.Open(runTag, logger).ConfigureAwait(false);
             openResponse.ThrowIfError();
 

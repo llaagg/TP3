@@ -15,18 +15,19 @@ public class FileSystemService : BaseDirectoryNode, IService
     {
         this.State = 
             new StateNode("state")
-                .Meta(MetaField.Desciption, 
+                .Meta(MetaField.Description, 
 @"This node provides access to the filesystem of the host machine. 
 
 It allows you to navigate through directories and access files. Uses access to files, and provides acces to files and folders on disk.")
-                .Meta(MetaField.UTFSymbol, "&#128193;");
+                .Meta(MetaField.UTFSymbol, "🖴");
 
-        this.Control = new BaseDirectoryNode(
-            "control", null,
-            new List<INode>
-            {
-                new MetaLs(this), new Meta(this)
-            });
+        this.Control = new BaseDirectoryNode("control");
+
+        this.Meta(MetaField.Description,
+@"This node provides access to the filesystem of the host machine.")
+            .Meta(MetaField.UTFSymbol, "🖴");
+
+        this.AddMetaNodes(this.Control);
     }
 
     public INode State { get; private set; } = null!;

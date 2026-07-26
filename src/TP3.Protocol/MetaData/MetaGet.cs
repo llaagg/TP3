@@ -2,11 +2,11 @@ using TP3.Interfaces;
 
 namespace TP3.Protocol.MetaData;
 
-public class Meta : BaseControlParamsArgsCommand
+public class MetaGet : BaseControlParamsArgsCommand
 {
     private readonly IService service;
 
-    public Meta(IService service)
+    public MetaGet(IService service)
     {
         this.service = service;
     }
@@ -21,15 +21,16 @@ public class Meta : BaseControlParamsArgsCommand
         if (args?.Length == 0)
         {
             // respond with descript of arguments that we need a path to node serpated with space
-            await writer.WriteLineAsync("Command requires a path to the node, separated by space. for ex.: state drives c:\\ ");
+            await writer.WriteLineAsync("Command requires property name and a path to the node, separated by space. for ex.: state drives c:\\ ");
             // flush and close and return
             await writer.FlushAsync();
             return;
         }   
         
+        var propertyName = args[0];
         // let's find the node from params
         var node = this.service as INode;
-        foreach (var arg in args ?? Array.Empty<string>())
+        foreach (var arg in args.Skip(1))
         {
             node = node?.Children?.FirstOrDefault(c => c.Name == arg);
         }
@@ -39,10 +40,13 @@ public class Meta : BaseControlParamsArgsCommand
 
         if(meta!=null)
         {
-            foreach (var m in meta.Properties)
+            var m = meta.Properties.FirstOrDefault(p => p.Name == propertyName);
+            if (m != null)
             {
-                await writer.WriteLineAsync($"{m.Name}: {m.GetValue()}");
+                await writer.WriteLineAsync($"{m.GetValue()}");
+                return;
             }
         }
     }
 }
+

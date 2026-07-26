@@ -1,7 +1,6 @@
 using TP3.Interfaces;
-using TP3.Protocol;
 
-namespace TP3.Service.FileSystem;
+namespace TP3.Protocol.MetaData;
 
 public class MetaLs : BaseControlParamsArgsCommand
 {
@@ -18,7 +17,7 @@ public class MetaLs : BaseControlParamsArgsCommand
         {
             AutoFlush = true
         };
-        if (args?.Length > 0)
+        if (args == null || args.Length == 0)
         {
             // respond with descript of arguments that we need a path to node serpated with space
             await writer.WriteLineAsync("Command requires a path to the node, separated by space.");

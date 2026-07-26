@@ -5,7 +5,7 @@ using TP3.Protocol.Base;
 
 namespace TP3.Protocol;
 
-public class BaseControlCommand : INode
+public class BaseControlCommand : BaseNodeWithMeta
 {
     private const ulong DefaultMaxCount = 16 * 1024;
 
@@ -17,16 +17,16 @@ public class BaseControlCommand : INode
         this.Name = BaseDirectoryNode.NameCreator(this.GetType());
     }
 
-    public string Id { get; }
-    public string Name { get; }
+    public override string Id { get; }
+    public override string Name { get; }
 
-    public NodeType NodeType => NodeType.Command;
+    public override NodeType NodeType => NodeType.Command;
 
-    public IEnumerable<INode>? Children => null;
+    public override IEnumerable<INode>? Children => null;
 
-    public ulong Length => 0;
+    public override ulong Length => 0;
 
-    public Task<ITP3DataStream?> Get()
+    public override Task<ITP3DataStream?> Get()
     {
         return Task.FromResult<ITP3DataStream?>(new MemeoryCachedCommandDataStream(this));
     }

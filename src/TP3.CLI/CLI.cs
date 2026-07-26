@@ -32,7 +32,6 @@ public static partial class CLI
             TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel), // terminal
         };
 
-
         rootCommand.SetHandler(() =>
         {
             Console.WriteLine("Specify a command. Use --help for usage details.");
@@ -72,5 +71,4 @@ public static partial class CLI
         listCommand.SetHandler(ExecuteList, ipcPortOption, bePatientAndWaitForServer, enableEmoted, logLevel, path);
         return listCommand;
     }
-
 }
