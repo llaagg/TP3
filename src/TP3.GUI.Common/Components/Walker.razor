@@ -1,11 +1,14 @@
 @inject TP3ClientWrapper TP3Client
 
+@inject ILogger logger
+
 <div class="d-flex align-items-center mb-3">
     <span class="me-2">Path:</span>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-0">
             <li class="breadcrumb-item">
-                <a href="" class="text-decoration-none" @onclick="NavigateToRoot" @onclick:preventDefault="true">Root</a>
+                <a href="" class="text-decoration-none" @onclick="NavigateToRoot"
+                   @onclick:preventDefault="true">Root</a>
             </li>
             @for (int i = 0; i < currentPath.Length; i++)
             {
@@ -18,7 +21,8 @@
                 else
                 {
                     <li class="breadcrumb-item">
-                        <a href="" class="text-decoration-none" @onclick="() => NavigateToSegment(idx)" @onclick:preventDefault="true">@segment</a>
+                        <a href="" class="text-decoration-none" @onclick="() => NavigateToSegment(idx)"
+                           @onclick:preventDefault="true">@segment</a>
                     </li>
                 }
             }
@@ -48,7 +52,7 @@
 @code {
 
     [Parameter]
-    public EventCallback<(string Tag, string Name,string[] Path)> OnFileSelected { get; set; }
+    public EventCallback<(string Tag, string Name, string[] Path)> OnFileSelected { get; set; }
 
     [Parameter]
     public EventCallback<(string Name, string[] Path)> OnCommandSelected { get; set; }
@@ -74,9 +78,9 @@
 
     private async Task NavigateToSegment(int index)
     {
-        var navigatoto = currentPath.Take(index+1).ToArray();
+        var navigatoto = currentPath.Take(index + 1).ToArray();
         await SetPath(navigatoto);
-    }               
+    }
 
     private string[] currentPath = Array.Empty<string>();
 
@@ -93,18 +97,28 @@
     {
         var tag = await TP3Client.NewSessionAndWalk(path.ToArray());
 
-        await TP3Client.ListFolder(
-            tag,
-            async (response) =>
+        try
         {
-            if (response != null)
-            {
-                folderContents.Add(response);
-                await InvokeAsync(StateHasChanged);
-            }
-        });
 
-        await TP3Client.CloseSession(tag);
+            await TP3Client.ListFolder(
+                tag,
+                async (response) =>
+            {
+                if (response != null)
+                {
+                    folderContents.Add(response);
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error loading folder: {Message}", ex.Message);
+        }
+        finally
+        {
+            await TP3Client.CloseSession(tag);
+        }
     }
 
     override protected async Task OnInitializedAsync()

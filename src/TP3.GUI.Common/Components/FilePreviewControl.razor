@@ -12,6 +12,12 @@
         disabled="@(CurrentPath.Length == 0)">
     <span class="me-2">⟳</span>Reload
 </button>
+<button @onclick="Save" 
+        class="btn btn-success mb-3 ms-2" 
+        disabled="@(CurrentPath.Length == 0 || IsImage)">
+    <span class="me-2">💾</span>Save
+</button>
+<div class="small text-body-secondary mb-3">@StatusMessage</div>
 
 @if (IsImage)
 {
@@ -38,6 +44,7 @@ else
 
     private bool IsImage { get; set; }
     private string ImageDataUri { get; set; } = string.Empty;
+    private string StatusMessage { get; set; } = string.Empty;
 
     private static readonly Dictionary<string, string> ImageMimeTypes = new()
     {
@@ -80,5 +87,27 @@ else
         {
             await TP3Client.CloseSession(tag);
         }
+    }
+
+    public async Task Save()
+    {
+        if (CurrentPath.Length == 0)
+        {
+            StatusMessage = "Cannot save: no file selected.";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        try
+        {
+            await TP3Client.WriteFileAsync(CurrentPath, Content);
+            StatusMessage = "Save completed.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Save failed: {ex.Message}";
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 }

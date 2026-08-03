@@ -10,14 +10,5 @@ internal class AutoStart : BaseDirectoryNode, INode
         
     }
 
-    public override IEnumerable<INode>? Children => this.GetAutoStartApps();
-
-    private IEnumerable<INode>? GetAutoStartApps()
-    {
-        var autoStartApps = AutoStartHelper.GetAutoStartApps();
-        foreach (var app in autoStartApps)
-        {
-            yield return new AutoStartApp(app.Name, app.Path, app.Enabled);
-        }
-    }
+    public override IEnumerable<INode>? Children => AutoStartHelper.GetAutoStartApps().ToList();
 }

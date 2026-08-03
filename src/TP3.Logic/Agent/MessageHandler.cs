@@ -106,7 +106,7 @@ public class MessageHandler
         var tag = request.Tag;
         var response = await OpenStream(incomingTransport, tag, request.OpenRequest);
 
-        await router.Respond(this.agent, CreateMessage(tag, m => m.OpenResponse = response), incomingTransport);
+        await router.Respond(this.agent, response, incomingTransport);
     }
 
     private async Task Attach(INetworkPipe incomingTransport, TP3Message request)
@@ -181,7 +181,7 @@ public class MessageHandler
         return response;
     }
 
-    public async Task<TP3OpenResponse> OpenStream(INetworkPipe incomingTransport, string tag, TP3OpenRequest tP3OpenRequest)
+    public async Task<TP3Message> OpenStream(INetworkPipe incomingTransport, string tag, TP3OpenRequest tP3OpenRequest)
     {
         // let's find the node in this connection
         if (string.IsNullOrEmpty(tag))
@@ -193,16 +193,16 @@ public class MessageHandler
         try{
             var data = await incomingTransport.TP3Transport.GetData(incomingTransport, tag);
 
-            return new TP3OpenResponse
+            return CreateMessage(tag, m => m.OpenResponse = new TP3OpenResponse
             {
                 Info = ToNodeInfo(node),
                 Iounit = data.Iounit,
-            };
+            });
         }
         catch (Exception ex)
         {
             logger?.LogError(ex, "Error opening data stream for tag: {Tag}", tag);
-            return CreateErrorMessage(tag, "open_error", ex.Message).OpenResponse;
+            return CreateErrorMessage(tag, "open_error", ex.Message);
         }
     }
 

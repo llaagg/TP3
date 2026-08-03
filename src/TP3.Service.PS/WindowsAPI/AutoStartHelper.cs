@@ -4,51 +4,153 @@ using TP3.Messages;
 using TP3.Protocol;
 using TP3.Protocol.Base;
 
+
+
+/*
+Registry: HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
+
+The values below HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run 
+can be used to enable or disable the corresponding values under 
+HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run.
+
+A value of 02 00 00 … or 06 00 00 … seems to indicate that the entry is enabled, all(?) 
+other values that it is disabled. (Possibly, in the case of disabledness, the value is the timestamp of the disabling).
+
+These values can be modified in the startup tab of taskmgr.exe.
+
+See also
+The corresponding key for all users is:
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run.
+
+
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run]
+"MicrosoftEdgeAutoLaunch_14DA42686A33801FBA0440A5992A3729"=hex:03,00,00,00,e4,\
+  7c,77,ac,ef,f3,dc,01
+"Teams"=hex:02,00,00,00,00,00,00,00,00,00,00,00
+"OneDrive"=hex:02,00,00,00,00,00,00,00,00,00,00,00
+"Docker Desktop"=hex:03,00,00,00,00,00,00,00,00,00,00,00
+"KeePassXC"=hex:02,00,00,00,00,00,00,00,00,00,00,00
+"NordVPN"=hex:01,00,00,00,b1,04,86,8e,d7,f4,dc,01
+"Mozilla-Zen-F0DC299D809B9700"=hex:01,00,00,00,eb,44,4a,bd,d4,18,dd,01
+"Dawn Launcher"=hex:02,00,00,00,00,00,00,00,00,00,00,00
+"Microsoft.Lists"=hex:02,00,00,00,00,00,00,00,00,00,00,00
+"Discord"=hex:02,00,00,00,00,00,00,00,00,00,00,00
+
+*/
+
 public static class AutoStartHelper
 {
-    public static IEnumerable<AutoStartApp> GetAutoStartApps()
+    public static IEnumerable<INode> GetAutoStartApps()
     {
+        return new List<INode>()
+        {
+            new BaseDirectoryNode("user", null, GetStartApps("user").ToList()),
+            new BaseDirectoryNode("user-startup-folder", null, GetStartApps("user-startup-folder", "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupFolder").ToList()),
+            new BaseDirectoryNode("machine", null, GetStartApps("machine").ToList()),
+            new BaseDirectoryNode("all-users", null, GetStartApps("machine").ToList()),
+        };
+    }
 
-        const string runKey = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
-        using (RegistryKey startupKey = Registry.LocalMachine.OpenSubKey(runKey))
+    public static IEnumerable<INode> GetStartApps(string scope = "user", string key = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run")
+    {
+        using (RegistryKey startupKey = GetReg(scope, key))
         {
             var valueNames = startupKey.GetValueNames();
+            //02 00 00 00 or 06 00 00 00: Startup item is Enabled (managed by user).
+            //03 00 00 00 or 01 00 00 00: Startup item is Disabled (by the user or system).
+            //08 00 00 00: Startup item is Enabled, but locked so the user cannot turn it of
+            
+            foreach (var valueName in valueNames)
+            {
+                var value = startupKey.GetValue(valueName);
+                var valueKind = startupKey.GetValueKind(valueName);
 
-            // Name => File path
-            var appInfos = valueNames
-                .Where(valueName => startupKey.GetValueKind(valueName) == RegistryValueKind.String)
-                .ToDictionary(valueName => valueName, valueName => startupKey.GetValue(valueName).ToString());
+                if (valueKind == RegistryValueKind.Binary && value is byte[] bytes && bytes.Length >= 4)
+                {
+                    string path = GetReg(scope, "Software\\Microsoft\\Windows\\CurrentVersion\\Run")?.GetValue(valueName)?.ToString() ?? string.Empty;
 
-            return appInfos.Select(kvp => new AutoStartApp(kvp.Key, kvp.Value, true));
+                    yield return new AutoStartAppNode(scope, valueName, path)
+                    {
+                    };
+                }
+            }
         }
+    }
+
+    public static RegistryKey GetReg(string scope, string name)
+    {
+        var root = scope == "machine" ? Registry.LocalMachine! : Registry.CurrentUser!;
+        return root.OpenSubKey(name);
     }
 }
 
-public class AutoStartApp : BaseDirectoryNode
+public class AutoStartAppNode : BaseDirectoryNode
 {
-    public string Name { get; }
+    public string Scope { get; }
     public string Path { get; }
-    public bool Enabled { get; }
 
-    public AutoStartApp(string name, string path, bool enabled)
+    public bool Enabled {
+        get
+        {
+            //02 00 00 00 or 06 00 00 00: Startup item is Enabled (managed by user).
+            //03 00 00 00 or 01 00 00 00: Startup item is Disabled (by the user or system).
+            //08 00 00 00: Startup item is Enabled, but locked so the user cannot turn it of
+            var value = AutoStartHelper.GetReg(Scope, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run")?.GetValue(Name);
+            if (value is byte[] bytes && bytes.Length >= 4)
+            {
+                if (bytes[0] == 0x02 || bytes[0] == 0x06 || bytes[0] == 0x08)
+                {
+                    return true;
+                }
+            }
+
+            return false;   
+        }
+        set
+        {
+            // change registry to enabled for this record
+            var startupKey = AutoStartHelper.GetReg(Scope, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run");
+            if (startupKey != null)
+            {
+                if (value)
+                {
+                    // Set to enabled (02 00 00 00)
+                    startupKey.SetValue(Name, new byte[] { 0x02, 0x00, 0x00, 0x00 }, RegistryValueKind.Binary);
+                }
+                else
+                {
+                    // Set to disabled (03 00 00 00)
+                    startupKey.SetValue(Name, new byte[] { 0x03, 0x00, 0x00, 0x00 }, RegistryValueKind.Binary);
+                }
+            }
+        }
+    }
+
+    public AutoStartAppNode(string scope, string name, string path)
         : base(name)
     {
-        Name = name;
+        Scope = scope;
         Path = path;
-        Enabled = enabled;
     }
 
     public override IEnumerable<INode>? Children => new List<INode>()
     {
-        new AutoStartAppEnabled(this),
+        new AutoStartAppEnabled((AutoStartAppNode)this),
     };
+
+    internal void SetEnabled(bool v)
+    {
+        this.Enabled = v;
+    }
 }
 
 public class AutoStartAppEnabled : INode
 {
-    private AutoStartApp parent;
+    private AutoStartAppNode parent;
 
-    public AutoStartAppEnabled(AutoStartApp parent)
+    public AutoStartAppEnabled(AutoStartAppNode parent)
     {
         this.parent = parent;
     }
@@ -68,79 +170,12 @@ public class AutoStartAppEnabled : INode
         return new RWStreamString(
             readFunc: async () =>
             {
-                return parent.Enabled ? "1" : "0";
+                return parent.Enabled ? true.ToString() : false.ToString();
             },
             writeFunc: async (value) =>
             {
-               throw new NotImplementedException("Writing to the enabled property is not implemented."); 
+                // change registry to disabled for this record
+                parent.SetEnabled(value == true.ToString());
             });
-    }
-}
-
-public abstract class RWStream : ITP3DataStream
-{
-    public uint Iounit => 0;
-
-    public ulong Position { get; protected set; } = 0;
-
-    public void Close()
-    {
-    }
-
-    public async Task Open()
-    {
-        
-    }
-
-    public async Task<byte[]> Read(ulong offset, ulong maxCount)
-    {
-        return await OnRead(offset, maxCount);
-    }
-
-    public async Task<ulong> Write(ulong offset, byte[] data)
-    {
-        var incomingData = data;
-        await OnWrite(incomingData);
-        return (ulong)data.Length;
-    }
-
-    public virtual async Task OnWrite(byte[] data)
-    {
-        
-    }
-
-    public virtual async Task<byte[]> OnRead(ulong offset, ulong maxCount)
-    {
-        return new byte[0];
-    }
-}
-
-public class RWStreamString : RWStream
-{
-    public RWStreamString(Func<Task<string>> readFunc, Func<string, Task> writeFunc)
-    {
-        this.readFunc = readFunc;
-        this.writeFunc = writeFunc;
-    }
-
-    private Func<Task<string>> readFunc;
-    private Func<string, Task> writeFunc;
-
-    public override async Task OnWrite(byte[] data)
-    {
-        var incomingData = System.Text.Encoding.UTF8.GetString(data);
-        await writeFunc(incomingData);
-    }
-
-    public override async Task<byte[]> OnRead(ulong offset, ulong maxCount)
-    {
-        if(offset != 0)
-        {
-            return new byte[0];
-        }
-
-        var result = await readFunc();
-        this.Position = (ulong)result.Length;
-        return System.Text.Encoding.UTF8.GetBytes(result);
     }
 }

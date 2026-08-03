@@ -177,7 +177,10 @@ public class TP3ClientWrapper
         {
             throw new InvalidOperationException("Failed to open directory for listing.");
         }
-
+        if(openResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+        {
+            throw new InvalidOperationException($"Error received from IPC server: {openResponse.Error?.Message}");
+        }
 
         await Task.Run(async () =>
         {
@@ -215,6 +218,58 @@ public class TP3ClientWrapper
 
         var stream = ipcClient.GetStream(openResponse, logger);
         return stream;
+    }
+
+    public async Task<ulong> WriteFileAsync(string[] path, string content)
+    {
+        var tag = await NewSessionAndWalk(path);
+
+        try
+        {
+            var openResponse = await ipcClient.SendAndWaitOne(new TP3Message()
+            {
+                Tag = tag,
+                OpenRequest = new TP3OpenRequest()
+            }, logger).ConfigureAwait(false);
+
+            if (openResponse is null)
+            {
+                throw new InvalidOperationException("Received null response from IPC server.");
+            }
+            if (openResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+            {
+                throw new InvalidOperationException($"Error received from IPC server: {openResponse.Error?.Message}");
+            }
+
+            var writeResponse = await ipcClient.SendAndWaitOne(new TP3Message()
+            {
+                Tag = tag,
+                WriteRequest = new TP3WriteRequest
+                {
+                    Offset = 0,
+                    Data = Google.Protobuf.ByteString.CopyFrom(Encoding.UTF8.GetBytes(content ?? string.Empty))
+                }
+            }, logger).ConfigureAwait(false);
+
+            if (writeResponse is null)
+            {
+                throw new InvalidOperationException("Received null response from IPC server.");
+            }
+            if (writeResponse.PayloadCase == TP3Message.PayloadOneofCase.Error)
+            {
+                throw new InvalidOperationException($"Error received from IPC server: {writeResponse.Error?.Message}");
+            }
+            if (writeResponse.PayloadCase != TP3Message.PayloadOneofCase.WriteResponse)
+            {
+                throw new InvalidOperationException($"Unexpected response type: {writeResponse.PayloadCase}");
+            }
+
+            return writeResponse.WriteResponse.Count;
+        }
+        finally
+        {
+            await CloseSession(tag);
+        }
     }
 
     public async Task<(string Tag, string Output)> RunCommand(string[] path, string arguments)
