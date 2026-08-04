@@ -14,10 +14,14 @@ public static class AutoStartHelper
     {
         return new List<INode>()
         {
-            new BaseDirectoryNode("user", null, GetStartApps("user").ToList()),
-            new BaseDirectoryNode("user-startup-folder", null, GetStartApps("user-startup-folder", "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupFolder").ToList()),
-            new BaseDirectoryNode("machine", null, GetStartApps("machine").ToList()),
-            new BaseDirectoryNode("all-users", null, GetStartApps("machine").ToList()),
+            new BaseDirectoryNode("user", null, GetStartApps("user").ToList())
+                .Meta(MetaField.Description, "Lists all autostart applications from windows registry for the current user"),
+            new BaseDirectoryNode("user-startup-folder", null, GetStartApps("user-startup-folder", "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupFolder").ToList())
+                .Meta(MetaField.Description, "Lists all autostart applications from the user's startup folder"),
+            new BaseDirectoryNode("machine", null, GetStartApps("machine").ToList())
+                .Meta(MetaField.Description, "Lists all autostart applications from windows registry for all users"),
+            new BaseDirectoryNode("all-users", null, GetStartApps("machine").ToList())
+                .Meta(MetaField.Description, "Lists all autostart applications from windows registry for all users")  ,
         };
     }
 
@@ -39,9 +43,7 @@ public static class AutoStartHelper
                 {
                     string path = GetReg(scope, "Software\\Microsoft\\Windows\\CurrentVersion\\Run")?.GetValue(valueName)?.ToString() ?? string.Empty;
 
-                    yield return new AutoStartAppNode(scope, valueName, path)
-                    {
-                    };
+                    yield return new AutoStartAppNode(scope, valueName, path);
                 }
             }
         }
@@ -105,7 +107,8 @@ public class AutoStartAppNode : BaseDirectoryNode
 
     public override IEnumerable<INode>? Children => new List<INode>()
     {
-        new AutoStartAppEnabled((AutoStartAppNode)this),
+        new AutoStartAppEnabled((AutoStartAppNode)this)
+            .Meta(MetaField.Description, "Indicates whether the autostart application is enabled or disabled")
     };
 
     internal void SetEnabled(bool v)
