@@ -79,7 +79,7 @@ public static class AutoStartHelper
         }
     }
 
-    public static RegistryKey GetReg(string scope, string name)
+    public static RegistryKey GetReg(string scope, string name, bool writable = false)
     {
         var root = scope == "machine" ? Registry.LocalMachine! : Registry.CurrentUser!;
         return root.OpenSubKey(name);
@@ -97,7 +97,7 @@ public class AutoStartAppNode : BaseDirectoryNode
             //02 00 00 00 or 06 00 00 00: Startup item is Enabled (managed by user).
             //03 00 00 00 or 01 00 00 00: Startup item is Disabled (by the user or system).
             //08 00 00 00: Startup item is Enabled, but locked so the user cannot turn it of
-            var value = AutoStartHelper.GetReg(Scope, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run")?.GetValue(Name);
+            var value = AutoStartHelper.GetReg(Scope, Path)?.GetValue(Name);
             if (value is byte[] bytes && bytes.Length >= 4)
             {
                 if (bytes[0] == 0x02 || bytes[0] == 0x06 || bytes[0] == 0x08)
@@ -111,18 +111,18 @@ public class AutoStartAppNode : BaseDirectoryNode
         set
         {
             // change registry to enabled for this record
-            var startupKey = AutoStartHelper.GetReg(Scope, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run");
+            var startupKey = AutoStartHelper.GetReg(Scope, Path, true);
             if (startupKey != null)
             {
                 if (value)
                 {
                     // Set to enabled (02 00 00 00)
-                    startupKey.SetValue(Name, new byte[] { 0x02, 0x00, 0x00, 0x00 }, RegistryValueKind.Binary);
+                    startupKey.SetValue(Name, new byte[] { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  }, RegistryValueKind.Binary);
                 }
                 else
                 {
                     // Set to disabled (03 00 00 00)
-                    startupKey.SetValue(Name, new byte[] { 0x03, 0x00, 0x00, 0x00 }, RegistryValueKind.Binary);
+                    startupKey.SetValue(Name, new byte[] { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, RegistryValueKind.Binary);
                 }
             }
         }
