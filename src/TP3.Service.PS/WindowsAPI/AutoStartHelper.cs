@@ -4,41 +4,9 @@ using TP3.Messages;
 using TP3.Protocol;
 using TP3.Protocol.Base;
 
+namespace TP3.Service.PS.WindowsAPI;
 
 
-/*
-Registry: HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
-
-The values below HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run 
-can be used to enable or disable the corresponding values under 
-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run.
-
-A value of 02 00 00 … or 06 00 00 … seems to indicate that the entry is enabled, all(?) 
-other values that it is disabled. (Possibly, in the case of disabledness, the value is the timestamp of the disabling).
-
-These values can be modified in the startup tab of taskmgr.exe.
-
-See also
-The corresponding key for all users is:
-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run.
-
-
-Windows Registry Editor Version 5.00
-
-[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run]
-"MicrosoftEdgeAutoLaunch_14DA42686A33801FBA0440A5992A3729"=hex:03,00,00,00,e4,\
-  7c,77,ac,ef,f3,dc,01
-"Teams"=hex:02,00,00,00,00,00,00,00,00,00,00,00
-"OneDrive"=hex:02,00,00,00,00,00,00,00,00,00,00,00
-"Docker Desktop"=hex:03,00,00,00,00,00,00,00,00,00,00,00
-"KeePassXC"=hex:02,00,00,00,00,00,00,00,00,00,00,00
-"NordVPN"=hex:01,00,00,00,b1,04,86,8e,d7,f4,dc,01
-"Mozilla-Zen-F0DC299D809B9700"=hex:01,00,00,00,eb,44,4a,bd,d4,18,dd,01
-"Dawn Launcher"=hex:02,00,00,00,00,00,00,00,00,00,00,00
-"Microsoft.Lists"=hex:02,00,00,00,00,00,00,00,00,00,00,00
-"Discord"=hex:02,00,00,00,00,00,00,00,00,00,00,00
-
-*/
 
 public static class AutoStartHelper
 {
