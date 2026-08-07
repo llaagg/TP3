@@ -40,7 +40,7 @@
         }
         else if (item.Info.NodeType == TP3.Messages.NodeType.Command)
         {
-            <WalkerCommandItem Item="item" OnCommandClick="HandleCommandSelected" />
+            <WalkerCommandItem Item="item" Path="elementPath" OnCommandClick="HandleCommandSelected" />
         }
         else
         {

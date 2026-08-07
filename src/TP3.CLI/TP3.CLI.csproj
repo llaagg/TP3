@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TP3.Protocol\TP3.Protocol.csproj" />
+    <ProjectReference Include="..\TP3.Security\TP3.Security.csproj" />
+    <ProjectReference Include="..\TP3.Shell\TP3.Shell.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lopla.Language" Version="0.0.20-alpha" />
+    <PackageReference Include="Lopla.Libs" Version="0.0.12-alpha" />
+  </ItemGroup>
+
+</Project>

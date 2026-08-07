@@ -24,7 +24,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        //this.Icon = await GetNfoAsync();
+        this.Icon = await GetNfoAsync();
     }
 
     public async Task<string> GetNfoAsync()
@@ -39,7 +39,7 @@ else
             try
             {
                 var r = 
-                    await TP3Client.RunCommand(metaCommand.ToArray(), string.Join("/", Element.Skip(2)) );
+                    await TP3Client.RunCommand(metaCommand.ToArray(), MetaField.UTFSymbol+" " + string.Join("/", Element.Skip(2)) );
                 return r.Output;
             }
             catch

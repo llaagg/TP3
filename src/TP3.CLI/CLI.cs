@@ -29,7 +29,7 @@ public static partial class CLI
             listCommand, // walk and open on dir
             readCommand, // read 
             runCommand,  // run command
-            TermCommand(ipcPortOption, bePatientAndWaitForServer, logLevel), // terminal
+            ShellCommand(ipcPortOption, bePatientAndWaitForServer, logLevel), // terminal
         };
 
         rootCommand.SetHandler(() =>
@@ -40,7 +40,7 @@ public static partial class CLI
         return rootCommand.InvokeAsync(args);
     }
 
-    private static Command TermCommand(Option<int> ipcPortOption, Option<int> bePatientAndWaitForServer, Option<LogLevel> logLevel)
+    private static Command ShellCommand(Option<int> ipcPortOption, Option<int> bePatientAndWaitForServer, Option<LogLevel> logLevel)
     {
         var termCommand = new Command("shell", "Start a terminal session with the IPC server")
         {

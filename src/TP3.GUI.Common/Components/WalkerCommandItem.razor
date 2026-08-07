@@ -1,6 +1,7 @@
+@using TP3.Protocol.Base
 <li class="list-group-item d-flex align-items-center justify-content-between">
     <button class="btn" @onclick="OnClick">
-        <span class="me-2">⚙</span>
+        <MetaInfo Element="@Path" Key="MetaField.UTFSymbol"><span class="me-2">⚙</span></MetaInfo>
         @Item.Name
     </button>
     <span class="badge text-bg-warning">command</span>
@@ -12,6 +13,10 @@
 
     [Parameter]
     public EventCallback<TP3.Protocol.TP3StatPayload> OnCommandClick { get; set; }
+
+ 
+    [Parameter]
+    public List<string> Path { get; set; } = default!;
 
     private Task OnClick()
     {

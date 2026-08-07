@@ -18,7 +18,7 @@ public class MetaGet : BaseControlParamsArgsCommand
             AutoFlush = true
         };
 
-        if (args?.Length == 0)
+        if (args?.Length < 2)
         {
             // respond with descript of arguments that we need a path to node serpated with space
             await writer.WriteLineAsync("Command requires property name and a path to the node, separated by space. for ex.: state drives c:\\ ");

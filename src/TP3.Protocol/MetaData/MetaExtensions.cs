@@ -41,11 +41,16 @@ public static class MetaExtensions
         var list = new List<INode>()
         {
             new MetaLs(service)
-                .Meta(MetaField.Description, "Lists all properties of metadata per convention"),
-            new Meta(service)
-                .Meta(MetaField.Description, "Shows all properties and values of metadata as concatenated string"),
-            new MetaGet(service)
-                .Meta(MetaField.Description, "Gets the value of a specific metadata property"), 
+                .Meta(MetaField.Description, "Lists all properties of metadata per convention")
+                .Meta(MetaField.UTFSymbol, "📜")
+                
+            ,new Meta(service)
+                .Meta(MetaField.Description, "Shows all properties and values of metadata as concatenated string")
+                .Meta(MetaField.UTFSymbol, "📝")
+            ,new MetaGet(service)
+                .Meta(MetaField.Description, "Gets the value of a specific metadata property")
+                .Meta(MetaField.UTFSymbol, "🔍")
+                ,
         };
 
         if(controlNode is BaseDirectoryNode dirNode)
