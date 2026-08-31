@@ -6,7 +6,7 @@ namespace TP3.Service.IPC;
 
 public class IpcService : BaseDirectoryNode, IService
 {
-    public IpcService(int port, ILogger? logger) : 
+    public IpcService(int port, ITP3Logger? logger) : 
         base()
     {
         this.Port = port;
@@ -17,7 +17,7 @@ public class IpcService : BaseDirectoryNode, IService
 
     public int Port { get; }
 
-    private ILogger? logger;
+    private ITP3Logger? logger;
     public IpcTransport? transport = null;
 
     public override IEnumerable<INode>? Children => new List<INode>{ this.State };

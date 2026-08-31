@@ -13,11 +13,11 @@ public class IpcTransport : INetworkTransport
     private readonly AsyncLocal<IpcSession?> currentSession = new();
     private readonly TcpListener listener;
     private ITP3Transport transport = null!;
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     private bool disposed;
     private bool Initialized;
 
-    public IpcTransport(int port, ILogger? logger = null)
+    public IpcTransport(int port, ITP3Logger? logger = null)
     {
         this.logger = logger;
         listener = new TcpListener(IPAddress.Loopback, port);

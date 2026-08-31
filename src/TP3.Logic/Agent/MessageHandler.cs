@@ -7,7 +7,7 @@ namespace TP3.Agent.Logic.Agent;
 public class MessageHandler
 {
     
-    public MessageHandler(IAgent agent, IRouter router, ILogger? logger = null)
+    public MessageHandler(IAgent agent, IRouter router, ITP3Logger? logger = null)
     {
         
         this.walker = new PathWalker();
@@ -19,7 +19,7 @@ public class MessageHandler
     private readonly PathWalker walker;
     private readonly IAgent agent;
     private readonly IRouter router;
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
 
     public async Task Handle(INetworkPipe incomingTransport, TP3Message request)
     {

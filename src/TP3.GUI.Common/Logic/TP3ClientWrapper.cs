@@ -18,12 +18,12 @@ public class StatusChangedEventArgs
 public class TP3ClientWrapper
 {
     private readonly TP3.Protocol.Client.TP3Client ipcClient;
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     private string rootTag;
 
     public string Status { get; private set; } = "Idle";
 
-    public TP3ClientWrapper(ILogger? logger = null)
+    public TP3ClientWrapper(ITP3Logger? logger = null)
     {
         this.logger = logger;
 
@@ -63,7 +63,7 @@ public class TP3ClientWrapper
         }
         catch (Exception ex)
         {
-            logger?.LogError(ex, "Failed to connect to IPC server.");
+            this.logger?.LogError(ex, "Failed to connect to IPC server.");
             this.UpdateStatus("Disconnected", $"Failed to connect to IPC server: {ex.Message}");
         }
     }

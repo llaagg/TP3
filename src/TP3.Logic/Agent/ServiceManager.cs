@@ -5,10 +5,10 @@ namespace TP3.Agent.Logic.Agent;
 internal class ServiceManager
 {
     private IAgent agent;
-    private ILogger? logger;
+    private ITP3Logger? logger;
     private List<IService> services;
 
-    public ServiceManager(IAgent agent, IEnumerable<IService> services, ILogger? logger = null)
+    public ServiceManager(IAgent agent, IEnumerable<IService> services, ITP3Logger? logger = null)
     {
         this.agent = agent;
         this.logger = logger;

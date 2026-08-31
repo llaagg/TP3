@@ -8,14 +8,14 @@ namespace TP3.Service.Remote;
 
 internal sealed class RemoteTcpClient : IDisposable
 {
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     private readonly TcpClient tcpClient;
     private readonly SemaphoreSlim sendLock = new(1, 1);
     private readonly string rootTag;
     private NetworkStream? stream;
     private bool connected;
 
-    public RemoteTcpClient(ILogger? logger, string host, int port)
+    public RemoteTcpClient(ITP3Logger? logger, string host, int port)
     {
         this.logger = logger;
         this.Host = host;

@@ -13,13 +13,13 @@ public class TCPTP3RemoveClient
 {
     public int Port { get; private set; }
     public string Host { get; private set; }
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     private NetworkStream TcpStream;
     private TcpClient TcpClient;
     private string rootTag;
 
     public TCPTP3RemoveClient(
-        ILogger? logger,
+        ITP3Logger? logger,
         string host, int port, int timeoutSeconds = 5)
     {
         this.logger = logger;
