@@ -49,20 +49,27 @@ public class ServerManager : IServerManager
 	{
         Thread thread = new Thread(async () =>
         {
-        await StartServerThread(logger, services);
+            await StartServerThread(logger, services);
         });
         thread.Start();
 	}
 
     public static async Task StartServerThread(ILogger? logger = null, IService[]? services = null)
     {
-		var ah = new Agent(logger, services);
+        try
+        {
+            var ah = new Agent(logger, services);
 
-        logger?.LogInformation("Initializing agent host...");
-        await ah.Init();
+            logger?.LogInformation("Initializing agent host...");
+            await ah.Init();
 
-        logger?.LogInformation("Starting agent host...");
-        await ah.Start();        
+            logger?.LogInformation("Starting agent host...");
+            await ah.Start();
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("Error starting server: " + ex.Message);
+        }
     }
 
 }
