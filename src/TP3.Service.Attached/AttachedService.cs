@@ -6,11 +6,11 @@ namespace TP3.Service.Attached;
 
 public class AttachedService: BaseDirectoryNode, IService
 {
-    private readonly ILogger logger;
+    private readonly ITP3Logger logger;
     private readonly int port;
     private TcpServerTransport? transport;
 
-    public AttachedService(int port, ILogger logger)
+    public AttachedService(int port, ITP3Logger logger)
         : base($"attached")
     {
         this.port = port;

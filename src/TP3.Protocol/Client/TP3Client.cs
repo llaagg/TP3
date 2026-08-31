@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using TP3.Agent.Logic.Protocol;
+using TP3.Interfaces;
 using TP3.Messages;
 
 namespace TP3.Protocol.Client;
@@ -9,12 +10,12 @@ namespace TP3.Protocol.Client;
 public class TP3Client
 {
     private int ipcPort = 5001;
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     private TcpClient? tcpClient;
     private NetworkStream? stream;
     private readonly int waitForServer;
 
-    public TP3Client(int ipcPort = 5001, ILogger? logger=null, int waitForServer=0)
+    public TP3Client(int ipcPort = 5001, ITP3Logger? logger=null, int waitForServer=0)
     {
         this.ipcPort = ipcPort;
         this.logger = logger;

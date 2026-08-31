@@ -6,9 +6,9 @@ namespace TP3.Agent.Logic.Transport;
 public sealed class Router : IRouter
 {
     private readonly IAgent agent;
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
 
-    public Router(IAgent agent, ILogger? logger)
+    public Router(IAgent agent, ITP3Logger? logger)
     {
         this.agent = agent;
         this.logger = logger;

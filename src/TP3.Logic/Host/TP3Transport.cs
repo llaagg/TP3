@@ -5,7 +5,7 @@ using TP3.Messages;
 
 public class TP3Transport : ITP3Transport
 {
-    private ILogger? logger;
+    private ITP3Logger? logger;
     private IRouter? router = null!;
     private INetworkTransport networkTransport;
     private INetworkManager networkManager;
@@ -15,7 +15,7 @@ public class TP3Transport : ITP3Transport
     /// </summary>
     public string TransportTag { get; }
 
-    public TP3Transport(ILogger? logger, INetworkTransport networkTransport)
+    public TP3Transport(ITP3Logger? logger, INetworkTransport networkTransport)
     {
         this.logger = logger;
         this.networkTransport = networkTransport;

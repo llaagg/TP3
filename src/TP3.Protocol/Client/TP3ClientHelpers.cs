@@ -6,7 +6,7 @@ public static class TP3ClientHelpers
 {
     private static readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
 
-    public static async Task<TP3Message?> SendAndWaitOne(this TP3Client ipcClient, TP3Message request, ILogger? logger = null)
+    public static async Task<TP3Message?> SendAndWaitOne(this TP3Client ipcClient, TP3Message request, ITP3Logger? logger = null)
     {
         await semaphoreSlim.WaitAsync();
         try
@@ -19,7 +19,7 @@ public static class TP3ClientHelpers
         }
     }
 
-    private static async Task<TP3Message?> SendAndWaitOneInternal(TP3Client ipcClient, TP3Message request, ILogger? logger = null)
+    private static async Task<TP3Message?> SendAndWaitOneInternal(TP3Client ipcClient, TP3Message request, ITP3Logger? logger = null)
     {
         logger?.LogInformation("Sending request to IPC server: {Request}", request);
         await ipcClient.SendMessageAsync(request);
@@ -30,7 +30,7 @@ public static class TP3ClientHelpers
 
 
     
-    public static async Task<TP3.Messages.TP3Message?> ReceiveSingleResponse(this TP3Client ipcClient, ILogger? logger = null)
+    public static async Task<TP3.Messages.TP3Message?> ReceiveSingleResponse(this TP3Client ipcClient, ITP3Logger? logger = null)
     {
         await semaphoreSlim.WaitAsync();
         try
@@ -43,7 +43,7 @@ public static class TP3ClientHelpers
         }
     }
 
-    private static async Task<TP3.Messages.TP3Message?> ReceiveSingleResponseInternal(TP3Client ipcClient, ILogger? logger = null)
+    private static async Task<TP3.Messages.TP3Message?> ReceiveSingleResponseInternal(TP3Client ipcClient, ITP3Logger? logger = null)
     {
         logger?.LogInformation("Listening for a single response from the IPC server...");
         await foreach (var response in ipcClient.ListenAsync())
@@ -54,7 +54,7 @@ public static class TP3ClientHelpers
         return null;
     }
 
-    public static Stream GetStream(this TP3Client pipe, TP3Message openResponse, ILogger? logger = null)
+    public static Stream GetStream(this TP3Client pipe, TP3Message openResponse, ITP3Logger? logger = null)
     {
         IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(openResponse.Tag, openResponse.OpenResponse.Iounit, logger);
         TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
@@ -62,7 +62,7 @@ public static class TP3ClientHelpers
         return stream;
     }
 
-    public static IEnumerable<TP3StatPayload> ReadDirectory(this TP3Client pipe, TP3Message openResponse, ILogger? logger = null)
+    public static IEnumerable<TP3StatPayload> ReadDirectory(this TP3Client pipe, TP3Message openResponse, ITP3Logger? logger = null)
     {
         IEnumerable<TP3ReadResponse> data = pipe.SynchronousDataProvider(openResponse.Tag, openResponse.OpenResponse.Iounit, logger);
         TP3ReadResponseDataStream stream = new TP3ReadResponseDataStream(data);
@@ -81,7 +81,7 @@ public static class TP3ClientHelpers
         return stats;
     }
 
-    private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this TP3Client ipcClient, string tag, uint maxBytes = 0, ILogger? logger = null)
+    private static IEnumerable<TP3ReadResponse> SynchronousDataProvider(this TP3Client ipcClient, string tag, uint maxBytes = 0, ITP3Logger? logger = null)
     {
         var offset = 0UL;
         while (true)

@@ -1,6 +1,6 @@
 
 
-public abstract class BaseLogger : ILogger
+public abstract class BaseLogger : ITP3Logger
 {
     public void LogDebug(string message, params object[] args)
     {

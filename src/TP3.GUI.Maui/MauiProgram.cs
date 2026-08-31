@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
+﻿
 
 namespace TP3.GUI.Maui;
 
@@ -30,7 +29,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IService, TP3.Service.Remote.RemotesService>();
 		builder.Services.AddSingleton<IService>(_ => new TP3.Service.Attached.AttachedService(
 			port: TP3Consts.DefaultServerPort,
-			logger: _.GetRequiredService<ILogger>()
+			logger: _.GetRequiredService<ITP3Logger>()
 		));
 		builder.Services.AddSingleton<IService>(_ => new TP3.Service.WebDav.WebDavService(
 			prefix: "http://localhost:19080/",
@@ -40,14 +39,14 @@ public static class MauiProgram
 			{
 				return new TP3.Service.IPC.IpcService(
 					port: TP3Consts.DefaultIPCPort,
-					serviceProvider.GetRequiredService<ILogger>());
+					serviceProvider.GetRequiredService<ITP3Logger>());
 			});
 		builder.Services.AddSingleton<IService, TP3.Service.PS.PersonalSystem>();
 		builder.Services.AddSingleton<IService, InitService>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
+		//builder.Logging.AddDebug();
 #endif
 
 		var app = builder.Build();

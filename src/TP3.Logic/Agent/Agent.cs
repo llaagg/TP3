@@ -14,12 +14,12 @@ namespace TP3.Agent.Logic.Agent;
 public class Agent : IAgent
 {
     private readonly IRouter router;
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     private NetworkManager NetworkManager;
     private ServiceManager ServiceManager;
     private MessageHandler MessageHandler;
 
-    public Agent(ILogger? logger = null, IService[]? services = null)
+    public Agent(ITP3Logger? logger = null, IService[]? services = null)
     {
         this.logger = logger;
         this.router = new Router(this, logger);

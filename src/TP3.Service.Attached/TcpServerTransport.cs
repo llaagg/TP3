@@ -11,12 +11,12 @@ public class TcpServerTransport : INetworkTransport
     private readonly CancellationTokenSource cancellationTokenSource = new();
     private readonly SemaphoreSlim writeLock = new(1, 1);
     private readonly TcpListener listener;
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     private ITP3Transport transport = null!;
     private bool disposed;
     private bool initialized;
 
-    public TcpServerTransport(int port, ILogger? logger = null)
+    public TcpServerTransport(int port, ITP3Logger? logger = null)
     {
         this.logger = logger;
         listener = new TcpListener(IPAddress.Any, port);

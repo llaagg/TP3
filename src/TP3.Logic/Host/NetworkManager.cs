@@ -5,7 +5,7 @@ namespace TP3.Agent.Logic.Host;
 
 public class NetworkManager : INetworkManager, IDisposable
 {
-    private readonly ILogger? logger;
+    private readonly ITP3Logger? logger;
     public readonly IRouter router;
 
     private NetworkSessions networkSessions = new NetworkSessions();
@@ -13,7 +13,7 @@ public class NetworkManager : INetworkManager, IDisposable
 
     public INetworkSessions NetworkSessions => networkSessions;
 
-    public NetworkManager(IRouter router, ILogger? logger = null)
+    public NetworkManager(IRouter router, ITP3Logger? logger = null)
     {
         this.logger = logger;
 
