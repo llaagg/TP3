@@ -43,6 +43,7 @@ public static class MauiProgram
 					serviceProvider.GetRequiredService<ILogger>());
 			});
 		builder.Services.AddSingleton<IService, TP3.Service.PS.PersonalSystem>();
+		builder.Services.AddSingleton<IService, InitService>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
