@@ -21,16 +21,17 @@ public class InitService : BaseDirectoryNode, IService
     {
         this.me = me;
 
-        var data = await this.autostartNode.Get();
-        var bytes = await data!.Read(0, 65536);
-        
-        System.Console.WriteLine($"InitService: autostart output: {System.Text.Encoding.UTF8.GetString(bytes)}");
     }
 
     public async Task Start()
     {
         this.autostartNode = new AutoStart(this);
         this.AddChild(new BaseDirectoryNode("control", children: new INode[]{ this.autostartNode }));
+
+        // var data = await this.autostartNode.Get();
+        // var bytes = await data!.Read(0, 65536);
+        
+        // System.Console.WriteLine($"InitService: autostart output: {System.Text.Encoding.UTF8.GetString(bytes)}");
     }
 
     public async Task Stop()

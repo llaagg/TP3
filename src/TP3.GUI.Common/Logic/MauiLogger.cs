@@ -1,24 +1,68 @@
 
-using Microsoft.Extensions.Logging;
+
+public abstract class BaseLogger : ILogger
+{
+    public void LogDebug(string message, params object[] args)
+    {
+        this.Log(LogLevel.Debug, message, args);
+    }
+
+    protected abstract void Log(LogLevel logLevel, string message, object[] args);
+
+    public void LogError(string message, params object[] args)
+    {
+        this.Log(LogLevel.Error, message, args);
+    }
+
+    public void LogError(Exception exception, string message, params object[] args)
+    {
+        this.Log(LogLevel.Error, $"{message} Exception: {exception}", args);
+    }
+
+    public void LogInformation(string message, params object[] args)
+    {
+        this.Log(LogLevel.Information, message, args);
+    }
+
+    public void LogWarning(string message, params object[] args)
+    {
+        this.Log(LogLevel.Warning, message, args);
+    }
+
+    public void LogWarning(Exception exception, string message, params object[] args)
+    {
+        this.Log(LogLevel.Warning, $"{message} Exception: {exception}", args);
+    }
+}
+
 
 public delegate void LogMessage(LogLevel logLevel, string message);
 
-public class MauiLogger : ILogger
+public class MauiLogger : BaseLogger
 {
     public event LogMessage? OnLogMessage;
 
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
+    protected override void Log(LogLevel logLevel, string message, object[] args)
     {
-        return null;
+        string text;
+        try{
+            text = string.Format(ConvertMessageTemplate(message), args);
+        }
+        catch (Exception ex)
+        {
+            text = $"Error formatting log message: {ex.Message}. Original message: {message}";
+        }
+
+        OnLogMessage?.Invoke(logLevel, text);
     }
 
-    public bool IsEnabled(LogLevel logLevel)
+    private static string ConvertMessageTemplate(string message)
     {
-        return true;
-    }
+        var argumentIndex = 0;
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-    {
-        OnLogMessage?.Invoke(logLevel, formatter(state, exception));
+        return System.Text.RegularExpressions.Regex.Replace(
+            message,
+            "(?<!\\{)\\{([A-Za-z_][A-Za-z0-9_]*)(:[^}]*)?\\}(?!\\})",
+            match => $"{{{argumentIndex++}{match.Groups[2].Value}}}");
     }
 }
