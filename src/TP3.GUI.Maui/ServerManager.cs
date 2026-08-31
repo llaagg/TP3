@@ -6,10 +6,10 @@ using TP3.Agent.Logic.Agent;
 [UnsupportedOSPlatform("browser")]
 public class ServerManager : IServerManager
 {
-    private readonly ILogger logger;
+    private readonly ITP3Logger logger;
     private readonly IService[] services;
 
-    public ServerManager(ILogger logger, IEnumerable<IService> services)
+    public ServerManager(ITP3Logger logger, IEnumerable<IService> services)
     {
         this.logger = logger;
         this.services = services.ToArray();
@@ -54,7 +54,7 @@ public class ServerManager : IServerManager
         thread.Start();
 	}
 
-    public static async Task StartServerThread(ILogger? logger = null, IService[]? services = null)
+    public static async Task StartServerThread(ITP3Logger? logger = null, IService[]? services = null)
     {
         try
         {
