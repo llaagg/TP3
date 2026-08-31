@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 

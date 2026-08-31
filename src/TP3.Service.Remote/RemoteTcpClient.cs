@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Sockets;
-using Microsoft.Extensions.Logging;
 using TP3.Agent.Logic.Protocol;
 using TP3.Messages;
 using TP3.Protocol;

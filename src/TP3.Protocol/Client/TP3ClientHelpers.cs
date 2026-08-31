@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using TP3.Messages;
 using TP3.Protocol;
 using TP3.Protocol.Client;

@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using TP3.Interfaces;
 
 namespace TP3.Agent.Logic.Agent;

@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Host;
+﻿using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Logic.Templates;
