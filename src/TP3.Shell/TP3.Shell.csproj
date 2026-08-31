@@ -11,4 +11,8 @@
     <PackageReference Include="Lopla.Libs" Version="0.0.12-alpha" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TP3.Protocol\TP3.Protocol.csproj" />
+    <ProjectReference Include="..\TP3.Security\TP3.Security.csproj" />
+  </ItemGroup>
 </Project>

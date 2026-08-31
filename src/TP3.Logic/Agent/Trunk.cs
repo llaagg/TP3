@@ -19,9 +19,12 @@ public class Trunk : INode
 {
     private IList<IService> services;
 
-    public Trunk(IList<IService> services)
+    private INode nameSpaces;
+
+    public Trunk(IList<IService> services, INode nameSpaces)
     {
         this.services = services;
+        this.nameSpaces = nameSpaces;
     }
 
     public string Id => "/";
@@ -35,6 +38,7 @@ public class Trunk : INode
         get
         {
             yield return new BaseDirectoryNode("services", "services", services.Cast<INode>().ToList());
+            yield return nameSpaces;
         }
     }
 

@@ -1,9 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System.Runtime.Versioning;
-using TP3.Service.FileSystem;
-using TP3.Agent.Logic.Transport;
-using TP3.Agent.Logic.Host;
 using TP3.Agent.Logic.Agent;
 
 [UnsupportedOSPlatform("browser")]

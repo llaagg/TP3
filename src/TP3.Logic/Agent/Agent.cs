@@ -27,10 +27,12 @@ public class Agent : IAgent
         this.ServiceManager = new ServiceManager(this, services ?? Array.Empty<IService>(), logger);
         this.Services = new List<IService>(services ?? Array.Empty<IService>());
         this.MessageHandler = new MessageHandler(this, this.router, logger);
+        this.NameSpaces = new NameSpaces();
     }
 
     public List<IService> Services { get; private set; }
 
+    public INode NameSpaces { get; private set; }
 
     public async Task Init()
     {
@@ -52,7 +54,7 @@ public class Agent : IAgent
     {
         get
         {
-            return new Trunk(this.ServiceManager.GetServices());
+            return new Trunk(this.ServiceManager.GetServices(), this.NameSpaces);
         }
     }
 

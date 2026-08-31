@@ -9,7 +9,7 @@ namespace TP3.Protocol.Client;
 
 public class TP3Client
 {
-    private readonly int ipcPort;
+    private int ipcPort = 5001;
     private readonly ILogger? logger;
     private TcpClient? tcpClient;
     private NetworkStream? stream;
@@ -22,9 +22,11 @@ public class TP3Client
         this.waitForServer = waitForServer;
     }
 
+    public int IpcPort { get => ipcPort; set => ipcPort = value; }
+
     public async Task ConnectAsync()
     {
-        logger?.LogInformation("Connecting to IPC server on port {IpcPort}...", ipcPort);
+        logger?.LogInformation("Connecting to IPC server on port {IpcPort}...", IpcPort);
 
         if (tcpClient?.Connected == true)
         {
