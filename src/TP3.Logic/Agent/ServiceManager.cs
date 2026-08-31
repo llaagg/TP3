@@ -32,7 +32,7 @@ internal class ServiceManager
         }
     }
 
-    public IList<IService> GetServices()
+    public IList<IService> GetServices() 
     {
         return this.services.ToList();
     }

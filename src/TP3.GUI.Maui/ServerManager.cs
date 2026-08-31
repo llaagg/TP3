@@ -47,15 +47,22 @@ public class ServerManager : IServerManager
     
 	public async Task StartServerTask(IService[]? services)
 	{
+        Thread thread = new Thread(async () =>
+        {
+        await StartServerThread(logger, services);
+        });
+        thread.Start();
+	}
+
+    public static async Task StartServerThread(ILogger? logger = null, IService[]? services = null)
+    {
 		var ah = new Agent(logger, services);
 
-        logger.LogInformation("Initializing agent host...");
+        logger?.LogInformation("Initializing agent host...");
         await ah.Init();
 
-        logger.LogInformation("Starting agent host...");
-        await ah.Start();
-
-        logger.LogInformation("Agent service started. Press Ctrl+C to exit.");
-	}
+        logger?.LogInformation("Starting agent host...");
+        await ah.Start();        
+    }
 
 }

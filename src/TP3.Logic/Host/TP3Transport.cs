@@ -100,7 +100,6 @@ public class TP3Transport : ITP3Transport
         return pointer;
     }
 
-
     public async Task ClosePointer(INetworkPipe incomingTransport, string tag)
     {
         this.networkManager.NetworkSessions.CloseSession(incomingTransport, tag);
