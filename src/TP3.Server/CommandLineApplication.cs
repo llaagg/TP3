@@ -5,12 +5,13 @@ using TP3.Agent.Logic.Transport;
 using TP3.Service.Attached;
 using TP3.Service.FileSystem;
 using TP3.Service.IPC;
+using TP3.Service.LLM;
 
 namespace TP3.CLI;
 
 public static class CommandLineApplication
 {
-    public static Task<int> RunAsync(string[] args, ILogger logger)
+    public static Task<int> RunAsync(string[] args, ITP3Logger logger)
     {
         var portOption = new Option<int>(new[] { "--port", "-p" }, () => 5000, "Port to listen on");
         var ipcPortOption = new Option<int>(new[] { "--ipc-port", "-i" }, () => 5001, "IPC port to connect to or listen on");
@@ -36,7 +37,7 @@ public static class CommandLineApplication
         return rootCommand.InvokeAsync(args);
     }
 
-    private static async Task ExecuteStart(int port, int ipcPort, ILogger logger)
+    private static async Task ExecuteStart(int port, int ipcPort, ITP3Logger logger)
     {
         logger.LogInformation("Starting agent service on port {Port} with IPC on port {IpcPort}.", port, ipcPort);
 
@@ -45,6 +46,7 @@ public static class CommandLineApplication
                     new IService[]
                     {
                         new FileSystemService(),
+                        new LLMService(),
                         new IpcService(ipcPort, logger),
                         new AttachedService(port, logger),
                     }

@@ -11,6 +11,7 @@
   <Project Path="TP3.Service.PS/TP3.Service.PS.csproj" />
   <Project Path="TP3.Service.Remote/TP3.Service.Remote.csproj" />
   <Project Path="TP3.Service.WebDav/TP3.Service.WebDav.csproj" />
+  <Project Path="TP3.Services.LLM/TP3.Services.LLM.csproj" />
   <Project Path="TP3.Tests/TP3.Tests.csproj" />
   <Project Path="TP3.CLI/TP3.CLI.csproj" />
 </Solution>
