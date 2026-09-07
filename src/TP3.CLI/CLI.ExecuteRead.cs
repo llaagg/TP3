@@ -12,7 +12,7 @@ public static partial class CLI
         Option<int> ipcPortOption,
         Option<int> bePatientAndWaitForServer,
         Argument<string> singlePath,
-        Option<LogLevel> logLevel)
+        Option<Microsoft.Extensions.Logging.LogLevel> logLevel)
     {
         var readCommand = new Command("read", "Read file or command output at TP3 path")
         {
@@ -26,7 +26,7 @@ public static partial class CLI
         return readCommand;
     }
 
-    private static async Task ExecuteRead(int ipcPort, int waitForServer, string path, LogLevel level)
+    private static async Task ExecuteRead(int ipcPort, int waitForServer, string path, Microsoft.Extensions.Logging.LogLevel level)
     {
         var logger = InitilizeLogger(level);
         

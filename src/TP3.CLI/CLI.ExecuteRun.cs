@@ -13,7 +13,7 @@ public static partial class CLI
         Option<int> bePatientAndWaitForServer,
         Argument<string> commandPath,
         Argument<string[]> commandArgs,
-        Option<LogLevel> logLevel)
+        Option<Microsoft.Extensions.Logging.LogLevel> logLevel)
     {
         var runCommand = new Command("run", "Run TP3 command node by path")
         {
@@ -28,7 +28,7 @@ public static partial class CLI
         return runCommand;
     }
 
-    private static async Task ExecuteRun(int ipcPort, int waitForServer, string commandPath, string[] args, LogLevel level)
+    private static async Task ExecuteRun(int ipcPort, int waitForServer, string commandPath, string[] args, Microsoft.Extensions.Logging.LogLevel level)
     {
         var logger = InitilizeLogger(level);
         var ipcClient = new TP3Client(ipcPort, logger, waitForServer);
