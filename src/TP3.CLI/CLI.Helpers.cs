@@ -8,7 +8,7 @@ namespace TP3.CLI;
 
 public static partial class CLI
 {
-    public static ILogger InitilizeLogger(LogLevel logLevel)
+    public static ITP3Logger InitilizeLogger(Microsoft.Extensions.Logging.LogLevel logLevel)
     {
         var loggerFactory = LoggerFactory.Create(builder =>
         {
@@ -22,10 +22,11 @@ public static partial class CLI
         });
 
         var logger = loggerFactory.CreateLogger(Assembly.GetExecutingAssembly().GetName().Name!);
-        return logger;
+
+        return null;
     }
     
-    public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ILogger logger)
+    public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ITP3Logger logger)
     {
         var attachRequest = new TP3Message()
         {
@@ -36,7 +37,7 @@ public static partial class CLI
 
         return attachResponse;
     }
-    public static async Task<TP3Message?> Walk(this TP3Client ipcClient, string? tag, string[] path, ILogger logger)
+    public static async Task<TP3Message?> Walk(this TP3Client ipcClient, string? tag, string[] path, ITP3Logger logger)
     {
         var walkRequest = new TP3Message()
         {
@@ -52,7 +53,7 @@ public static partial class CLI
         return walkResponse;
     }
     
-    public static async Task<TP3Message?> Write(this TP3Client ipcClient, string? tag, byte[] data, ILogger logger)
+    public static async Task<TP3Message?> Write(this TP3Client ipcClient, string? tag, byte[] data, ITP3Logger logger)
     {
         var writeRequest = new TP3Message()
         {
@@ -67,7 +68,7 @@ public static partial class CLI
         return writeResponse;
     }
 
-    public static async Task<TP3Message?> Open(this TP3Client ipcClient, string? tag, ILogger logger)
+    public static async Task<TP3Message?> Open(this TP3Client ipcClient, string? tag, ITP3Logger logger)
     {
         var openRequest = new TP3Message()
         {
@@ -80,7 +81,7 @@ public static partial class CLI
     }
 
 
-    public static async Task<TP3Message?> Read(this TP3Client ipcClient, string? tag, ILogger logger)
+    public static async Task<TP3Message?> Read(this TP3Client ipcClient, string? tag, ITP3Logger logger)
     {
         var readRequest = new TP3Message()
         {

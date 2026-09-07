@@ -9,7 +9,7 @@ var loggerFactory = LoggerFactory.Create(builder =>
             options.SingleLine = true;
             options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
         })
-        .SetMinimumLevel(LogLevel.Information);
+        .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Information);
 });
 
 var logger = loggerFactory.CreateLogger(Assembly.GetExecutingAssembly().GetName().Name!);

@@ -29,6 +29,7 @@ public static partial class CLI
     private static async Task ExecuteRead(int ipcPort, int waitForServer, string path, LogLevel level)
     {
         var logger = InitilizeLogger(level);
+        
         var ipcClient = new TP3Client(ipcPort, logger, waitForServer);
 
         await ipcClient.ConnectAsync().ConfigureAwait(false);
@@ -65,7 +66,7 @@ public static partial class CLI
         }
     }
 
-    private static async Task PrintReadData(TP3Client ipcClient, string? tag, ILogger logger)
+    private static async Task PrintReadData(TP3Client ipcClient, string? tag, ITP3Logger logger)
     {
         if (string.IsNullOrWhiteSpace(tag))
         {

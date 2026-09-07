@@ -1,9 +1,6 @@
 using System.Diagnostics;
 using FakeItEasy;
 using Google.Protobuf;
-using Microsoft.Extensions.Logging;
-using TP3.Agent.Logic.Host;
-using TP3.Agent.Logic.Transport;
 using TP3.Interfaces;
 using TP3.Messages;
 using TP3.Protocol;
@@ -196,7 +193,7 @@ namespace TP3.Tests.Integration
                 .Returns(Task.CompletedTask);
 
 
-            var sut = new TP3.Agent.Logic.Agent.Agent(A.Fake<ILogger>(),
+            var sut = new TP3.Agent.Logic.Agent.Agent(A.Fake<ITP3Logger>(),
                 new List<IService> { fakeservice }.ToArray());
 
 

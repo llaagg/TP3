@@ -10,7 +10,7 @@ namespace TP3.CLI;
 public static partial class CLI
 {
 
-    private static async Task ExecuteShell(int ipcPort, int bePatientAndWaitForServer, LogLevel level)
+    private static async Task ExecuteShell(int ipcPort, int bePatientAndWaitForServer, bool emotes, Microsoft.Extensions.Logging.LogLevel level)
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 

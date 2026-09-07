@@ -11,8 +11,9 @@ namespace TP3.CLI;
 
 public static class CommandLineApplication
 {
-    public static Task<int> RunAsync(string[] args, ITP3Logger logger)
+    public static Task<int> RunAsync(string[] args, ILogger logger1)
     {
+        ITP3Logger logger = null;
         var portOption = new Option<int>(new[] { "--port", "-p" }, () => 5000, "Port to listen on");
         var ipcPortOption = new Option<int>(new[] { "--ipc-port", "-i" }, () => 5001, "IPC port to connect to or listen on");
         var messageArgument = new Argument<string>("message", "Message to send to IPC server");
