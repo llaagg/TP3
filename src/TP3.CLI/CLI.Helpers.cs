@@ -8,7 +8,7 @@ namespace TP3.CLI;
 
 public static partial class CLI
 {
-    public static ITP3Logger InitilizeLogger(LogLevel logLevel)
+    public static ILogger InitilizeLogger(LogLevel logLevel)
     {
         var loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
         {
@@ -23,8 +23,7 @@ public static partial class CLI
         });
 
         var logger = loggerFactory.CreateLogger(Assembly.GetExecutingAssembly().GetName().Name!);
-        
-        return new TP3Logger(logger);
+        return logger;
     }
     
     public static async Task<TP3Message?> Attach(this TP3Client ipcClient, ITP3Logger logger)

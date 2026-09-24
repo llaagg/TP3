@@ -26,6 +26,7 @@ public static class MauiProgram
 		builder.Services.RegisterTP3();
         builder.Services.AddSingleton<IServerManager, ServerManager>();
 		builder.Services.AddSingleton<IService, TP3.Service.FileSystem.FileSystemService>();
+		builder.Services.AddSingleton<IService, TP3.Service.LLM.LLMService>();
 		builder.Services.AddSingleton<IService, TP3.Service.Remote.RemotesService>();
 		builder.Services.AddSingleton<IService>(_ => new TP3.Service.Attached.AttachedService(
 			port: TP3Consts.DefaultServerPort,
