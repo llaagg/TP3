@@ -38,7 +38,7 @@ public static class ScriptRunner
         var libs = new List<ILibrary>()
             {
                 new Lopla.Libs.IO(),
-                new TP3()
+                new TP3(null)
             };
 
         var project = new MemoryScripts("tp3", libs,

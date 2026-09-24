@@ -65,7 +65,7 @@ public static partial class CLI
         }
     }
 
-    private static async Task PrintReadData(TP3Client ipcClient, string? tag, ILogger logger)
+    private static async Task PrintReadData(TP3Client ipcClient, string? tag, ITP3Logger logger)
     {
         if (string.IsNullOrWhiteSpace(tag))
         {
