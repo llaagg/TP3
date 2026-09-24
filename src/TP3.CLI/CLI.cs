@@ -14,7 +14,7 @@ public static partial class CLI
         var commandPath = new Argument<string>("command-path", "TP3 command node path");
         var commandArgs = new Argument<string[]>("args", () => Array.Empty<string>(), "Arguments passed to the command node");
         var enableEmoted = new Option<bool>(new[] { "--enable-emoted", "-e" }, () => true, "Enable emoted output for file and directory types");
-        var logLevel = new Option<Microsoft.Extensions.Logging.LogLevel>("log-level", () => Microsoft.Extensions.Logging.LogLevel.Error, "Log level for the CLI");
+        var logLevel = new Option<LogLevel>("log-level", () => LogLevel.Error, "Log level for the CLI");
         var argsArgument = new Argument<string[]>("args", "Arguments to pass to the command being executed");
         var commndFile = new Argument<string>("command-file", "File containing the command to execute in the webdav mounted folder");
 
@@ -43,7 +43,7 @@ public static partial class CLI
     private static Command ShellCommand(
         Option<int> ipcPortOption, 
         Option<int> bePatientAndWaitForServer, 
-        Option<Microsoft.Extensions.Logging.LogLevel> logLevel)
+        Option<LogLevel> logLevel)
     {
         var termCommand = new Command("shell", "Start a terminal session with the IPC server")
         {
@@ -61,7 +61,7 @@ public static partial class CLI
         Option<int> bePatientAndWaitForServer, 
         Argument<string[]?> path, 
         Option<bool> enableEmoted, 
-        Option<Microsoft.Extensions.Logging.LogLevel> logLevel)
+        Option<LogLevel> logLevel)
     {
         var listCommand = new Command("list", "List the contents of a folder in the IPC server")
         {

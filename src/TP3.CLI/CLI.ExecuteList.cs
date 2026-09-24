@@ -1,4 +1,5 @@
 using System.CommandLine;
+using Microsoft.Extensions.Logging;
 using TP3.Messages;
 using TP3.Protocol;
 using TP3.Protocol.Client;
@@ -8,7 +9,7 @@ namespace TP3.CLI;
 public static partial class CLI
 {
 
-    private static async Task ExecuteList(int ipcPort, int waitForServer, bool enableEmoted, Microsoft.Extensions.Logging.LogLevel logLevel, string[]? path)
+    private static async Task ExecuteList(int ipcPort, int waitForServer, bool enableEmoted, LogLevel logLevel, string[]? path)
     {
         var logger = InitilizeLogger(logLevel);
         if(enableEmoted)

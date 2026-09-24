@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using TP3.Interfaces;
 using TP3.Messages;
 using TP3.Protocol.Client;
 
@@ -12,7 +13,7 @@ public static partial class CLI
         Option<int> ipcPortOption,
         Option<int> bePatientAndWaitForServer,
         Argument<string> singlePath,
-        Option<Microsoft.Extensions.Logging.LogLevel> logLevel)
+        Option<LogLevel> logLevel)
     {
         var readCommand = new Command("read", "Read file or command output at TP3 path")
         {
@@ -26,7 +27,7 @@ public static partial class CLI
         return readCommand;
     }
 
-    private static async Task ExecuteRead(int ipcPort, int waitForServer, string path, Microsoft.Extensions.Logging.LogLevel level)
+    private static async Task ExecuteRead(int ipcPort, int waitForServer, string path, LogLevel level)
     {
         var logger = InitilizeLogger(level);
         
