@@ -46,6 +46,22 @@
       "problemMatcher": "$msCompile"
     },
     {
+      "label": "build GUI GTK",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/TP3.GUI.GTK/TP3.GUI.GTK.csproj",
+        "-f",
+        "net10.0"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
       "label": "build GUI packaged",
       "type": "shell",
       "command": "dotnet",

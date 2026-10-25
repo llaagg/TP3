@@ -74,6 +74,13 @@
       "cwd": "${workspaceFolder}/src/TP3.GUI.Maui"
     },
     {
+      "name": "GUI GTK",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build GUI GTK",
+      "program": "${workspaceFolder}/src/TP3.GUI.GTK/bin/Debug/net10.0/TP3.GUI.GTK.dll"
+    },
+    {
       "name": "GUI MAUI Run",
       "type": "coreclr",
       "request": "attach",
