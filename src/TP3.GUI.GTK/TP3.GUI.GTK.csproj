@@ -7,12 +7,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GirCore.Adw-1" Version="0.6.3" />
-		<PackageReference Include="GirCore.Gtk-4.0" Version="0.6.3" />
-		<PackageReference Include="GirCore.WebKit-6.0" Version="0.6.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebView" Version="10.0.2" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.2" />
-    	<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+		<PackageReference Include="GirCore.Adw-1" Version="0.8.1" />
+		<PackageReference Include="GirCore.Gtk-4.0" Version="0.8.1" />
+		<PackageReference Include="GirCore.WebKit-6.0" Version="0.8.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebView" Version="10.0.13" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.13" />
+    	<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
 	</ItemGroup>
 
 	<ItemGroup>
