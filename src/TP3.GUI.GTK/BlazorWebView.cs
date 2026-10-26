@@ -122,8 +122,9 @@ class WebViewManager : Microsoft.AspNetCore.Components.WebView.WebViewManager
 			using var ms = new MemoryStream();
 			content.CopyTo(ms);
 			var streamPtr = MemoryInputStream.NewFromData(ref ms.GetBuffer()[0], (nint)ms.Length, _ => { });
-			var inputStream = new Gio.InputStream(new Gio.Internal.InputStreamHandle(streamPtr, false));
-			request.Finish(inputStream, ms.Length, headers["Content-Type"]);
+			#warning fix
+			//var inputStream = new Gio.InputStream(new Gio.Internal.InputStreamHandle(streamPtr, false));
+			//request.Finish(inputStream, ms.Length, headers["Content-Type"]);
 		}
 		else
 		{
